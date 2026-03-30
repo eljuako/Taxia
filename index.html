@@ -1,67 +1,141 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tax-Bot | Inteligencia Fiscal para República Dominicana</title>
+    <title>TaxIA | Inteligencia Fiscal Autónoma para RD</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .gradient-text { background: linear-gradient(90deg, #3b82f6, #2dd4bf); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        
+        :root {
+            --primary-bg: #020617;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #22d3ee;
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: var(--primary-bg);
+        }
+
+        .glass-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(59, 130, 246, 0.4);
+            transform: translateY(-4px);
+        }
+
+        .hero-gradient {
+            background: radial-gradient(circle at 50% -20%, rgba(59, 130, 246, 0.15) 0%, rgba(2, 6, 23, 0) 60%);
+        }
+
+        .text-gradient {
+            background: linear-gradient(to right, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .cta-glow {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
     </style>
 </head>
-<body class="bg-slate-950 text-white antialiased">
+<body class="text-slate-200 antialiased hero-gradient">
 
-    <nav class="fixed w-full z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-md">
-        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold">T</div>
-                <span class="text-xl font-bold tracking-tight">Tax-Bot <span class="text-blue-500">RD</span></span>
+    <nav class="fixed w-full z-50 border-b border-white/5 bg-slate-950/60 backdrop-blur-xl">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <div class="absolute inset-0 bg-blue-500 blur-md opacity-40"></div>
+                    <div class="relative w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                        <span class="font-black text-white italic">T</span>
+                    </div>
+                </div>
+                <span class="text-2xl font-extrabold tracking-tighter text-white">TaxIA<span class="text-blue-500 italic">.</span></span>
             </div>
-            <div class="hidden md:flex gap-8 text-sm font-medium text-slate-400">
-                <a href="#features" class="hover:text-white transition">Características</a>
-                <a href="#pricing" class="hover:text-white transition">Precios</a>
-                <a href="#" class="hover:text-white transition">Documentación</a>
+            
+            <div class="hidden md:flex items-center gap-10 text-sm font-medium">
+                <a href="#soluciones" class="text-slate-400 hover:text-white transition-colors">Soluciones</a>
+                <a href="#seguridad" class="text-slate-400 hover:text-white transition-colors">Seguridad</a>
+                <a href="#precios" class="text-slate-400 hover:text-white transition-colors">Precios</a>
             </div>
-            <a href="#" class="bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-full text-sm font-semibold transition">Comenzar Gratis</a>
+
+            <div class="flex items-center gap-4">
+                <a href="#" class="text-sm font-semibold hover:text-white transition-colors hidden sm:block">Log in</a>
+                <a href="#" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-full text-sm font-bold transition-all cta-glow">
+                    Empezar ahora
+                </a>
+            </div>
         </div>
     </nav>
 
-    <section class="pt-32 pb-20 px-4 text-center">
-        <div class="max-w-4xl mx-auto">
-            <span class="px-4 py-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-400 text-xs font-bold uppercase tracking-widest mb-6 inline-block">
-                Impulsado por RAG & IA de última generación
-            </span>
-            <h1 class="text-5xl md:text-7xl font-bold mb-6 tracking-tight leading-tight">
-                Domina tus impuestos en <span class="gradient-text">segundos</span>, no días.
+    <section class="relative pt-44 pb-32 px-6 overflow-hidden">
+        <div class="max-w-5xl mx-auto text-center relative z-10">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold mb-8 animate-pulse">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                </span>
+                SISTEMA RAG OPTIMIZADO PARA DGII
+            </div>
+            
+            <h1 class="text-6xl md:text-8xl font-extrabold mb-8 tracking-tighter text-gradient">
+                La nueva era del <br>cumplimiento fiscal.
             </h1>
-            <p class="text-lg md:text-xl text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
-                Tu asistente fiscal inteligente entrenado con el Código Tributario de la Rep. Dom. Obtén respuestas precisas, cálculos de ISR/ITBIS y citas legales al instante.
+            
+            <p class="text-lg md:text-xl text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed">
+                TaxIA combina el Código Tributario Dominicano con inteligencia artificial de vanguardia. Respuestas precisas, cálculos de ITBIS y asesoría legal en tiempo real.
             </p>
-            <div class="flex flex-col md:flex-row gap-4 justify-center">
-                <button class="bg-white text-slate-950 px-8 py-4 rounded-xl font-bold text-lg hover:bg-slate-200 transition flex items-center justify-center gap-2">
-                    Probar Chatbot Ahora <i class="fa-solid fa-arrow-right"></i>
+
+            <div class="flex flex-col sm:flex-row gap-5 justify-center mb-24">
+                <button class="bg-white text-slate-950 px-10 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform flex items-center justify-center gap-3">
+                    Hablar con TaxIA <i class="fa-solid fa-bolt"></i>
                 </button>
-                <button class="glass px-8 py-4 rounded-xl font-bold text-lg hover:bg-white/10 transition">
-                    Ver Demo de Dashboard
+                <button class="px-10 py-4 rounded-full font-bold text-lg border border-white/10 hover:bg-white/5 transition-all">
+                    Ver Capacidades
                 </button>
             </div>
-            <div class="mt-16 p-4 glass rounded-3xl max-w-5xl mx-auto relative group overflow-hidden">
-                <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
-                <div class="relative bg-slate-900 rounded-2xl p-6 text-left border border-white/5 shadow-2xl">
-                    <div class="flex items-start gap-4 mb-6">
-                        <div class="w-10 h-10 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center"><i class="fa-solid fa-robot"></i></div>
-                        <div class="bg-slate-800 p-4 rounded-2xl rounded-tl-none border border-white/10 text-slate-200">
-                            ¿En qué puedo ayudarte hoy con la DGII?
+
+            <div class="relative group">
+                <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-500 rounded-[2.5rem] blur opacity-20 group-hover:opacity-30 transition duration-1000"></div>
+                <div class="relative glass-card rounded-[2rem] p-4 border border-white/10 shadow-2xl overflow-hidden bg-slate-900/50">
+                    <div class="flex items-center gap-2 mb-4 px-4 pt-2">
+                        <div class="flex gap-1.5">
+                            <div class="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/40"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/40"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/40"></div>
                         </div>
+                        <div class="mx-auto bg-white/5 px-4 py-1 rounded-md text-[10px] text-slate-500 font-mono tracking-widest uppercase">Consulta Fiscal en Curso</div>
                     </div>
-                    <div class="flex items-start gap-4 flex-row-reverse mb-6">
-                        <div class="w-10 h-10 rounded-full bg-slate-700 flex-shrink-0 flex items-center justify-center font-bold">H</div>
-                        <div class="bg-blue-600 p-4 rounded-2xl rounded-tr-none text-white">
-                            ¿Cuál es la fecha límite para presentar el IT-1 este mes?
+                    <div class="grid md:grid-cols-4 gap-4 p-4">
+                        <div class="md:col-span-1 space-y-4">
+                            <div class="h-24 glass-card rounded-2xl p-4 flex flex-col justify-center border-l-4 border-l-blue-500">
+                                <span class="text-xs text-slate-500 font-bold uppercase">ITBIS por Pagar</span>
+                                <span class="text-xl font-bold text-white">RD$ 42,500</span>
+                            </div>
+                            <div class="h-24 glass-card rounded-2xl p-4 flex flex-col justify-center border-l-4 border-l-cyan-500">
+                                <span class="text-xs text-slate-500 font-bold uppercase">Saldo a Favor</span>
+                                <span class="text-xl font-bold text-white">RD$ 0.00</span>
+                            </div>
+                        </div>
+                        <div class="md:col-span-3 bg-slate-950/80 rounded-2xl p-6 border border-white/5 min-h-[300px] text-left">
+                            <div class="flex gap-4 mb-6">
+                                <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-robot text-xs"></i></div>
+                                <div class="space-y-3">
+                                    <p class="text-sm leading-relaxed text-slate-300">Basado en el <strong>Artículo 335 del Código Tributario</strong>, el ITBIS para servicios de consultoría está gravado con una tasa del 18%. Sin embargo, si exportas este servicio, podrías estar exento bajo el régimen de exención de servicios para el exterior.</p>
+                                    <div class="flex gap-2">
+                                        <span class="px-2 py-1 rounded bg-slate-800 text-[10px] border border-white/10 text-slate-400">#Art-335</span>
+                                        <span class="px-2 py-1 rounded bg-slate-800 text-[10px] border border-white/10 text-slate-400">#ExencionServicios</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -69,75 +143,81 @@
         </div>
     </section>
 
-    <section id="features" class="py-20 bg-slate-900/50">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-bold mb-4">Diseñado para Contadores y Contribuyentes</h2>
-                <p class="text-slate-400">Todo lo que necesitas para estar al día con la DGII.</p>
+    <section class="py-12 border-y border-white/5 bg-slate-950/40">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-wrap justify-center md:justify-between items-center gap-12 opacity-50 grayscale">
+                <span class="text-xl font-bold tracking-tighter">DGII COMPLIANT</span>
+                <span class="text-xl font-bold tracking-tighter">CERTIFICADO RAG</span>
+                <span class="text-xl font-bold tracking-tighter">ENCRYPTION 256-BIT</span>
+                <span class="text-xl font-bold tracking-tighter">DOMINICAN REPUBLIC AI</span>
             </div>
+        </div>
+    </section>
+
+    <section id="precios" class="py-32 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-20">
+                <h2 class="text-4xl font-bold mb-4 text-white">Inversión para tu tranquilidad</h2>
+                <p class="text-slate-400">Planes diseñados para freelancers y firmas contables en RD.</p>
+            </div>
+            
             <div class="grid md:grid-cols-3 gap-8">
-                <div class="p-8 glass rounded-3xl hover:border-blue-500/50 transition">
-                    <div class="text-blue-500 text-3xl mb-4"><i class="fa-solid fa-scale-balanced"></i></div>
-                    <h3 class="text-xl font-bold mb-2">Base Legal Actualizada</h3>
-                    <p class="text-slate-400 text-sm">Respuestas fundamentadas directamente en el Código Tributario dominicano y normas recientes.</p>
+                <div class="glass-card rounded-[2rem] p-10 flex flex-col border-white/5">
+                    <h3 class="text-xl font-bold mb-2">Freelance</h3>
+                    <p class="text-slate-500 text-sm mb-8">Para individuos reportando ingresos profesionales.</p>
+                    <div class="text-4xl font-extrabold mb-8 text-white">US$ 15 <span class="text-sm font-normal text-slate-500">/ mes</span></div>
+                    <ul class="space-y-4 mb-10 text-sm flex-grow">
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-blue-500"></i> 20 Consultas con IA</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-blue-500"></i> Calculadora de ITBIS/ISR</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-blue-500"></i> Soporte por Email</li>
+                    </ul>
+                    <button class="w-full py-4 rounded-xl border border-white/10 font-bold hover:bg-white/5 transition-all">Seleccionar Plan</button>
                 </div>
-                <div class="p-8 glass rounded-3xl hover:border-blue-500/50 transition">
-                    <div class="text-blue-500 text-3xl mb-4"><i class="fa-solid fa-calculator"></i></div>
-                    <h3 class="text-xl font-bold mb-2">Cálculos Automatizados</h3>
-                    <p class="text-slate-400 text-sm">Estimaciones precisas de ISR, ITBIS y retenciones con solo describir tu situación financiera.</p>
+
+                <div class="glass-card rounded-[2rem] p-10 flex flex-col border-blue-500/50 bg-blue-600/5 relative">
+                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-4 py-1 rounded-full text-[10px] font-black tracking-widest">RECOMENDADO</div>
+                    <h3 class="text-xl font-bold mb-2">Empresarial</h3>
+                    <p class="text-slate-500 text-sm mb-8">Gestión completa para PyMES y startups.</p>
+                    <div class="text-4xl font-extrabold mb-8 text-white">US$ 49 <span class="text-sm font-normal text-slate-500">/ mes</span></div>
+                    <ul class="space-y-4 mb-10 text-sm flex-grow">
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-blue-500"></i> Consultas Ilimitadas</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-blue-500"></i> Lectura de Estados Financieros</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-blue-500"></i> Citas Legales Directas</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-blue-500"></i> Soporte Prioritario</li>
+                    </ul>
+                    <button class="w-full py-4 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition-all cta-glow">Suscribirme ahora</button>
                 </div>
-                <div class="p-8 glass rounded-3xl hover:border-blue-500/50 transition">
-                    <div class="text-blue-500 text-3xl mb-4"><i class="fa-solid fa-shield-halved"></i></div>
-                    <h3 class="text-xl font-bold mb-2">Privacidad de Datos</h3>
-                    <p class="text-slate-400 text-sm">Encriptación de nivel bancario. Tus datos financieros nunca se usan para entrenar modelos públicos.</p>
+
+                <div class="glass-card rounded-[2rem] p-10 flex flex-col border-white/5">
+                    <h3 class="text-xl font-bold mb-2">Contadores</h3>
+                    <p class="text-slate-500 text-sm mb-8">Multi-perfiles y gestión de clientes masiva.</p>
+                    <div class="text-4xl font-extrabold mb-8 text-white">US$ 99 <span class="text-sm font-normal text-slate-500">/ mes</span></div>
+                    <ul class="space-y-4 mb-10 text-sm flex-grow">
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-blue-500"></i> Dashboard Multi-cliente</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-blue-500"></i> Reportes PDF automatizados</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-blue-500"></i> Acceso vía API</li>
+                    </ul>
+                    <button class="w-full py-4 rounded-xl border border-white/10 font-bold hover:bg-white/5 transition-all">Contactar Ventas</button>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="pricing" class="py-20">
-        <div class="max-w-5xl mx-auto px-4">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-bold mb-4">Planes que crecen contigo</h2>
-            </div>
-            <div class="grid md:grid-cols-2 gap-8">
-                <div class="p-8 glass rounded-3xl border-white/5 relative overflow-hidden">
-                    <h3 class="text-2xl font-bold mb-2">Individual</h3>
-                    <p class="text-slate-400 mb-6">Para personas físicas y freelancers.</p>
-                    <div class="text-4xl font-bold mb-8">$0 <span class="text-lg font-normal text-slate-500">/mes</span></div>
-                    <ul class="space-y-4 mb-8 text-sm">
-                        <li><i class="fa-solid fa-check text-blue-500 mr-2"></i> 15 consultas mensuales</li>
-                        <li><i class="fa-solid fa-check text-blue-500 mr-2"></i> Base legal RD básica</li>
-                        <li><i class="fa-solid fa-check text-blue-500 mr-2"></i> Calculadora de ISR</li>
-                    </ul>
-                    <button class="w-full py-3 rounded-xl border border-white/20 font-bold hover:bg-white/5 transition text-sm">Empezar Gratis</button>
+    <footer class="py-20 border-t border-white/5 text-center">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col items-center">
+                <div class="flex items-center gap-3 mb-8">
+                    <div class="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center font-bold">T</div>
+                    <span class="text-xl font-bold tracking-tighter text-white">TaxIA<span class="text-blue-500">.</span></span>
                 </div>
-                <div class="p-8 glass rounded-3xl border-blue-500/50 bg-blue-600/5 relative">
-                    <div class="absolute top-4 right-4 bg-blue-600 text-[10px] px-2 py-1 rounded font-black uppercase">Más Popular</div>
-                    <h3 class="text-2xl font-bold mb-2">Profesional</h3>
-                    <p class="text-slate-400 mb-6">Para contadores y empresas.</p>
-                    <div class="text-4xl font-bold mb-8">$45 <span class="text-lg font-normal text-slate-500">/mes</span></div>
-                    <ul class="space-y-4 mb-8 text-sm text-slate-200">
-                        <li><i class="fa-solid fa-check text-blue-500 mr-2"></i> Consultas ilimitadas</li>
-                        <li><i class="fa-solid fa-check text-blue-500 mr-2"></i> Análisis de documentos PDF</li>
-                        <li><i class="fa-solid fa-check text-blue-500 mr-2"></i> Soporte prioritario 24/7</li>
-                    </ul>
-                    <button class="w-full py-3 rounded-xl bg-blue-600 font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-900/20 text-sm">Suscribirse Ahora</button>
+                <div class="flex gap-8 text-sm text-slate-500 mb-8">
+                    <a href="#" class="hover:text-white transition-colors">Aviso Legal</a>
+                    <a href="#" class="hover:text-white transition-colors">Privacidad</a>
+                    <a href="#" class="hover:text-white transition-colors">DGII Link</a>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <footer class="border-t border-white/10 py-12 bg-slate-950">
-        <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8">
-            <div class="flex items-center gap-2 grayscale opacity-70">
-                <div class="w-6 h-6 bg-slate-600 rounded flex items-center justify-center text-xs">T</div>
-                <span class="font-bold">Tax-Bot RD</span>
-            </div>
-            <p class="text-slate-500 text-sm">© 2026 Tax-Bot RD. Todos los derechos reservados. Desarrollado para el mercado Dominicano.</p>
-            <div class="flex gap-6 text-slate-400">
-                <a href="#" class="hover:text-white transition"><i class="fa-brands fa-twitter"></i></a>
-                <a href="#" class="hover:text-white transition"><i class="fa-brands fa-linkedin"></i></a>
+                <p class="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
+                    © 2026 TaxIA. La información proporcionada es generada por IA y debe ser validada por un profesional contable colegiado en la República Dominicana.
+                </p>
             </div>
         </div>
     </footer>
