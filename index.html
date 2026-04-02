@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TaxIA — Asistente Tributario Inteligente RD</title>
+  <!-- Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- PayPal SDK (reemplaza YOUR_PAYPAL_CLIENT_ID) -->
+  <script src="https://www.paypal.com/sdk/js?client-id=YOUR_PAYPAL_CLIENT_ID&vault=true&intent=subscription&currency=USD" data-sdk-integration-source="button-factory" id="paypal-sdk"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -24,7 +28,172 @@
       color: var(--white);
       overflow-x: hidden;
     }
- 
+
+    /* ─── AUTH MODALS ───────────────────────────────────────── */
+    .modal-overlay {
+      position:fixed; inset:0; z-index:500;
+      background:rgba(0,0,0,.75); backdrop-filter:blur(6px);
+      display:none; align-items:center; justify-content:center;
+      padding:1rem;
+    }
+    .modal-overlay.open { display:flex; }
+    .modal {
+      background:#0f2060; border:1px solid rgba(245,158,11,.3);
+      border-radius:20px; padding:2.2rem;
+      width:100%; max-width:420px; position:relative;
+    }
+    .modal h2 { font-size:1.5rem; font-weight:800; margin-bottom:.4rem; }
+    .modal .modal-sub { color:var(--text-muted); font-size:.88rem; margin-bottom:1.5rem; }
+    .modal-close {
+      position:absolute; top:1rem; right:1rem;
+      background:none; border:none; color:var(--text-muted);
+      font-size:1.4rem; cursor:pointer; line-height:1;
+    }
+    .modal-close:hover { color:white; }
+    .form-group { margin-bottom:1rem; }
+    .form-group label { display:block; font-size:.83rem; color:var(--text-muted); margin-bottom:.4rem; }
+    .form-group input {
+      width:100%; background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.15); color:white;
+      border-radius:10px; padding:.7rem .9rem; font-size:.92rem; outline:none;
+      transition:border-color .2s;
+    }
+    .form-group input:focus { border-color:var(--gold); }
+    .form-group input::placeholder { color:rgba(255,255,255,.35); }
+    .btn-auth {
+      width:100%; padding:.8rem; border-radius:10px;
+      background:var(--gold); color:#000; border:none;
+      font-weight:700; font-size:.95rem; cursor:pointer;
+      transition:background .2s; margin-top:.5rem;
+    }
+    .btn-auth:hover { background:var(--gold-light); }
+    .btn-auth:disabled { opacity:.5; cursor:not-allowed; }
+    .btn-google {
+      width:100%; padding:.75rem; border-radius:10px;
+      background:white; color:#333; border:none;
+      font-weight:600; font-size:.9rem; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; gap:.6rem;
+      margin-top:.75rem; transition:background .2s;
+    }
+    .btn-google:hover { background:#f5f5f5; }
+    .modal-divider {
+      display:flex; align-items:center; gap:.8rem;
+      margin:1rem 0; color:var(--text-muted); font-size:.8rem;
+    }
+    .modal-divider::before,.modal-divider::after {
+      content:''; flex:1; height:1px; background:rgba(255,255,255,.1);
+    }
+    .modal-switch {
+      text-align:center; margin-top:1.2rem;
+      font-size:.85rem; color:var(--text-muted);
+    }
+    .modal-switch a { color:var(--gold); cursor:pointer; text-decoration:none; }
+    .modal-switch a:hover { text-decoration:underline; }
+    .auth-error {
+      background:rgba(239,68,68,.15); border:1px solid rgba(239,68,68,.3);
+      color:#fca5a5; border-radius:8px; padding:.65rem .9rem;
+      font-size:.83rem; margin-bottom:.8rem; display:none;
+    }
+    .auth-error.show { display:block; }
+    .auth-success {
+      background:rgba(34,197,94,.1); border:1px solid rgba(34,197,94,.3);
+      color:#86efac; border-radius:8px; padding:.65rem .9rem;
+      font-size:.83rem; margin-bottom:.8rem; display:none;
+    }
+    .auth-success.show { display:block; }
+
+    /* ─── UPGRADE MODAL ──────────────────────────────────────── */
+    .upgrade-modal .modal-title-icon { font-size:2.5rem; margin-bottom:.5rem; }
+    .upgrade-modal h2 { color:var(--gold); }
+    .upgrade-options { display:flex; flex-direction:column; gap:.75rem; margin-top:1.2rem; }
+    .upgrade-option {
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:12px; padding:1rem 1.2rem;
+      cursor:pointer; transition:border-color .2s, background .2s;
+    }
+    .upgrade-option:hover { border-color:var(--gold); background:rgba(245,158,11,.06); }
+    .upgrade-option.featured { border-color:var(--gold); background:rgba(245,158,11,.07); }
+    .upgrade-option h4 { font-size:1rem; font-weight:700; }
+    .upgrade-option p { font-size:.82rem; color:var(--text-muted); margin-top:.2rem; }
+    .upgrade-option .up-price { color:var(--gold); font-weight:800; font-size:1.1rem; margin-top:.3rem; }
+
+    /* ─── USER MENU ──────────────────────────────────────────── */
+    .user-menu-wrap { position:relative; }
+    .user-avatar-btn {
+      width:36px; height:36px; border-radius:50%;
+      background:var(--gold); color:#000; border:none;
+      font-weight:800; font-size:.85rem; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      transition:box-shadow .2s;
+    }
+    .user-avatar-btn:hover { box-shadow:0 0 0 3px rgba(245,158,11,.3); }
+    .user-dropdown {
+      position:absolute; top:calc(100% + 10px); right:0;
+      background:#0f2060; border:1px solid rgba(255,255,255,.12);
+      border-radius:14px; padding:.7rem;
+      min-width:220px; display:none;
+      box-shadow:0 10px 40px rgba(0,0,0,.5);
+    }
+    .user-dropdown.open { display:block; }
+    .ud-header { padding:.5rem .7rem; margin-bottom:.3rem; }
+    .ud-name { font-weight:700; font-size:.9rem; }
+    .ud-plan {
+      display:inline-block; margin-top:.25rem;
+      padding:.15rem .55rem; border-radius:10px;
+      font-size:.72rem; font-weight:700;
+    }
+    .plan-libre  { background:rgba(148,163,184,.15); color:#cbd5e1; }
+    .plan-pro    { background:rgba(245,158,11,.15); color:var(--gold); }
+    .plan-pro_max{ background:rgba(168,85,247,.15); color:#d8b4fe; }
+    .ud-usage {
+      background:rgba(255,255,255,.05); border-radius:8px;
+      padding:.5rem .7rem; margin:.4rem 0;
+    }
+    .ud-usage-label { font-size:.75rem; color:var(--text-muted); }
+    .ud-usage-bar { height:4px; background:rgba(255,255,255,.1); border-radius:2px; margin-top:.4rem; overflow:hidden; }
+    .ud-usage-fill { height:100%; background:var(--gold); border-radius:2px; transition:width .3s; }
+    .ud-divider { height:1px; background:rgba(255,255,255,.08); margin:.5rem 0; }
+    .ud-item {
+      display:flex; align-items:center; gap:.6rem;
+      padding:.5rem .7rem; border-radius:8px; cursor:pointer;
+      font-size:.87rem; transition:background .15s;
+    }
+    .ud-item:hover { background:rgba(255,255,255,.06); }
+    .ud-item.danger { color:#fca5a5; }
+    .ud-item.danger:hover { background:rgba(239,68,68,.1); }
+
+    /* ─── QUERY COUNTER IN CHAT ──────────────────────────────── */
+    .chat-usage-bar {
+      background:rgba(245,158,11,.08); border-bottom:1px solid rgba(245,158,11,.15);
+      padding:.5rem 1rem;
+      display:flex; align-items:center; gap:.6rem; font-size:.78rem;
+    }
+    .chat-usage-bar .cub-label { color:var(--text-muted); }
+    .chat-usage-bar .cub-count { font-weight:700; color:var(--gold); }
+    .cub-bar { flex:1; height:4px; background:rgba(255,255,255,.1); border-radius:2px; overflow:hidden; }
+    .cub-fill { height:100%; border-radius:2px; transition:width .3s; }
+    .cub-fill.ok    { background:var(--gold); }
+    .cub-fill.low   { background:#f97316; }
+    .cub-fill.empty { background:#ef4444; }
+    .cub-upgrade { color:var(--gold); cursor:pointer; font-weight:600; text-decoration:underline; white-space:nowrap; }
+
+    /* ─── PAYMENT BUTTONS ────────────────────────────────────── */
+    .paypal-container { min-height:48px; position:relative; }
+    .pay-loading {
+      display:flex; align-items:center; justify-content:center;
+      height:48px; color:var(--text-muted); font-size:.85rem; gap:.5rem;
+    }
+
+    /* ─── NOTIFICATION TOAST ─────────────────────────────────── */
+    .toast {
+      position:fixed; bottom:100px; left:50%; transform:translateX(-50%) translateY(20px);
+      background:#0f2060; border:1px solid rgba(245,158,11,.4);
+      color:white; border-radius:12px; padding:.8rem 1.4rem;
+      font-size:.88rem; z-index:999; opacity:0; pointer-events:none;
+      transition:all .3s; white-space:nowrap;
+    }
+    .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
     /* ─── NAVBAR ─────────────────────────────────────────── */
     nav {
       position: fixed; top:0; left:0; right:0; z-index:100;
@@ -58,7 +227,7 @@
     .nav-cta:hover { background: var(--gold-light); }
     .hamburger { display:none; background:none; border:none; cursor:pointer; }
     .hamburger span { display:block; width:22px; height:2px; background:white; margin:5px 0; }
- 
+
     /* ─── HERO ─────────────────────────────────────────────── */
     #inicio {
       min-height: 100vh;
@@ -67,7 +236,7 @@
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       padding: 80px 2rem 4rem;
     }
- 
+
     /* grid pattern */
     #inicio::before {
       content:'';
@@ -78,14 +247,14 @@
       background-size: 40px 40px;
       pointer-events:none;
     }
- 
+
     .hero-title {
       font-size: clamp(1.1rem, 2.5vw, 1.4rem);
       color: rgba(255,255,255,0.7);
       letter-spacing: .2em; text-transform: uppercase;
       margin-bottom: 2rem; position: relative; z-index:2;
     }
- 
+
     /* orbit container */
     .orbit-area {
       position: relative;
@@ -93,7 +262,7 @@
       display: flex; align-items:center; justify-content:center;
       z-index:2;
     }
- 
+
     /* gold ring */
     .orbit-ring {
       position:absolute;
@@ -107,7 +276,7 @@
       0%,100% { box-shadow: 0 0 30px rgba(245,158,11,.25), inset 0 0 30px rgba(245,158,11,.1); }
       50%      { box-shadow: 0 0 55px rgba(245,158,11,.45), inset 0 0 55px rgba(245,158,11,.2); }
     }
- 
+
     /* avatar circle */
     .avatar-circle {
       position:relative; z-index:3;
@@ -122,12 +291,12 @@
     .avatar-circle:hover {
       box-shadow: 0 0 70px rgba(245,158,11,.7);
     }
- 
+
     /* ─── inline SVG avatar ─────────────────────── */
     .avatar-svg {
       width:130px; height:130px;
     }
- 
+
     /* floating chips */
     .chip {
       position:absolute;
@@ -150,12 +319,12 @@
     .chip-1 { left:-40px; top:60px;  animation-delay: 0s;   }
     .chip-2 { right:-60px; top:100px; animation-delay: .7s; }
     .chip-3 { left:-20px; bottom:60px; animation-delay: 1.4s; }
- 
+
     @keyframes float {
       0%,100% { transform: translateY(0);   }
       50%      { transform: translateY(-8px); }
     }
- 
+
     /* hero bottom */
     .hero-bottom {
       position:relative; z-index:2;
@@ -172,7 +341,7 @@
       text-decoration:none;
     }
     .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(245,158,11,.4); }
- 
+
     .hint-text {
       font-size:.9rem; color:rgba(255,255,255,0.6);
     }
@@ -185,7 +354,7 @@
       text-decoration:none; transition:border-color .2s, background .2s;
     }
     .btn-outline:hover { border-color:white; background:rgba(255,255,255,.08); }
- 
+
     /* stats */
     .stats-row {
       display:flex; gap:3rem; margin-top:3rem;
@@ -194,7 +363,7 @@
     .stat { text-align:center; }
     .stat-num { font-size:1.8rem; font-weight:800; color:var(--gold); }
     .stat-lbl { font-size:.8rem; color:var(--text-muted); margin-top:.2rem; }
- 
+
     /* ─── SECTIONS COMMON ─────────────────────────────────── */
     section { padding: 5rem 2rem; }
     .container { max-width:1100px; margin:0 auto; }
@@ -208,7 +377,7 @@
     }
     .section-title { font-size:clamp(1.6rem,3vw,2.2rem); font-weight:800; margin-bottom:.8rem; }
     .section-sub   { color:var(--text-muted); font-size:1rem; max-width:560px; line-height:1.7; }
- 
+
     /* ─── CÓMO FUNCIONA ────────────────────────────────────── */
     #como { background: rgba(0,0,0,.2); }
     .como-grid { display:grid; grid-template-columns:1fr 1fr; gap:3rem; align-items:center; margin-top:3rem; }
@@ -236,7 +405,7 @@
     .chat-bubble.user { background:var(--gold); color:#000; margin-left:2rem; border-bottom-right-radius:4px; }
     .chat-bubble.bot  { background:rgba(255,255,255,.1); margin-right:2rem; border-bottom-left-radius:4px; }
     .chat-label { font-size:.75rem; color:var(--text-muted); margin-bottom:.3rem; }
- 
+
     /* ─── TEMAS ─────────────────────────────────────────────── */
     #temas { background: var(--blue-dark); }
     .temas-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:1rem; margin-top:2rem; }
@@ -250,7 +419,7 @@
     .tema-icon { font-size:1.8rem; margin-bottom:.6rem; }
     .tema-card h3 { font-size:.95rem; font-weight:700; margin-bottom:.3rem; }
     .tema-card p  { font-size:.8rem; color:var(--text-muted); line-height:1.5; }
- 
+
     /* ─── EJEMPLOS ──────────────────────────────────────────── */
     #ejemplos { background:rgba(0,0,0,.2); }
     .ejemplos-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1rem; margin-top:2rem; }
@@ -263,7 +432,7 @@
     .ej-card:hover { background:rgba(245,158,11,.08); border-color:rgba(245,158,11,.3); }
     .ej-arrow { color:var(--gold); font-size:1rem; margin-top:.1rem; flex-shrink:0; }
     .ej-card p { font-size:.87rem; line-height:1.55; }
- 
+
     /* ─── PLANES ────────────────────────────────────────────── */
     #planes { background:var(--blue-dark); }
     .planes-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.5rem; margin-top:2rem; }
@@ -297,7 +466,7 @@
     .plan-btn-outline:hover { border-color:white; }
     .plan-btn-gold { background:var(--gold); color:#000; }
     .plan-btn-gold:hover { background:var(--gold-light); }
- 
+
     /* ─── FOOTER ────────────────────────────────────────────── */
     footer {
       background:rgba(0,0,0,.3);
@@ -307,7 +476,7 @@
       color:var(--text-muted); font-size:.85rem;
     }
     footer strong { color:var(--gold); }
- 
+
     /* ─── CHAT WIDGET ────────────────────────────────────────── */
     .chat-widget {
       position:fixed; bottom:24px; right:24px; z-index:200;
@@ -373,7 +542,7 @@
       0%,100% { transform:scale(1); }
       50%      { transform:scale(1.3); }
     }
- 
+
     /* NOTE: Replace .dify-placeholder content with your Dify iframe:
        <iframe src="YOUR_DIFY_URL" width="100%" height="100%" frameborder="0"></iframe>
     */
@@ -381,7 +550,7 @@
       flex:1; display:flex; align-items:center; justify-content:center;
       flex-direction:column; gap:1rem; color:rgba(255,255,255,.5); text-align:center; padding:1rem;
     }
- 
+
     /* ─── RESPONSIVE ─────────────────────────────────────────── */
     @media(max-width:768px){
       .nav-links { display:none; }
@@ -406,7 +575,7 @@
   </style>
 </head>
 <body>
- 
+
 <!-- ═══════════════════════════════════════════
      NAVBAR
 ═══════════════════════════════════════════════ -->
@@ -419,23 +588,52 @@
     <li><a href="#ejemplos">Ejemplos</a></li>
     <li><a href="#planes">Planes</a></li>
   </ul>
-  <a href="#planes" class="nav-cta">Comenzar gratis</a>
+  <!-- Auth buttons (shown when logged out) -->
+  <div id="nav-auth-out" style="display:flex;gap:.6rem;align-items:center;">
+    <button onclick="openModal('login')" style="background:none;border:1px solid rgba(255,255,255,.3);color:white;padding:.4rem .9rem;border-radius:20px;cursor:pointer;font-size:.85rem;">Iniciar sesión</button>
+    <button onclick="openModal('register')" class="nav-cta">Comenzar gratis</button>
+  </div>
+  <!-- User menu (shown when logged in) -->
+  <div id="nav-auth-in" style="display:none;">
+    <div class="user-menu-wrap">
+      <button class="user-avatar-btn" id="user-avatar-btn" onclick="toggleUserMenu()">J</button>
+      <div class="user-dropdown" id="user-dropdown">
+        <div class="ud-header">
+          <div class="ud-name" id="ud-name">Usuario</div>
+          <span class="ud-plan plan-libre" id="ud-plan-badge">Plan Libre</span>
+        </div>
+        <div class="ud-usage">
+          <div class="ud-usage-label">Consultas usadas este mes</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.2rem;">
+            <span style="font-weight:700;font-size:.88rem;" id="ud-usage-text">0 / 10</span>
+            <span style="font-size:.72rem;color:var(--text-muted);" id="ud-reset-text"></span>
+          </div>
+          <div class="ud-usage-bar"><div class="ud-usage-fill" id="ud-usage-fill" style="width:0%"></div></div>
+        </div>
+        <div class="ud-divider"></div>
+        <div class="ud-item" onclick="openUpgradeModal();toggleUserMenu()">⚡ Mejorar plan</div>
+        <div class="ud-item" onclick="toggleUserMenu();document.getElementById('planes').scrollIntoView({behavior:'smooth'})">💳 Ver planes</div>
+        <div class="ud-divider"></div>
+        <div class="ud-item danger" onclick="signOut()">↩ Cerrar sesión</div>
+      </div>
+    </div>
+  </div>
   <button class="hamburger" onclick="document.getElementById('nav-links').classList.toggle('open')" aria-label="Menú">
     <span></span><span></span><span></span>
   </button>
 </nav>
- 
- 
+
+
 <!-- ═══════════════════════════════════════════
      HERO
 ═══════════════════════════════════════════════ -->
 <section id="inicio">
   <p class="hero-title">Asistente Tributario</p>
- 
+
   <div class="orbit-area">
     <!-- gold ring -->
     <div class="orbit-ring"></div>
- 
+
     <!-- avatar -->
     <div class="avatar-circle" onclick="openChat()" title="Iniciar consulta">
       <!-- TaxIA mascot — humanized, DGII-inspired -->
@@ -455,24 +653,24 @@
             <stop offset="100%" stop-color="#1d4ed8"/>
           </radialGradient>
         </defs>
- 
+
         <!-- ARMS -->
         <ellipse cx="19" cy="111" rx="13" ry="8" fill="#1e40af" transform="rotate(-25 19 111)"/>
         <ellipse cx="111" cy="111" rx="13" ry="8" fill="#1e40af" transform="rotate(25 111 111)"/>
         <!-- Hands (white gloves, like DGII) -->
         <circle cx="11" cy="120" r="7" fill="#dbeafe"/>
         <circle cx="119" cy="120" r="7" fill="#dbeafe"/>
- 
+
         <!-- TORSO -->
         <rect x="38" y="104" width="54" height="28" rx="10" fill="#1e3a8a"/>
         <!-- Gold tie -->
         <polygon points="60,104 70,104 66,117 65,120 64,117" fill="#F59E0B"/>
- 
+
         <!-- HEAD outer ring (blue, like clock rim reference) -->
         <circle cx="65" cy="68" r="41" fill="#1d4ed8"/>
         <!-- HEAD face interior -->
         <circle cx="65" cy="68" r="36" fill="url(#faceG2)"/>
- 
+
         <!-- HAT crown -->
         <rect x="27" y="3" width="76" height="29" rx="10" fill="url(#hatG2)"/>
         <!-- HAT brim -->
@@ -484,11 +682,11 @@
               font-family="'Arial Black',Arial,sans-serif"
               font-size="15" font-weight="900"
               fill="#F59E0B" text-anchor="middle">TaxIA</text>
- 
+
         <!-- EYEBROWS (arched, expressive) -->
         <path d="M41 55 Q51 48 61 53" stroke="#1e3a8a" stroke-width="3" stroke-linecap="round" fill="none"/>
         <path d="M69 53 Q79 48 89 55" stroke="#1e3a8a" stroke-width="3" stroke-linecap="round" fill="none"/>
- 
+
         <!-- EYE whites -->
         <ellipse cx="50" cy="63" rx="11" ry="12" fill="white"/>
         <ellipse cx="80" cy="63" rx="11" ry="12" fill="white"/>
@@ -501,23 +699,23 @@
         <!-- Eye shine -->
         <circle cx="54" cy="60" r="2.5" fill="white" opacity="0.9"/>
         <circle cx="84" cy="60" r="2.5" fill="white" opacity="0.9"/>
- 
+
         <!-- NOSE -->
         <ellipse cx="65" cy="74" rx="3.5" ry="3" fill="#93c5fd"/>
- 
+
         <!-- MUSTACHE (gold — two curled lobes, like DGII's clock hands) -->
         <path d="M47 80 C51 76 58 76 63 80 C58 84 51 84 47 80 Z" fill="#F59E0B"/>
         <path d="M67 80 C72 76 79 76 83 80 C79 84 72 84 67 80 Z" fill="#F59E0B"/>
         <ellipse cx="65" cy="80" rx="2.5" ry="2" fill="#F59E0B"/>
- 
+
         <!-- MOUTH (open, happy — teeth showing, like DGII mascot) -->
         <path d="M51 88 Q65 103 79 88" fill="#1e3a8a"/>
         <path d="M51 88 Q65 97 79 88"  fill="white"/>
- 
+
         <!-- CHEEKS blush -->
         <circle cx="36" cy="72" r="9" fill="#fca5a5" opacity="0.25"/>
         <circle cx="94" cy="72" r="9" fill="#fca5a5" opacity="0.25"/>
- 
+
         <!-- CLOCK TICK MARKS on blue rim (subtle nod to DGII clock theme) -->
         <rect x="63" y="29" width="4" height="5" rx="1" fill="rgba(255,255,255,0.3)"/>
         <rect x="63" y="102" width="4" height="5" rx="1" fill="rgba(255,255,255,0.3)"/>
@@ -525,7 +723,7 @@
         <rect x="99" y="66" width="5" height="4" rx="1" fill="rgba(255,255,255,0.3)"/>
       </svg>
     </div>
- 
+
     <!-- chip 1: ITBIS & ISR -->
     <div class="chip chip-1">
       <div class="chip-icon" style="background:rgba(59,130,246,.2);">
@@ -538,7 +736,7 @@
       </div>
       ITBIS &amp; ISR
     </div>
- 
+
     <!-- chip 2: Calendario DGII -->
     <div class="chip chip-2">
       <div class="chip-icon" style="background:rgba(245,158,11,.2);">
@@ -555,7 +753,7 @@
       </div>
       Calendario DGII
     </div>
- 
+
     <!-- chip 3: Facturación e-CF -->
     <div class="chip chip-3">
       <div class="chip-icon" style="background:rgba(34,197,94,.2);">
@@ -570,7 +768,7 @@
       Facturación e-CF
     </div>
   </div><!-- .orbit-area -->
- 
+
   <!-- CTA buttons -->
   <div class="hero-bottom">
     <button class="btn-primary" onclick="openChat()">
@@ -582,7 +780,7 @@
     <p class="hint-text">👆 Haz clic en el avatar para iniciar una consulta</p>
     <a href="#planes" class="btn-outline">Iniciar consulta gratuita ›</a>
   </div>
- 
+
   <!-- Stats -->
   <div class="stats-row">
     <div class="stat">
@@ -599,8 +797,8 @@
     </div>
   </div>
 </section>
- 
- 
+
+
 <!-- ═══════════════════════════════════════════
      CÓMO FUNCIONA
 ═══════════════════════════════════════════════ -->
@@ -609,7 +807,7 @@
     <div class="section-tag">¿Cómo funciona?</div>
     <h2 class="section-title">Tu experto tributario potenciado por IA</h2>
     <p class="section-sub">TaxIA utiliza tecnología RAG (Retrieval-Augmented Generation) para buscar en toda la normativa tributaria dominicana y darte respuestas precisas y fundamentadas.</p>
- 
+
     <div class="como-grid">
       <div class="steps">
         <div class="step">
@@ -641,7 +839,7 @@
           </div>
         </div>
       </div>
- 
+
       <div class="demo-chat">
         <div class="chat-label">Ejemplo de consulta</div>
         <div class="chat-bubble user">¿Cuál es la tasa del ITBIS para servicios médicos?</div>
@@ -655,8 +853,8 @@
     </div>
   </div>
 </section>
- 
- 
+
+
 <!-- ═══════════════════════════════════════════
      TEMÁTICAS
 ═══════════════════════════════════════════════ -->
@@ -681,8 +879,8 @@
     </div>
   </div>
 </section>
- 
- 
+
+
 <!-- ═══════════════════════════════════════════
      EJEMPLOS
 ═══════════════════════════════════════════════ -->
@@ -731,8 +929,8 @@
     </div>
   </div>
 </section>
- 
- 
+
+
 <!-- ═══════════════════════════════════════════
      PLANES
 ═══════════════════════════════════════════════ -->
@@ -741,7 +939,7 @@
     <div class="section-tag">Precios</div>
     <h2 class="section-title">Planes para cada necesidad</h2>
     <p class="section-sub">Empieza gratis y escala cuando lo necesites. Sin tarjeta de crédito para el plan libre.</p>
- 
+
     <div class="planes-grid">
       <!-- Plan Libre -->
       <div class="plan-card">
@@ -754,9 +952,9 @@
           <li>Respuestas con fuentes citadas</li>
           <li>Chat en tiempo real</li>
         </ul>
-        <a href="#" class="plan-btn plan-btn-outline" onclick="openChat()">Comenzar gratis</a>
+        <button class="plan-btn plan-btn-outline" onclick="handleFreePlan()">Comenzar gratis</button>
       </div>
- 
+
       <!-- Plan Pro (featured) -->
       <div class="plan-card featured">
         <div class="plan-badge">Más popular</div>
@@ -770,9 +968,12 @@
           <li>Acceso a circulares DGII</li>
           <li>Todo lo del plan Libre</li>
         </ul>
-        <a href="#" class="plan-btn plan-btn-gold">Suscribirse ahora</a>
+        <!-- PayPal button container for Pro -->
+        <div class="paypal-container" id="paypal-pro">
+          <div class="pay-loading">⏳ Cargando opciones de pago…</div>
+        </div>
       </div>
- 
+
       <!-- Plan Pro Max -->
       <div class="plan-card">
         <div class="plan-name">Pro Max</div>
@@ -786,13 +987,16 @@
           <li>Diagnóstico de carga fiscal</li>
           <li>Todo lo del plan Pro</li>
         </ul>
-        <a href="#" class="plan-btn plan-btn-outline">Contactar ventas</a>
+        <!-- PayPal button container for Pro Max -->
+        <div class="paypal-container" id="paypal-promax">
+          <div class="pay-loading">⏳ Cargando opciones de pago…</div>
+        </div>
       </div>
     </div>
   </div>
 </section>
- 
- 
+
+
 <!-- ═══════════════════════════════════════════
      FOOTER
 ═══════════════════════════════════════════════ -->
@@ -800,8 +1004,8 @@
   <p>© 2025 <strong>TaxIA</strong> — Asistente Tributario para República Dominicana</p>
   <p style="margin-top:.5rem; font-size:.8rem;">No constituye asesoría legal. Consulte siempre con un contador certificado para decisiones fiscales específicas.</p>
 </footer>
- 
- 
+
+
 <!-- ═══════════════════════════════════════════
      CHAT WIDGET
 ═══════════════════════════════════════════════ -->
@@ -859,7 +1063,15 @@
       </div>
       <button class="chat-panel-close" onclick="closeChat()">✕</button>
     </div>
- 
+
+    <!-- Usage bar -->
+    <div class="chat-usage-bar" id="chat-usage-bar">
+      <span class="cub-label">Consultas:</span>
+      <span class="cub-count" id="cub-count">10 restantes</span>
+      <div class="cub-bar"><div class="cub-fill ok" id="cub-fill" style="width:100%"></div></div>
+      <span class="cub-upgrade" onclick="openUpgradeModal()">Mejorar</span>
+    </div>
+
     <!-- DIFY PLACEHOLDER — Reemplaza con tu iframe de Dify -->
     <div class="dify-placeholder" id="dify-area">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
@@ -872,14 +1084,14 @@
         <iframe src="TU_URL_DE_DIFY" width="100%" height="100%" frameborder="0" style="border:none;"></iframe>
       -->
     </div>
- 
+
     <!-- chat input demo -->
     <div class="chat-panel-footer">
       <input type="text" id="chat-input" placeholder="Escribe tu consulta tributaria…" onkeydown="if(event.key==='Enter')sendChat()"/>
       <button onclick="sendChat()">↑</button>
     </div>
   </div>
- 
+
   <!-- FAB button -->
   <div class="chat-fab" onclick="toggleChat()" title="Consultar TaxIA">
     <div class="fab-pulse"></div>
@@ -926,37 +1138,478 @@
     </svg>
   </div>
 </div>
- 
- 
+
+
+<!-- ═══════════════════════════════════════════
+     AUTH MODALS
+═══════════════════════════════════════════════ -->
+
+<!-- Login Modal -->
+<div class="modal-overlay" id="modal-login">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('login')">✕</button>
+    <h2>Iniciar sesión</h2>
+    <p class="modal-sub">Accede a tu cuenta TaxIA</p>
+    <div class="auth-error" id="login-error"></div>
+    <div class="auth-success" id="login-success"></div>
+    <div class="form-group">
+      <label>Correo electrónico</label>
+      <input type="email" id="login-email" placeholder="tucorreo@ejemplo.com"/>
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="btn-auth" id="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="modal-divider">o</div>
+    <button class="btn-google" onclick="doGoogleAuth()">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Continuar con Google
+    </button>
+    <div class="modal-switch">¿No tienes cuenta? <a onclick="switchModal('login','register')">Regístrate gratis</a></div>
+  </div>
+</div>
+
+<!-- Register Modal -->
+<div class="modal-overlay" id="modal-register">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('register')">✕</button>
+    <h2>Crear cuenta</h2>
+    <p class="modal-sub">Empieza con 10 consultas gratuitas al mes</p>
+    <div class="auth-error" id="register-error"></div>
+    <div class="auth-success" id="register-success"></div>
+    <div class="form-group">
+      <label>Nombre completo</label>
+      <input type="text" id="register-name" placeholder="Juan Pérez"/>
+    </div>
+    <div class="form-group">
+      <label>Correo electrónico</label>
+      <input type="email" id="register-email" placeholder="tucorreo@ejemplo.com"/>
+    </div>
+    <div class="form-group">
+      <label>Contraseña (mínimo 8 caracteres)</label>
+      <input type="password" id="register-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doRegister()"/>
+    </div>
+    <button class="btn-auth" id="register-btn" onclick="doRegister()">Crear cuenta gratis</button>
+    <div class="modal-divider">o</div>
+    <button class="btn-google" onclick="doGoogleAuth()">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Continuar con Google
+    </button>
+    <div class="modal-switch">¿Ya tienes cuenta? <a onclick="switchModal('register','login')">Inicia sesión</a></div>
+  </div>
+</div>
+
+<!-- Upgrade Modal -->
+<div class="modal-overlay" id="modal-upgrade">
+  <div class="modal upgrade-modal" style="max-width:460px;">
+    <button class="modal-close" onclick="closeModal('upgrade')">✕</button>
+    <div class="modal-title-icon" id="upgrade-icon">⚡</div>
+    <h2 id="upgrade-title">¡Mejora tu plan!</h2>
+    <p class="modal-sub" id="upgrade-sub">Accede a más consultas y funciones exclusivas</p>
+    <div class="upgrade-options">
+      <div class="upgrade-option featured" onclick="handleUpgradeSelect('pro')">
+        <h4>Plan Pro — Más popular</h4>
+        <p>100 consultas · Calendario DGII · Alertas de vencimientos · Circulares DGII</p>
+        <div class="up-price">RD$1,500 / mes</div>
+      </div>
+      <div class="upgrade-option" onclick="handleUpgradeSelect('pro_max')">
+        <h4>Plan Pro Max</h4>
+        <p>1,000 consultas · Declaraciones asistidas · Memos tributarios · Diagnóstico fiscal</p>
+        <div class="up-price">RD$5,500 / mes</div>
+      </div>
+    </div>
+    <p style="font-size:.75rem;color:var(--text-muted);text-align:center;margin-top:1rem;">
+      Pago seguro vía PayPal · Cancela cuando quieras
+    </p>
+  </div>
+</div>
+
+<!-- Payment Success Modal -->
+<div class="modal-overlay" id="modal-pay-success">
+  <div class="modal" style="text-align:center;max-width:380px;">
+    <div style="font-size:3rem;margin-bottom:1rem;">🎉</div>
+    <h2 style="color:#22c55e;">¡Suscripción activada!</h2>
+    <p class="modal-sub" id="pay-success-msg">Tu plan ha sido activado exitosamente.</p>
+    <button class="btn-auth" onclick="closeModal('pay-success');openChat()">Empezar a consultar →</button>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
 <script>
-  /* ── chat toggle ── */
-  function openChat()    { document.getElementById('chat-panel').classList.add('open'); }
-  function closeChat()   { document.getElementById('chat-panel').classList.remove('open'); }
-  function toggleChat()  { document.getElementById('chat-panel').classList.toggle('open'); }
- 
-  /* ── populate question from ejemplos ── */
-  function askQuestion(q) {
-    openChat();
-    const input = document.getElementById('chat-input');
-    if (input) { input.value = q; input.focus(); }
-  }
- 
-  /* ── dummy send (replace with Dify logic) ── */
-  function sendChat() {
-    const input = document.getElementById('chat-input');
-    if (!input || !input.value.trim()) return;
-    console.log('[TaxIA] query:', input.value);
-    input.value = '';
-  }
- 
-  /* ── smooth scroll for nav ── */
-  document.querySelectorAll('a[href^="#"]').forEach(a => {
-    a.addEventListener('click', e => {
-      const t = document.querySelector(a.getAttribute('href'));
-      if (t) { e.preventDefault(); t.scrollIntoView({ behavior:'smooth' }); }
+/* ═══════════════════════════════════════════════════════════
+   CONFIGURACIÓN — REEMPLAZA ESTOS VALORES
+═══════════════════════════════════════════════════════════ */
+const SUPABASE_URL  = 'https://TU_PROYECTO.supabase.co';          // ← reemplaza
+const SUPABASE_ANON = 'TU_SUPABASE_ANON_KEY';                     // ← reemplaza
+const PAYPAL_PLAN_PRO     = 'P-XXXXXXXXXXXXXXXXXXXXXXXX';          // ← ID plan PayPal Pro
+const PAYPAL_PLAN_PROMAX  = 'P-YYYYYYYYYYYYYYYYYYYYYYYY';          // ← ID plan PayPal Pro Max
+
+/* ═══════════════════════════════════════════════════════════
+   PLAN LIMITS
+═══════════════════════════════════════════════════════════ */
+const PLAN_LIMITS = { libre: 10, pro: 100, pro_max: 1000 };
+const PLAN_LABELS = { libre: 'Plan Libre', pro: 'Plan Pro', pro_max: 'Plan Pro Max' };
+
+/* ═══════════════════════════════════════════════════════════
+   SUPABASE INIT
+═══════════════════════════════════════════════════════════ */
+let sb = null;
+let currentUser = null;
+let userProfile = null;
+
+function initSupabase() {
+  try {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    sb.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        currentUser = session.user;
+        await loadProfile();
+        showLoggedIn();
+      } else {
+        currentUser = null;
+        userProfile = null;
+        showLoggedOut();
+      }
     });
+  } catch(e) {
+    console.warn('[TaxIA] Supabase no inicializado. Configura SUPABASE_URL y SUPABASE_ANON_KEY.');
+  }
+}
+
+async function loadProfile() {
+  if (!sb || !currentUser) return;
+  const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  if (data) {
+    userProfile = data;
+    updateUIWithProfile();
+  }
+}
+
+function updateUIWithProfile() {
+  if (!userProfile) return;
+  const plan = userProfile.plan || 'libre';
+  const used = userProfile.queries_used || 0;
+  const limit = userProfile.queries_limit || PLAN_LIMITS[plan] || 10;
+  const remaining = Math.max(0, limit - used);
+  const pct = Math.min(100, (used / limit) * 100);
+
+  // Navbar user menu
+  const email = currentUser?.email || '';
+  const initial = email[0]?.toUpperCase() || 'U';
+  document.getElementById('user-avatar-btn').textContent = initial;
+  document.getElementById('ud-name').textContent = email;
+  document.getElementById('ud-plan-badge').textContent = PLAN_LABELS[plan] || plan;
+  document.getElementById('ud-plan-badge').className = 'ud-plan plan-' + plan;
+  document.getElementById('ud-usage-text').textContent = `${used} / ${limit}`;
+  document.getElementById('ud-usage-fill').style.width = pct + '%';
+
+  // Chat usage bar
+  document.getElementById('cub-count').textContent = remaining + ' restantes';
+  const fill = document.getElementById('cub-fill');
+  fill.style.width = (100 - pct) + '%';
+  fill.className = 'cub-fill ' + (remaining === 0 ? 'empty' : remaining <= 3 ? 'low' : 'ok');
+
+  if (remaining === 0) blockChat();
+
+  // Reset date
+  if (userProfile.reset_date) {
+    const d = new Date(userProfile.reset_date);
+    document.getElementById('ud-reset-text').textContent =
+      'Reinicia ' + d.toLocaleDateString('es-DO', { month: 'short', day: 'numeric' });
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AUTH FUNCTIONS
+═══════════════════════════════════════════════════════════ */
+function showLoggedIn() {
+  document.getElementById('nav-auth-out').style.display = 'none';
+  document.getElementById('nav-auth-in').style.display = 'block';
+}
+function showLoggedOut() {
+  document.getElementById('nav-auth-out').style.display = 'flex';
+  document.getElementById('nav-auth-in').style.display = 'none';
+}
+
+async function doLogin() {
+  if (!sb) return demoMode('login');
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  if (!email || !pass) return showAuthMsg('login', 'error', 'Completa todos los campos.');
+  setAuthLoading('login-btn', true);
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  setAuthLoading('login-btn', false);
+  if (error) return showAuthMsg('login', 'error', error.message);
+  closeModal('login');
+  showToast('✅ ¡Bienvenido de vuelta!');
+}
+
+async function doRegister() {
+  if (!sb) return demoMode('register');
+  const name  = document.getElementById('register-name').value.trim();
+  const email = document.getElementById('register-email').value.trim();
+  const pass  = document.getElementById('register-pass').value;
+  if (!name || !email || !pass) return showAuthMsg('register', 'error', 'Completa todos los campos.');
+  if (pass.length < 8) return showAuthMsg('register', 'error', 'La contraseña debe tener al menos 8 caracteres.');
+  setAuthLoading('register-btn', true);
+  const { error } = await sb.auth.signUp({ email, password: pass, options: { data: { full_name: name } } });
+  setAuthLoading('register-btn', false);
+  if (error) return showAuthMsg('register', 'error', error.message);
+  showAuthMsg('register', 'success', '¡Cuenta creada! Revisa tu correo para confirmarla.');
+}
+
+async function doGoogleAuth() {
+  if (!sb) return demoMode();
+  await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin }
   });
+}
+
+async function signOut() {
+  if (sb) await sb.auth.signOut();
+  toggleUserMenu();
+  showToast('👋 Sesión cerrada');
+}
+
+function demoMode(modal) {
+  const msg = '⚙️ Conecta Supabase para activar el auth. Ver instrucciones en el código.';
+  if (modal) showAuthMsg(modal, 'error', msg);
+  else showToast(msg);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MODAL HELPERS
+═══════════════════════════════════════════════════════════ */
+function openModal(id) {
+  document.getElementById('modal-' + id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById('modal-' + id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+function switchModal(from, to) { closeModal(from); openModal(to); }
+function openUpgradeModal(reason) {
+  const icon = document.getElementById('upgrade-icon');
+  const title = document.getElementById('upgrade-title');
+  const sub = document.getElementById('upgrade-sub');
+  if (reason === 'limit') {
+    icon.textContent = '🚫';
+    title.textContent = '¡Agotaste tus consultas!';
+    const plan = userProfile?.plan || 'libre';
+    const limit = PLAN_LIMITS[plan];
+    sub.textContent = `Usaste las ${limit} consultas del ${PLAN_LABELS[plan]}. Actualiza para seguir consultando.`;
+  } else {
+    icon.textContent = '⚡';
+    title.textContent = '¡Mejora tu plan!';
+    sub.textContent = 'Accede a más consultas y funciones exclusivas';
+  }
+  openModal('upgrade');
+}
+function showAuthMsg(form, type, msg) {
+  const el = document.getElementById(form + '-' + type);
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 5000);
+}
+function setAuthLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.textContent = loading ? 'Cargando…' : (btnId === 'login-btn' ? 'Entrar' : 'Crear cuenta gratis');
+}
+function toggleUserMenu() {
+  document.getElementById('user-dropdown').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  const menu = document.getElementById('user-dropdown');
+  const btn  = document.getElementById('user-avatar-btn');
+  if (menu && !menu.contains(e.target) && e.target !== btn) {
+    menu.classList.remove('open');
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════════════ */
+function showToast(msg, duration = 3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PLAN SELECTION
+═══════════════════════════════════════════════════════════ */
+function handleFreePlan() {
+  if (!currentUser) { openModal('register'); return; }
+  closeModal('upgrade');
+  showToast('✅ Estás en el Plan Libre — 10 consultas/mes');
+  openChat();
+}
+
+function handleUpgradeSelect(plan) {
+  closeModal('upgrade');
+  if (!currentUser) { openModal('register'); return; }
+  document.getElementById('planes').scrollIntoView({ behavior: 'smooth' });
+  showToast('Selecciona tu plan y completa el pago con PayPal');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PAYPAL BUTTONS
+═══════════════════════════════════════════════════════════ */
+function renderPayPalButtons() {
+  if (!window.paypal) {
+    // SDK no cargado (falta client-id) — mostrar botón de placeholder
+    ['paypal-pro', 'paypal-promax'].forEach(id => {
+      const c = document.getElementById(id);
+      const plan = id === 'paypal-pro' ? 'pro' : 'pro_max';
+      if (c) c.innerHTML = `<button class="plan-btn plan-btn-gold" onclick="handlePaypalClick('${plan}')">
+        Suscribirse con PayPal</button>`;
+    });
+    return;
+  }
+
+  // Plan Pro
+  paypal.Buttons({
+    style: { shape:'pill', color:'gold', layout:'vertical', label:'subscribe' },
+    createSubscription: (data, actions) => actions.subscription.create({
+      plan_id: PAYPAL_PLAN_PRO
+    }),
+    onApprove: (data) => handlePaymentSuccess('pro', data.subscriptionID),
+    onError: (err) => showToast('❌ Error en el pago. Intenta de nuevo.')
+  }).render('#paypal-pro');
+
+  // Plan Pro Max
+  paypal.Buttons({
+    style: { shape:'pill', color:'gold', layout:'vertical', label:'subscribe' },
+    createSubscription: (data, actions) => actions.subscription.create({
+      plan_id: PAYPAL_PLAN_PROMAX
+    }),
+    onApprove: (data) => handlePaymentSuccess('pro_max', data.subscriptionID),
+    onError: (err) => showToast('❌ Error en el pago. Intenta de nuevo.')
+  }).render('#paypal-promax');
+}
+
+function handlePaypalClick(plan) {
+  if (!currentUser) { openModal('register'); return; }
+  showToast('⚙️ Configura tu PAYPAL_CLIENT_ID para activar pagos reales.');
+}
+
+async function handlePaymentSuccess(plan, subscriptionId) {
+  if (!sb || !currentUser) return;
+  const limit = PLAN_LIMITS[plan];
+  await sb.from('profiles').update({
+    plan,
+    queries_limit: limit,
+    subscription_id: subscriptionId,
+    subscription_status: 'active',
+    reset_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+  }).eq('id', currentUser.id);
+
+  await loadProfile();
+  document.getElementById('pay-success-msg').textContent =
+    `${PLAN_LABELS[plan]} activado. Ahora tienes ${limit} consultas mensuales.`;
+  openModal('pay-success');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CHAT LIMITS
+═══════════════════════════════════════════════════════════ */
+function blockChat() {
+  const area = document.getElementById('dify-area');
+  const input = document.getElementById('chat-input');
+  if (input) {
+    input.disabled = true;
+    input.placeholder = 'Consultas agotadas — mejora tu plan para continuar';
+  }
+  if (area) {
+    area.innerHTML = `
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" stroke="#ef4444" stroke-width="1.5"/>
+        <line x1="8" y1="8" x2="16" y2="16" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
+        <line x1="16" y1="8" x2="8" y2="16" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <p style="font-size:.9rem;color:#fca5a5;font-weight:700;">¡Consultas agotadas!</p>
+      <p style="font-size:.82rem;">Actualizaste las ${userProfile?.queries_limit || 10} consultas de tu ${PLAN_LABELS[userProfile?.plan || 'libre']}.</p>
+      <button class="plan-btn plan-btn-gold" style="margin-top:1rem;padding:.7rem 1.5rem;border-radius:10px;font-size:.9rem;"
+        onclick="closeChat();openUpgradeModal('limit')">⚡ Mejorar plan ahora</button>
+    `;
+  }
+}
+
+async function incrementQueryCount() {
+  if (!sb || !currentUser || !userProfile) return true; // allow in demo mode
+  const used = (userProfile.queries_used || 0) + 1;
+  const limit = userProfile.queries_limit || 10;
+  if (used > limit) { openUpgradeModal('limit'); return false; }
+  await sb.from('profiles').update({ queries_used: used }).eq('id', currentUser.id);
+  userProfile.queries_used = used;
+  updateUIWithProfile();
+  return true;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CHAT WIDGET
+═══════════════════════════════════════════════════════════ */
+function openChat() {
+  if (!currentUser) { openModal('register'); return; }
+  document.getElementById('chat-panel').classList.add('open');
+}
+function closeChat()  { document.getElementById('chat-panel').classList.remove('open'); }
+function toggleChat() {
+  if (!currentUser) { openModal('register'); return; }
+  document.getElementById('chat-panel').classList.toggle('open');
+}
+
+function askQuestion(q) {
+  openChat();
+  const input = document.getElementById('chat-input');
+  if (input && !input.disabled) { input.value = q; input.focus(); }
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  if (!input || !input.value.trim() || input.disabled) return;
+  const allowed = await incrementQueryCount();
+  if (!allowed) return;
+  const query = input.value.trim();
+  input.value = '';
+  // Aquí va la llamada a Dify o tu iframe captura el mensaje
+  console.log('[TaxIA] query:', query);
+  showToast('💬 Consulta enviada');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SMOOTH SCROLL
+═══════════════════════════════════════════════════════════ */
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const t = document.querySelector(a.getAttribute('href'));
+    if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth' }); }
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  initSupabase();
+  // PayPal SDK: render cuando esté listo
+  if (window.paypal) {
+    renderPayPalButtons();
+  } else {
+    const ps = document.getElementById('paypal-sdk');
+    if (ps) ps.onload = renderPayPalButtons;
+    else renderPayPalButtons(); // fallback placeholder buttons
+  }
+});
 </script>
- 
+
 </body>
 </html>
