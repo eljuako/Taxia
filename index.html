@@ -1072,23 +1072,15 @@
       <span class="cub-upgrade" onclick="currentUser ? openUpgradeModal() : openModal('register')">Mejorar</span>
     </div>
 
-    <!-- DIFY PLACEHOLDER — Reemplaza con tu iframe de Dify -->
-    <div class="dify-placeholder" id="dify-area">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="#F59E0B" stroke-width="1.5" stroke-linejoin="round"/>
-      </svg>
-      <p style="font-size:.85rem;">Chat conectado a tu base de conocimiento tributario.<br>
-      <span style="font-size:.75rem;color:rgba(255,255,255,.4);">Reemplaza este bloque con tu iframe de Dify.</span></p>
-      <!--
-        INSTRUCCIONES: Sustituye el bloque .dify-placeholder por:
-        <iframe src="TU_URL_DE_DIFY" width="100%" height="100%" frameborder="0" style="border:none;"></iframe>
-      -->
-    </div>
-
-    <!-- chat input demo -->
-    <div class="chat-panel-footer">
-      <input type="text" id="chat-input" placeholder="Escribe tu consulta tributaria…" onkeydown="if(event.key==='Enter')sendChat()"/>
-      <button onclick="sendChat()">↑</button>
+    <!-- Dify chatbot iframe -->
+    <div id="dify-area" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <iframe
+        id="dify-iframe"
+        src="https://udify.app/chatbot/BDvOq3yHNlSSon5R"
+        style="width:100%;flex:1;border:none;min-height:0;"
+        frameborder="0"
+        allow="microphone">
+      </iframe>
     </div>
   </div>
 
@@ -1519,26 +1511,80 @@ async function handlePaymentSuccess(plan, subscriptionId) {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   GUEST MESSAGE (1 gratis sin cuenta)
+   GUEST SESSION (1 sesión gratis sin cuenta)
 ═══════════════════════════════════════════════════════════ */
-const GUEST_LIMIT = 1;
+const GUEST_FREE_SECS = 120; // 2 minutos de chat gratis
+let guestTimer = null;
+let guestSecsLeft = GUEST_FREE_SECS;
 
-function getGuestUsed() {
-  return parseInt(localStorage.getItem('taxia_guest_msgs') || '0');
+function guestSessionUsed() {
+  return localStorage.getItem('taxia_guest_used') === '1';
 }
-function setGuestUsed(n) {
-  localStorage.setItem('taxia_guest_msgs', String(n));
+function markGuestSessionUsed() {
+  localStorage.setItem('taxia_guest_used', '1');
 }
 
-function updateGuestUsageBar() {
-  const used = getGuestUsed();
-  const remaining = Math.max(0, GUEST_LIMIT - used);
-  const pct = (used / GUEST_LIMIT) * 100;
-  document.getElementById('cub-count').textContent =
-    remaining > 0 ? `${remaining} mensaje de prueba` : 'Prueba agotada';
+function updateGuestUsageBar(secsLeft) {
+  const used = guestSessionUsed();
+  const countEl = document.getElementById('cub-count');
   const fill = document.getElementById('cub-fill');
-  fill.style.width = (100 - pct) + '%';
-  fill.className = 'cub-fill ' + (remaining === 0 ? 'empty' : 'ok');
+  if (used) {
+    countEl.textContent = 'Sesión gratis usada';
+    fill.style.width = '0%';
+    fill.className = 'cub-fill empty';
+  } else if (secsLeft !== undefined) {
+    const mins = Math.floor(secsLeft / 60);
+    const secs = secsLeft % 60;
+    const pct  = (secsLeft / GUEST_FREE_SECS) * 100;
+    countEl.textContent = `Prueba: ${mins}:${String(secs).padStart(2,'0')} restante`;
+    fill.style.width = pct + '%';
+    fill.className = 'cub-fill ' + (pct > 40 ? 'ok' : pct > 15 ? 'low' : 'empty');
+  } else {
+    countEl.textContent = '1 sesión de prueba gratis';
+    fill.style.width = '100%';
+    fill.className = 'cub-fill ok';
+  }
+}
+
+function startGuestTimer() {
+  if (guestTimer) return; // ya corriendo
+  markGuestSessionUsed();
+  guestSecsLeft = GUEST_FREE_SECS;
+  updateGuestUsageBar(guestSecsLeft);
+  guestTimer = setInterval(() => {
+    guestSecsLeft--;
+    updateGuestUsageBar(guestSecsLeft);
+    if (guestSecsLeft <= 0) {
+      clearInterval(guestTimer);
+      guestTimer = null;
+      showGuestExpired();
+    }
+  }, 1000);
+}
+
+function showGuestExpired() {
+  const area = document.getElementById('dify-area');
+  if (area) {
+    area.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                  flex:1;padding:1.5rem;text-align:center;gap:.8rem;">
+        <div style="font-size:2.5rem;">⏰</div>
+        <p style="font-size:.95rem;font-weight:700;color:var(--gold);">¡Tu prueba gratuita terminó!</p>
+        <p style="font-size:.83rem;color:var(--text-muted);">
+          Crea tu cuenta gratis y obtén <strong style="color:white;">10 consultas</strong> al mes sin costo.<br>
+          O suscríbete a Pro para consultas ilimitadas.
+        </p>
+        <button class="btn-primary" style="font-size:.88rem;padding:.75rem 1.5rem;margin-top:.5rem;"
+          onclick="closeChat();openModal('register')">
+          Crear cuenta gratis →
+        </button>
+        <span style="font-size:.78rem;color:var(--text-muted);">
+          ¿Ya tienes cuenta?
+          <span style="color:var(--gold);cursor:pointer;" onclick="closeChat();openModal('login')">Inicia sesión</span>
+        </span>
+      </div>
+    `;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1593,24 +1639,8 @@ function blockChatLimit() {
 }
 
 async function incrementQueryCount() {
-  // Usuario no registrado — modo guest
-  if (!currentUser) {
-    const used = getGuestUsed();
-    if (used >= GUEST_LIMIT) {
-      blockChatGuest();
-      return false;
-    }
-    setGuestUsed(used + 1);
-    updateGuestUsageBar();
-    // Después de enviar el mensaje, bloquear para el próximo intento
-    if (used + 1 >= GUEST_LIMIT) {
-      setTimeout(() => blockChatGuest(), 1500); // espera la respuesta antes de bloquear
-    }
-    return true;
-  }
-
-  // Usuario registrado — verificar plan
-  if (!sb || !userProfile) return true;
+  // Solo aplica para usuarios registrados (el guest usa el timer)
+  if (!currentUser || !sb || !userProfile) return true;
   const used = (userProfile.queries_used || 0) + 1;
   const limit = userProfile.queries_limit || 10;
   if (used > limit) { blockChatLimit(); return false; }
@@ -1625,38 +1655,32 @@ async function incrementQueryCount() {
    CHAT WIDGET
 ═══════════════════════════════════════════════════════════ */
 function openChat() {
-  // Cualquiera puede abrir el chat — guest tiene 1 mensaje gratis
+  if (!currentUser) {
+    // Guest: si ya usó su sesión, mostrar registro
+    if (guestSessionUsed() && !guestTimer) {
+      openModal('register'); return;
+    }
+  }
   document.getElementById('chat-panel').classList.add('open');
-  if (!currentUser) updateGuestUsageBar();
+  if (!currentUser) {
+    updateGuestUsageBar(guestTimer ? guestSecsLeft : undefined);
+    if (!guestSessionUsed()) {
+      // Primera vez — arrancar timer al abrir
+      setTimeout(() => startGuestTimer(), 500);
+    }
+  }
 }
-function closeChat()  { document.getElementById('chat-panel').classList.remove('open'); }
+function closeChat()  {
+  document.getElementById('chat-panel').classList.remove('open');
+}
 function toggleChat() {
-  document.getElementById('chat-panel').classList.toggle('open');
-  if (!currentUser) updateGuestUsageBar();
+  const isOpen = document.getElementById('chat-panel').classList.contains('open');
+  if (isOpen) { closeChat(); return; }
+  openChat();
 }
 
 function askQuestion(q) {
   openChat();
-  const input = document.getElementById('chat-input');
-  if (input && !input.disabled) { input.value = q; input.focus(); }
-}
-
-async function sendChat() {
-  const input = document.getElementById('chat-input');
-  if (!input || !input.value.trim() || input.disabled) return;
-
-  // Verificar límite ANTES de enviar
-  if (!currentUser && getGuestUsed() >= GUEST_LIMIT) {
-    blockChatGuest(); return;
-  }
-
-  const allowed = await incrementQueryCount();
-  if (!allowed) return;
-
-  const query = input.value.trim();
-  input.value = '';
-  console.log('[TaxIA] query:', query);
-  showToast('💬 Consulta enviada');
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1674,9 +1698,11 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
 ═══════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
   initSupabase();
-  // Mostrar estado guest si ya usó el mensaje
-  if (getGuestUsed() >= GUEST_LIMIT) {
+  // Mostrar estado guest correcto en barra
+  if (guestSessionUsed()) {
     updateGuestUsageBar();
+  } else {
+    updateGuestUsageBar(undefined);
   }
   // PayPal SDK: render cuando esté listo
   if (window.paypal) {
