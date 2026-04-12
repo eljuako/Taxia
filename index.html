@@ -6,8 +6,8 @@
   <title>TaxIA — Asistente Tributario Inteligente RD</title>
   <!-- Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- PayPal SDK (reemplaza YOUR_PAYPAL_CLIENT_ID) -->
-  <script src="https://www.paypal.com/sdk/js?client-id=YOUR_PAYPAL_CLIENT_ID&vault=true&intent=subscription&currency=USD" data-sdk-integration-source="button-factory" id="paypal-sdk"></script>
+  <!-- PayPal SDK (configura en Semana 3) -->
+  <!-- <script src="https://www.paypal.com/sdk/js?client-id=TU_PAYPAL_CLIENT_ID&vault=true&intent=subscription&currency=USD" id="paypal-sdk"></script> -->
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -1067,9 +1067,9 @@
     <!-- Usage bar -->
     <div class="chat-usage-bar" id="chat-usage-bar">
       <span class="cub-label">Consultas:</span>
-      <span class="cub-count" id="cub-count">10 restantes</span>
+      <span class="cub-count" id="cub-count">1 mensaje de prueba</span>
       <div class="cub-bar"><div class="cub-fill ok" id="cub-fill" style="width:100%"></div></div>
-      <span class="cub-upgrade" onclick="openUpgradeModal()">Mejorar</span>
+      <span class="cub-upgrade" onclick="currentUser ? openUpgradeModal() : openModal('register')">Mejorar</span>
     </div>
 
     <!-- DIFY PLACEHOLDER — Reemplaza con tu iframe de Dify -->
@@ -1242,8 +1242,8 @@
 /* ═══════════════════════════════════════════════════════════
    CONFIGURACIÓN — REEMPLAZA ESTOS VALORES
 ═══════════════════════════════════════════════════════════ */
-const SUPABASE_URL  = 'https://TU_PROYECTO.supabase.co';          // ← reemplaza
-const SUPABASE_ANON = 'TU_SUPABASE_ANON_KEY';                     // ← reemplaza
+const SUPABASE_URL  = 'https://qxxjyndyegknrhgmmkkw.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4eGp5bmR5ZWdrbnJoZ21ta2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MDczNzEsImV4cCI6MjA5MTE4MzM3MX0.PnxJJhfORxDbd7JO2Q5XvNBdSkGb7SwNg7zoJsNAkjc';
 const PAYPAL_PLAN_PRO     = 'P-XXXXXXXXXXXXXXXXXXXXXXXX';          // ← ID plan PayPal Pro
 const PAYPAL_PLAN_PROMAX  = 'P-YYYYYYYYYYYYYYYYYYYYYYYY';          // ← ID plan PayPal Pro Max
 
@@ -1519,38 +1519,105 @@ async function handlePaymentSuccess(plan, subscriptionId) {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   GUEST MESSAGE (1 gratis sin cuenta)
+═══════════════════════════════════════════════════════════ */
+const GUEST_LIMIT = 1;
+
+function getGuestUsed() {
+  return parseInt(localStorage.getItem('taxia_guest_msgs') || '0');
+}
+function setGuestUsed(n) {
+  localStorage.setItem('taxia_guest_msgs', String(n));
+}
+
+function updateGuestUsageBar() {
+  const used = getGuestUsed();
+  const remaining = Math.max(0, GUEST_LIMIT - used);
+  const pct = (used / GUEST_LIMIT) * 100;
+  document.getElementById('cub-count').textContent =
+    remaining > 0 ? `${remaining} mensaje de prueba` : 'Prueba agotada';
+  const fill = document.getElementById('cub-fill');
+  fill.style.width = (100 - pct) + '%';
+  fill.className = 'cub-fill ' + (remaining === 0 ? 'empty' : 'ok');
+}
+
+/* ═══════════════════════════════════════════════════════════
    CHAT LIMITS
 ═══════════════════════════════════════════════════════════ */
-function blockChat() {
+function blockChatGuest() {
+  const input = document.getElementById('chat-input');
+  if (input) {
+    input.disabled = true;
+    input.placeholder = '¡Regístrate gratis para seguir consultando!';
+  }
   const area = document.getElementById('dify-area');
+  if (area) {
+    area.innerHTML = `
+      <div style="font-size:2.5rem;margin-bottom:.5rem;">🔓</div>
+      <p style="font-size:.95rem;font-weight:700;color:var(--gold);">¡Probaste TaxIA!</p>
+      <p style="font-size:.83rem;margin:.4rem 0 1rem;color:var(--text-muted);">
+        Crea tu cuenta gratuita y obtén <strong style="color:white;">10 consultas</strong> mensuales sin costo.
+      </p>
+      <button class="btn-primary" style="font-size:.88rem;padding:.7rem 1.4rem;"
+        onclick="closeChat();openModal('register')">
+        Crear cuenta gratis →
+      </button>
+      <p style="font-size:.75rem;margin-top:.8rem;color:var(--text-muted);">
+        ¿Ya tienes cuenta? <span style="color:var(--gold);cursor:pointer;" onclick="closeChat();openModal('login')">Inicia sesión</span>
+      </p>
+    `;
+  }
+}
+
+function blockChatLimit() {
   const input = document.getElementById('chat-input');
   if (input) {
     input.disabled = true;
     input.placeholder = 'Consultas agotadas — mejora tu plan para continuar';
   }
+  const area = document.getElementById('dify-area');
   if (area) {
     area.innerHTML = `
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="10" stroke="#ef4444" stroke-width="1.5"/>
-        <line x1="8" y1="8" x2="16" y2="16" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
-        <line x1="16" y1="8" x2="8" y2="16" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      <p style="font-size:.9rem;color:#fca5a5;font-weight:700;">¡Consultas agotadas!</p>
-      <p style="font-size:.82rem;">Actualizaste las ${userProfile?.queries_limit || 10} consultas de tu ${PLAN_LABELS[userProfile?.plan || 'libre']}.</p>
-      <button class="plan-btn plan-btn-gold" style="margin-top:1rem;padding:.7rem 1.5rem;border-radius:10px;font-size:.9rem;"
-        onclick="closeChat();openUpgradeModal('limit')">⚡ Mejorar plan ahora</button>
+      <div style="font-size:2.5rem;margin-bottom:.5rem;">⚡</div>
+      <p style="font-size:.95rem;font-weight:700;color:#fca5a5;">¡Consultas agotadas!</p>
+      <p style="font-size:.83rem;margin:.4rem 0 1rem;color:var(--text-muted);">
+        Usaste las ${userProfile?.queries_limit || 10} consultas del ${PLAN_LABELS[userProfile?.plan || 'libre']}.
+        Mejora tu plan para seguir consultando.
+      </p>
+      <button class="btn-primary" style="font-size:.88rem;padding:.7rem 1.4rem;"
+        onclick="closeChat();openUpgradeModal('limit')">
+        ⚡ Mejorar plan ahora
+      </button>
     `;
   }
 }
 
 async function incrementQueryCount() {
-  if (!sb || !currentUser || !userProfile) return true; // allow in demo mode
+  // Usuario no registrado — modo guest
+  if (!currentUser) {
+    const used = getGuestUsed();
+    if (used >= GUEST_LIMIT) {
+      blockChatGuest();
+      return false;
+    }
+    setGuestUsed(used + 1);
+    updateGuestUsageBar();
+    // Después de enviar el mensaje, bloquear para el próximo intento
+    if (used + 1 >= GUEST_LIMIT) {
+      setTimeout(() => blockChatGuest(), 1500); // espera la respuesta antes de bloquear
+    }
+    return true;
+  }
+
+  // Usuario registrado — verificar plan
+  if (!sb || !userProfile) return true;
   const used = (userProfile.queries_used || 0) + 1;
   const limit = userProfile.queries_limit || 10;
-  if (used > limit) { openUpgradeModal('limit'); return false; }
+  if (used > limit) { blockChatLimit(); return false; }
   await sb.from('profiles').update({ queries_used: used }).eq('id', currentUser.id);
   userProfile.queries_used = used;
   updateUIWithProfile();
+  if (used >= limit) setTimeout(() => blockChatLimit(), 1500);
   return true;
 }
 
@@ -1558,13 +1625,14 @@ async function incrementQueryCount() {
    CHAT WIDGET
 ═══════════════════════════════════════════════════════════ */
 function openChat() {
-  if (!currentUser) { openModal('register'); return; }
+  // Cualquiera puede abrir el chat — guest tiene 1 mensaje gratis
   document.getElementById('chat-panel').classList.add('open');
+  if (!currentUser) updateGuestUsageBar();
 }
 function closeChat()  { document.getElementById('chat-panel').classList.remove('open'); }
 function toggleChat() {
-  if (!currentUser) { openModal('register'); return; }
   document.getElementById('chat-panel').classList.toggle('open');
+  if (!currentUser) updateGuestUsageBar();
 }
 
 function askQuestion(q) {
@@ -1576,11 +1644,17 @@ function askQuestion(q) {
 async function sendChat() {
   const input = document.getElementById('chat-input');
   if (!input || !input.value.trim() || input.disabled) return;
+
+  // Verificar límite ANTES de enviar
+  if (!currentUser && getGuestUsed() >= GUEST_LIMIT) {
+    blockChatGuest(); return;
+  }
+
   const allowed = await incrementQueryCount();
   if (!allowed) return;
+
   const query = input.value.trim();
   input.value = '';
-  // Aquí va la llamada a Dify o tu iframe captura el mensaje
   console.log('[TaxIA] query:', query);
   showToast('💬 Consulta enviada');
 }
@@ -1600,13 +1674,17 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
 ═══════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
   initSupabase();
+  // Mostrar estado guest si ya usó el mensaje
+  if (getGuestUsed() >= GUEST_LIMIT) {
+    updateGuestUsageBar();
+  }
   // PayPal SDK: render cuando esté listo
   if (window.paypal) {
     renderPayPalButtons();
   } else {
     const ps = document.getElementById('paypal-sdk');
     if (ps) ps.onload = renderPayPalButtons;
-    else renderPayPalButtons(); // fallback placeholder buttons
+    else renderPayPalButtons();
   }
 });
 </script>
