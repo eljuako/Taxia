@@ -1254,20 +1254,47 @@ let userProfile = null;
 
 function initSupabase() {
   try {
-    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-    sb.auth.onAuthStateChange(async (event, session) => {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+        flowType: 'pkce'
+      }
+    });
+
+    // Detectar sesión existente al cargar (cubre el redirect de OAuth)
+    sb.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         currentUser = session.user;
         await loadProfile();
         showLoggedIn();
-      } else {
+        // Limpiar el hash/params del URL después del OAuth redirect
+        if (window.location.hash || window.location.search.includes('code=')) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+    });
+
+    // Escuchar cambios de sesión en tiempo real
+    sb.auth.onAuthStateChange(async (event, session) => {
+      console.log('[TaxIA] Auth event:', event);
+      if (event === 'SIGNED_IN' && session?.user) {
+        currentUser = session.user;
+        await loadProfile();
+        showLoggedIn();
+        closeModal('login');
+        closeModal('register');
+        showToast('✅ ¡Bienvenido a TaxIA!');
+      } else if (event === 'SIGNED_OUT') {
         currentUser = null;
         userProfile = null;
         showLoggedOut();
       }
     });
+
   } catch(e) {
-    console.warn('[TaxIA] Supabase no inicializado. Configura SUPABASE_URL y SUPABASE_ANON_KEY.');
+    console.warn('[TaxIA] Supabase error:', e);
   }
 }
 
@@ -1357,7 +1384,10 @@ async function doGoogleAuth() {
   if (!sb) return demoMode();
   await sb.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.origin }
+    options: {
+      redirectTo: 'https://taxia-five.vercel.app',
+      queryParams: { access_type: 'offline', prompt: 'consent' }
+    }
   });
 }
 
