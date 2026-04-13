@@ -538,6 +538,9 @@
       border:2px solid var(--blue-dark);
       animation:pulse-dot 2s infinite;
     }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
     @keyframes pulse-dot {
       0%,100% { transform:scale(1); }
       50%      { transform:scale(1.3); }
@@ -588,6 +591,10 @@
     <li><a href="#ejemplos">Ejemplos</a></li>
     <li><a href="#planes">Planes</a></li>
   </ul>
+  <!-- Spinner mientras Supabase resuelve el estado de auth -->
+  <div id="nav-auth-loading" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;">
+    <div style="width:20px;height:20px;border:2px solid rgba(255,255,255,.25);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;"></div>
+  </div>
   <!-- Auth buttons (shown when logged out) -->
   <div id="nav-auth-out" style="display:none;gap:.6rem;align-items:center;">
     <button onclick="openModal('login')" style="background:none;border:1px solid rgba(255,255,255,.3);color:white;padding:.4rem .9rem;border-radius:20px;cursor:pointer;font-size:.85rem;">Iniciar sesión</button>
@@ -1263,29 +1270,34 @@ function initSupabase() {
       }
     });
 
-    // Detectar sesión existente al cargar (cubre el redirect de OAuth)
-    sb.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        currentUser = session.user;
-        await loadProfile();
-        showLoggedIn();
-        // Limpiar el hash/params del URL después del OAuth redirect
-        if (window.location.hash || window.location.search.includes('code=')) {
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
-      }
-    });
-
-    // Escuchar cambios de sesión en tiempo real
     sb.auth.onAuthStateChange(async (event, session) => {
-      console.log('[TaxIA] Auth event:', event);
-      if (event === 'SIGNED_IN' && session?.user) {
+      console.log('[TaxIA] Auth event:', event, session?.user?.email || '—');
+
+      if (event === 'INITIAL_SESSION') {
+        // Supabase ya determinó el estado definitivo (incluye exchange PKCE post-OAuth).
+        // Este evento reemplaza getSession() y garantiza que no hay flash.
+        if (session?.user) {
+          currentUser = session.user;
+          await loadProfile();
+          showLoggedIn();
+          // Limpiar params del URL post-OAuth
+          if (window.location.hash || window.location.search.includes('code=')) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        } else {
+          showLoggedOut();
+        }
+
+      } else if (event === 'SIGNED_IN') {
+        // Login nuevo (email/password o refresh de sesión)
+        const isNewLogin = !currentUser;
         currentUser = session.user;
         await loadProfile();
         showLoggedIn();
         closeModal('login');
         closeModal('register');
-        showToast('✅ ¡Bienvenido a TaxIA!');
+        if (isNewLogin) showToast('✅ ¡Bienvenido a TaxIA!');
+
       } else if (event === 'SIGNED_OUT') {
         currentUser = null;
         userProfile = null;
@@ -1295,6 +1307,7 @@ function initSupabase() {
 
   } catch(e) {
     console.warn('[TaxIA] Supabase error:', e);
+    showLoggedOut(); // fallback si Supabase falla
   }
 }
 
@@ -1345,10 +1358,12 @@ function updateUIWithProfile() {
    AUTH FUNCTIONS
 ═══════════════════════════════════════════════════════════ */
 function showLoggedIn() {
+  document.getElementById('nav-auth-loading').style.display = 'none';
   document.getElementById('nav-auth-out').style.display = 'none';
   document.getElementById('nav-auth-in').style.display = 'block';
 }
 function showLoggedOut() {
+  document.getElementById('nav-auth-loading').style.display = 'none';
   document.getElementById('nav-auth-out').style.display = 'flex';
   document.getElementById('nav-auth-in').style.display = 'none';
 }
