@@ -1939,26 +1939,36 @@ function initSupabase() {
       }
     });
 
+    // Bandera para que getSession() e INITIAL_SESSION no se pisen entre sí
+    let authResolved = false;
+
+    async function resolveAuthState(session) {
+      if (authResolved) return;
+      authResolved = true;
+      if (session?.user) {
+        currentUser = session.user;
+        await loadProfile();
+        showLoggedIn();
+        if (window.location.hash || window.location.search.includes('code=')) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      } else {
+        showLoggedOut();
+      }
+    }
+
+    // ── Mecanismo 1: getSession() inmediato (resuelve el spinner rápido en la mayoría de casos)
+    sb.auth.getSession().then(({ data: { session } }) => resolveAuthState(session));
+
+    // ── Mecanismo 2: onAuthStateChange (cubre PKCE post-OAuth y sesiones futuras)
     sb.auth.onAuthStateChange(async (event, session) => {
       console.log('[TaxIA] Auth event:', event, session?.user?.email || '—');
 
       if (event === 'INITIAL_SESSION') {
-        // Supabase ya determinó el estado definitivo (incluye exchange PKCE post-OAuth).
-        // Este evento reemplaza getSession() y garantiza que no hay flash.
-        if (session?.user) {
-          currentUser = session.user;
-          await loadProfile();
-          showLoggedIn();
-          // Limpiar params del URL post-OAuth
-          if (window.location.hash || window.location.search.includes('code=')) {
-            window.history.replaceState({}, document.title, window.location.pathname);
-          }
-        } else {
-          showLoggedOut();
-        }
+        // Tiene prioridad sobre getSession() si aún no resolvió
+        resolveAuthState(session);
 
       } else if (event === 'SIGNED_IN') {
-        // Login nuevo (email/password o refresh de sesión)
         const isNewLogin = !currentUser;
         currentUser = session.user;
         await loadProfile();
@@ -1968,15 +1978,25 @@ function initSupabase() {
         if (isNewLogin) showToast('✅ ¡Bienvenido a TaxIA!');
 
       } else if (event === 'SIGNED_OUT') {
+        authResolved = false; // Permitir nueva resolución en el próximo login
         currentUser = null;
         userProfile = null;
         showLoggedOut();
       }
     });
 
+    // ── Mecanismo 3: Safety net — si en 6 s ningún evento resolvió, muestra la landing
+    setTimeout(() => {
+      if (!authResolved) {
+        console.warn('[TaxIA] Auth timeout — mostrando estado desconectado');
+        authResolved = true;
+        showLoggedOut();
+      }
+    }, 6000);
+
   } catch(e) {
-    console.warn('[TaxIA] Supabase error:', e);
-    showLoggedOut(); // fallback si Supabase falla
+    console.warn('[TaxIA] Supabase init error:', e);
+    showLoggedOut();
   }
 }
 
