@@ -814,11 +814,11 @@
 <nav>
   <a href="#inicio" class="nav-logo">Tax<span>IA</span></a>
   <ul class="nav-links" id="nav-links">
-    <li><a href="#inicio">Inicio</a></li>
-    <li><a href="#como">Cómo Funciona</a></li>
-    <li><a href="#temas">Temáticas</a></li>
-    <li><a href="#ejemplos">Ejemplos</a></li>
-    <li><a href="#planes">Planes</a></li>
+    <li id="nav-li-inicio"><a href="#inicio">Inicio</a></li>
+    <li id="nav-li-como"><a href="#como">Cómo Funciona</a></li>
+    <li id="nav-li-temas"><a href="#temas">Temáticas</a></li>
+    <li id="nav-li-ejemplos"><a href="#ejemplos">Ejemplos</a></li>
+    <li id="nav-li-planes"><a href="#planes" onclick="handlePlanesClick(event)">Planes</a></li>
   </ul>
   <!-- Spinner mientras Supabase resuelve el estado de auth -->
   <div id="nav-auth-loading" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;">
@@ -848,9 +848,11 @@
         </div>
         <div class="ud-divider"></div>
         <div class="ud-item" onclick="openUpgradeModal();toggleUserMenu()">⚡ Mejorar plan</div>
-        <div class="ud-item" onclick="toggleUserMenu();document.getElementById('planes').scrollIntoView({behavior:'smooth'})">💳 Ver planes</div>
+        <div class="ud-item" onclick="toggleUserMenu();handlePlanesClick()">💳 Ver planes</div>
         <div class="ud-divider"></div>
-        <div class="ud-item danger" onclick="signOut()">↩ Cerrar sesión</div>
+        <div class="ud-item danger" onclick="signOut()" style="font-weight:700;">
+          ↩ Cerrar sesión
+        </div>
       </div>
     </div>
   </div>
@@ -2011,7 +2013,10 @@ function updateUIWithProfile() {
   fill.style.width = (100 - pct) + '%';
   fill.className = 'cub-fill ' + (remaining === 0 ? 'empty' : remaining <= 3 ? 'low' : 'ok');
 
-  if (remaining === 0) blockChat();
+  if (remaining === 0) {
+    blockChat();
+    blockModuleChat(); // También bloquea el chat dentro del módulo
+  }
 
   // Reset date
   if (userProfile.reset_date) {
@@ -2024,35 +2029,59 @@ function updateUIWithProfile() {
 /* ═══════════════════════════════════════════════════════════
    AUTH FUNCTIONS
 ═══════════════════════════════════════════════════════════ */
-const LANDING_SECTIONS = ['inicio','como','temas','ejemplos','planes'];
+const LANDING_SECTIONS  = ['inicio','como','temas','ejemplos','planes'];
+const NAV_LANDING_ITEMS = ['nav-li-inicio','nav-li-como','nav-li-temas','nav-li-ejemplos'];
 
 function showLoggedIn() {
   document.getElementById('nav-auth-loading').style.display = 'none';
-  document.getElementById('nav-auth-out').style.display = 'none';
-  document.getElementById('nav-auth-in').style.display = 'block';
-  // Ocultar landing y mostrar módulo de trabajo
+  document.getElementById('nav-auth-out').style.display   = 'none';
+  document.getElementById('nav-auth-in').style.display    = 'block';
+
+  // Ocultar landing, mostrar módulo de trabajo
   LANDING_SECTIONS.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
-  document.querySelector('footer').style.display = 'none';
+  document.querySelector('footer').style.display      = 'none';
   document.getElementById('chat-widget').style.display = 'none';
   document.getElementById('taxia-module').style.display = 'block';
+
+  // Nav: ocultar Inicio, Cómo Funciona, Temáticas, Ejemplos — dejar solo Planes
+  NAV_LANDING_ITEMS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  // Planes abre el modal de upgrade en lugar de hacer scroll
+  const planesLink = document.querySelector('#nav-li-planes a');
+  if (planesLink) planesLink.style.color = 'var(--gold)';
+
   updateModPlanStrip();
 }
 
 function showLoggedOut() {
   document.getElementById('nav-auth-loading').style.display = 'none';
   document.getElementById('nav-auth-out').style.display = 'flex';
-  document.getElementById('nav-auth-in').style.display = 'none';
-  // Ocultar módulo y mostrar landing
+  document.getElementById('nav-auth-in').style.display  = 'none';
+
+  // Mostrar landing, ocultar módulo
   LANDING_SECTIONS.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = '';
   });
-  document.querySelector('footer').style.display = '';
-  document.getElementById('chat-widget').style.display = '';
+  document.querySelector('footer').style.display       = '';
+  document.getElementById('chat-widget').style.display  = '';
   document.getElementById('taxia-module').style.display = 'none';
+
+  // Restaurar todos los nav items
+  NAV_LANDING_ITEMS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = '';
+  });
+  const planesLink = document.querySelector('#nav-li-planes a');
+  if (planesLink) planesLink.style.color = '';
+
+  // Volver al inicio de la página
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function updateModPlanStrip() {
@@ -2104,9 +2133,23 @@ async function doGoogleAuth() {
 }
 
 async function signOut() {
-  if (sb) await sb.auth.signOut();
   toggleUserMenu();
-  showToast('👋 Sesión cerrada');
+  if (sb) await sb.auth.signOut();
+  // showLoggedOut() se dispara automáticamente via onAuthStateChange → SIGNED_OUT
+  // que llama showLoggedOut() y hace scroll al inicio
+  showToast('👋 Sesión cerrada · ¡Hasta pronto!');
+}
+
+/* "Planes" se comporta diferente según el contexto:
+   - En landing → hace scroll a la sección de planes
+   - En módulo  → abre el modal de upgrade */
+function handlePlanesClick(e) {
+  const inModule = document.getElementById('taxia-module').style.display !== 'none';
+  if (inModule) {
+    if (e) e.preventDefault();
+    openUpgradeModal();
+  }
+  // Si estamos en la landing, el comportamiento default del <a href="#planes"> funciona
 }
 
 function demoMode(modal) {
@@ -2378,6 +2421,46 @@ function blockChatLimit() {
       </button>
     `;
   }
+}
+
+/* Bloqueo dentro del módulo de trabajo (sobre el iframe de Dify) */
+function blockModuleChat() {
+  const wrap = document.querySelector('.mod-chat-wrap');
+  if (!wrap) return;
+  // Evita duplicados
+  if (document.getElementById('mod-chat-overlay')) return;
+  const plan   = userProfile?.plan || 'libre';
+  const limit  = userProfile?.queries_limit || PLAN_LIMITS[plan] || 10;
+  const planLbl = PLAN_LABELS[plan] || plan;
+  const overlay = document.createElement('div');
+  overlay.id = 'mod-chat-overlay';
+  overlay.style.cssText = `
+    position:absolute; inset:0; z-index:20;
+    background:rgba(10,17,40,.94);
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    text-align:center; padding:2rem;
+    backdrop-filter:blur(4px);
+  `;
+  overlay.innerHTML = `
+    <div style="font-size:3rem;margin-bottom:.75rem;">⚡</div>
+    <p style="font-size:1.05rem;font-weight:800;color:#fca5a5;margin-bottom:.5rem;">¡Consultas agotadas!</p>
+    <p style="font-size:.85rem;color:rgba(255,255,255,.5);max-width:320px;line-height:1.6;margin-bottom:1.5rem;">
+      Usaste las <strong style="color:white;">${limit} consultas</strong> incluidas en el <strong style="color:white;">${planLbl}</strong>.
+      Mejora tu plan para seguir consultando sin límites.
+    </p>
+    <button onclick="openUpgradeModal('limit')"
+      style="background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#000;border:none;
+             padding:.75rem 2rem;border-radius:10px;font-size:.95rem;font-weight:800;
+             cursor:pointer;margin-bottom:.75rem;width:100%;max-width:280px;">
+      ⚡ Ver planes y mejorar
+    </button>
+    <p style="font-size:.75rem;color:rgba(255,255,255,.3);">
+      También puedes hacer clic en <strong style="color:var(--gold,#f59e0b);">Planes</strong> en la barra de navegación
+    </p>
+  `;
+  wrap.style.position = 'relative';
+  wrap.appendChild(overlay);
 }
 
 async function incrementQueryCount() {
