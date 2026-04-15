@@ -1939,16 +1939,20 @@ function initSupabase() {
       }
     });
 
-    // Bandera para que getSession() e INITIAL_SESSION no se pisen entre sí
-    let authResolved = false;
+    let initialAuthDone  = false; // ¿ya se resolvió la sesión inicial?
+    let postLoginPending = false; // ¿viene de un login nuevo (modal)?
 
-    async function resolveAuthState(session) {
-      if (authResolved) return;
-      authResolved = true;
+    /* Resuelve la sesión inicial UNA SOLA VEZ.
+       getSession() solo la llama cuando hay sesión positiva.
+       INITIAL_SESSION la llama siempre (con o sin sesión). */
+    async function resolveInitialAuth(session) {
+      if (initialAuthDone) return;
+      initialAuthDone = true;
       if (session?.user) {
         currentUser = session.user;
         await loadProfile();
         showLoggedIn();
+        // Limpiar params OAuth del URL
         if (window.location.hash || window.location.search.includes('code=')) {
           window.history.replaceState({}, document.title, window.location.pathname);
         }
@@ -1957,42 +1961,55 @@ function initSupabase() {
       }
     }
 
-    // ── Mecanismo 1: getSession() inmediato (resuelve el spinner rápido en la mayoría de casos)
-    sb.auth.getSession().then(({ data: { session } }) => resolveAuthState(session));
+    // ── Mecanismo 1: getSession() — solo actúa cuando YA HAY sesión guardada.
+    //    Si devuelve null NO llama resolveInitialAuth, deja que INITIAL_SESSION lo maneje.
+    //    Esto evita el bug donde getSession() null bloqueaba al PKCE post-OAuth.
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        resolveInitialAuth(session);   // sesión activa → módulo de trabajo inmediato
+      }
+      // null → esperar INITIAL_SESSION (que llega tras el intercambio PKCE)
+    });
 
-    // ── Mecanismo 2: onAuthStateChange (cubre PKCE post-OAuth y sesiones futuras)
+    // ── Mecanismo 2: onAuthStateChange
     sb.auth.onAuthStateChange(async (event, session) => {
       console.log('[TaxIA] Auth event:', event, session?.user?.email || '—');
 
       if (event === 'INITIAL_SESSION') {
-        // Tiene prioridad sobre getSession() si aún no resolvió
-        resolveAuthState(session);
+        // Estado definitivo post-carga (incluye resultado del PKCE exchange de OAuth)
+        resolveInitialAuth(session);
 
       } else if (event === 'SIGNED_IN') {
-        const isNewLogin = !currentUser;
-        currentUser = session.user;
-        await loadProfile();
-        showLoggedIn();
-        closeModal('login');
-        closeModal('register');
-        if (isNewLogin) showToast('✅ ¡Bienvenido a TaxIA!');
+        if (!initialAuthDone) {
+          // SIGNED_IN llegó antes que INITIAL_SESSION (raro) — tratarlo igual
+          resolveInitialAuth(session);
+        } else {
+          // Login activo del usuario (modal email/password o Google)
+          currentUser = session.user;
+          await loadProfile();
+          showLoggedIn();
+          closeModal('login');
+          closeModal('register');
+          showToast('✅ ¡Bienvenido a TaxIA!');
+        }
 
       } else if (event === 'SIGNED_OUT') {
-        authResolved = false; // Permitir nueva resolución en el próximo login
+        initialAuthDone = false; // Permite resolver de nuevo en el próximo login
         currentUser = null;
         userProfile = null;
         showLoggedOut();
       }
     });
 
-    // ── Mecanismo 3: Safety net — si en 6 s ningún evento resolvió, muestra la landing
+    // ── Mecanismo 3: Safety net — si INITIAL_SESSION nunca disparó (error de red, etc.)
+    //    muestra la landing después de 5 segundos para no dejar el spinner indefinido.
     setTimeout(() => {
-      if (!authResolved) {
-        console.warn('[TaxIA] Auth timeout — mostrando estado desconectado');
-        authResolved = true;
+      if (!initialAuthDone) {
+        console.warn('[TaxIA] Auth timeout — forzando estado desconectado');
+        initialAuthDone = true;
         showLoggedOut();
       }
-    }, 6000);
+    }, 5000);
 
   } catch(e) {
     console.warn('[TaxIA] Supabase init error:', e);
