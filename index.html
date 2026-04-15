@@ -8,6 +8,10 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- PayPal SDK (configura en Semana 3) -->
   <!-- <script src="https://www.paypal.com/sdk/js?client-id=TU_PAYPAL_CLIENT_ID&vault=true&intent=subscription&currency=USD" id="paypal-sdk"></script> -->
+  <!-- PDF.js para leer documentos PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- SheetJS para leer archivos Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -554,6 +558,231 @@
       flex-direction:column; gap:1rem; color:rgba(255,255,255,.5); text-align:center; padding:1rem;
     }
 
+    /* ══════════════════════════════════════════════════════════
+       MÓDULO DE TRABAJO (post-login)
+    ══════════════════════════════════════════════════════════ */
+    #taxia-module {
+      display: none;
+      position: fixed; inset: 0; top: 60px;
+      background: #0f172a;
+      z-index: 100;
+    }
+    .mod-layout {
+      display: flex; height: 100%;
+    }
+
+    /* ── Sidebar ── */
+    .mod-sidebar {
+      width: 220px; min-width: 220px;
+      background: #0a1128;
+      border-right: 1px solid rgba(255,255,255,.08);
+      display: flex; flex-direction: column;
+      overflow-y: auto;
+    }
+    .mod-sidebar-logo {
+      padding: 1rem 1.2rem .6rem;
+      font-size: .7rem; font-weight: 700;
+      color: var(--gold); letter-spacing: .1em;
+      text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,.07);
+      margin-bottom: .4rem;
+    }
+    .mod-nav-group {
+      font-size: .65rem; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: rgba(255,255,255,.3);
+      padding: .7rem 1.2rem .3rem;
+    }
+    .mod-nav-item {
+      display: flex; align-items: center; gap: .6rem;
+      width: 100%; text-align: left;
+      background: none; border: none; color: rgba(255,255,255,.65);
+      padding: .6rem 1.2rem; font-size: .83rem; cursor: pointer;
+      border-radius: 0; transition: all .15s;
+      border-left: 3px solid transparent;
+    }
+    .mod-nav-item:hover { background: rgba(255,255,255,.05); color: white; }
+    .mod-nav-item.active {
+      background: rgba(37,99,235,.18); color: white;
+      border-left-color: #2563EB; font-weight: 600;
+    }
+    .mod-plan-strip {
+      margin-top: auto; padding: .8rem 1.2rem;
+      border-top: 1px solid rgba(255,255,255,.07);
+      font-size: .72rem; color: rgba(255,255,255,.5);
+    }
+    .mod-plan-strip strong { color: var(--gold); }
+
+    /* ── Main content ── */
+    .mod-main {
+      flex: 1; display: flex; flex-direction: column; overflow: hidden;
+    }
+    .mod-tab { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+    .mod-tab.active { display: flex; }
+
+    /* ── Tab: Chat ── */
+    .mod-chat-wrap {
+      flex: 1; display: flex; flex-direction: column; overflow: hidden;
+    }
+    .mod-chat-wrap iframe {
+      flex: 1; border: none; width: 100%; height: 100%;
+    }
+
+    /* ── Tab: Tax tools ── */
+    .tax-panel {
+      flex: 1; overflow-y: auto; padding: 1.5rem 2rem;
+      background: #0f172a;
+    }
+    .tax-header {
+      display: flex; align-items: center; gap: .75rem;
+      margin-bottom: 1.5rem;
+    }
+    .tax-header-icon {
+      width: 42px; height: 42px; border-radius: 10px;
+      background: #1e3a8a; display: flex; align-items: center;
+      justify-content: center; font-size: 1.2rem; flex-shrink: 0;
+    }
+    .tax-header-title { font-size: 1.15rem; font-weight: 700; color: white; }
+    .tax-header-sub { font-size: .78rem; color: rgba(255,255,255,.5); margin-top: .1rem; }
+
+    /* Upload zone */
+    .upload-zone {
+      border: 2px dashed rgba(37,99,235,.5);
+      border-radius: 12px; padding: 1.5rem;
+      text-align: center; cursor: pointer;
+      background: rgba(37,99,235,.05);
+      transition: all .2s; margin-bottom: 1.4rem;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: #2563EB; background: rgba(37,99,235,.12);
+    }
+    .upload-zone input[type=file] { display: none; }
+    .upload-zone .uz-icon { font-size: 2rem; margin-bottom: .5rem; }
+    .upload-zone .uz-title { font-size: .88rem; font-weight: 600; color: rgba(255,255,255,.85); }
+    .upload-zone .uz-sub   { font-size: .72rem; color: rgba(255,255,255,.4); margin-top: .25rem; }
+    .upload-zone .uz-filename {
+      margin-top: .6rem; font-size: .78rem; color: #60a5fa;
+      font-weight: 600; display: none;
+    }
+    .upload-status {
+      font-size: .78rem; color: rgba(255,255,255,.5);
+      margin-top: .4rem; min-height: 18px;
+    }
+
+    /* Tax form grid */
+    .tax-form-section {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px; padding: 1.2rem 1.4rem;
+      margin-bottom: 1.2rem;
+    }
+    .tax-form-section h3 {
+      font-size: .8rem; font-weight: 700; letter-spacing: .06em;
+      text-transform: uppercase; color: rgba(255,255,255,.4);
+      margin-bottom: 1rem;
+    }
+    .tax-form-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
+      gap: .85rem;
+    }
+    .tax-field { display: flex; flex-direction: column; gap: .3rem; }
+    .tax-field label {
+      font-size: .73rem; color: rgba(255,255,255,.5); font-weight: 500;
+    }
+    .tax-field .casilla {
+      font-size: .65rem; color: rgba(255,255,255,.25); margin-bottom: -.1rem;
+    }
+    .tax-field input, .tax-field select {
+      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+      border-radius: 7px; padding: .55rem .75rem;
+      color: white; font-size: .85rem; width: 100%;
+      transition: border .2s; outline: none;
+    }
+    .tax-field input:focus, .tax-field select:focus {
+      border-color: #2563EB; background: rgba(37,99,235,.12);
+    }
+    .tax-field input.auto-filled { border-color: rgba(96,165,250,.4); color: #93c5fd; }
+
+    /* Calculate button */
+    .tax-calc-btn {
+      width: 100%; padding: .85rem;
+      background: linear-gradient(135deg, #1e3a8a, #2563EB);
+      border: none; border-radius: 10px; color: white;
+      font-size: .95rem; font-weight: 700; cursor: pointer;
+      transition: opacity .2s; margin: 1rem 0;
+    }
+    .tax-calc-btn:hover { opacity: .9; }
+    .tax-calc-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* Results box */
+    .tax-result {
+      display: none;
+      background: rgba(22,163,74,.08); border: 1px solid rgba(22,163,74,.25);
+      border-radius: 12px; padding: 1.2rem 1.4rem;
+    }
+    .tax-result.show { display: block; }
+    .tax-result.negative {
+      background: rgba(220,38,38,.08); border-color: rgba(220,38,38,.25);
+    }
+    .tax-result-title {
+      font-size: .75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; color: rgba(255,255,255,.5); margin-bottom: .8rem;
+    }
+    .tax-result-main {
+      font-size: 1.8rem; font-weight: 800; color: #4ade80; margin-bottom: .3rem;
+    }
+    .tax-result.negative .tax-result-main { color: #f87171; }
+    .tax-result-sub { font-size: .8rem; color: rgba(255,255,255,.5); }
+    .tax-result-breakdown {
+      margin-top: 1rem; display: flex; flex-direction: column; gap: .4rem;
+    }
+    .tax-result-line {
+      display: flex; justify-content: space-between;
+      font-size: .82rem; padding: .35rem 0;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      color: rgba(255,255,255,.7);
+    }
+    .tax-result-line strong { color: white; }
+    .tax-result-actions {
+      display: flex; gap: .7rem; margin-top: 1rem; flex-wrap: wrap;
+    }
+    .tax-result-actions button {
+      flex: 1; min-width: 120px; padding: .6rem .9rem;
+      border-radius: 8px; font-size: .8rem; font-weight: 600; cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn-save {
+      background: rgba(37,99,235,.25); border: 1px solid rgba(37,99,235,.4); color: #93c5fd;
+    }
+    .btn-ask-ia {
+      background: rgba(245,158,11,.15); border: 1px solid rgba(245,158,11,.3); color: #fcd34d;
+    }
+    .btn-save:hover, .btn-ask-ia:hover { opacity: .8; }
+
+    /* History tab */
+    .history-empty {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      color: rgba(255,255,255,.3); gap: .75rem; text-align: center;
+    }
+    .history-empty .he-icon { font-size: 2.5rem; }
+    .history-list { padding: 1.5rem 2rem; overflow-y: auto; }
+    .history-card {
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: .75rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .history-card .hc-type {
+      font-size: .7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; color: #60a5fa; margin-bottom: .25rem;
+    }
+    .history-card .hc-date { font-size: .72rem; color: rgba(255,255,255,.35); }
+    .history-card .hc-amount { font-size: 1.1rem; font-weight: 800; color: #4ade80; }
+    .history-card .hc-amount.owed { color: #f87171; }
+    .history-card .hc-del {
+      background: none; border: none; color: rgba(255,255,255,.2);
+      cursor: pointer; font-size: 1rem; padding: .3rem;
+    }
+    .history-card .hc-del:hover { color: #f87171; }
+
     /* ─── RESPONSIVE ─────────────────────────────────────────── */
     @media(max-width:768px){
       .nav-links { display:none; }
@@ -1004,6 +1233,444 @@
 </section>
 
 
+<!-- ═══════════════════════════════════════════════════════════════
+     MÓDULO DE TRABAJO — Visible solo cuando el usuario está logueado
+═══════════════════════════════════════════════════════════════════ -->
+<div id="taxia-module">
+  <div class="mod-layout">
+
+    <!-- ── SIDEBAR ── -->
+    <div class="mod-sidebar">
+      <div class="mod-sidebar-logo">🤖 TaxIA Pro</div>
+
+      <div class="mod-nav-group">Asistente</div>
+      <button class="mod-nav-item active" data-tab="chat" onclick="switchModTab('chat')">
+        💬 Consultar IA
+      </button>
+
+      <div class="mod-nav-group">Simulaciones</div>
+      <button class="mod-nav-item" data-tab="itbis" onclick="switchModTab('itbis')">
+        📊 ITBIS (IT-1)
+      </button>
+      <button class="mod-nav-item" data-tab="ir1" onclick="switchModTab('ir1')">
+        👤 IR-1 Personas Físicas
+      </button>
+      <button class="mod-nav-item" data-tab="ir2" onclick="switchModTab('ir2')">
+        🏢 IR-2 Personas Jurídicas
+      </button>
+      <button class="mod-nav-item" data-tab="rst" onclick="switchModTab('rst')">
+        📋 RST — Régimen Simplificado
+      </button>
+      <button class="mod-nav-item" data-tab="ir17" onclick="switchModTab('ir17')">
+        💼 IR-17 Retención Salarios
+      </button>
+
+      <div class="mod-nav-group">Registros</div>
+      <button class="mod-nav-item" data-tab="history" onclick="switchModTab('history')">
+        📜 Mis cálculos
+      </button>
+
+      <div class="mod-plan-strip" id="mod-plan-strip">
+        Plan: <strong id="mod-plan-name">Libre</strong><br>
+        <span id="mod-queries-left">— consultas restantes</span>
+      </div>
+    </div>
+
+    <!-- ── MAIN CONTENT ── -->
+    <div class="mod-main">
+
+      <!-- ─── TAB: CHAT ─── -->
+      <div id="tab-chat" class="mod-tab active">
+        <div class="mod-chat-wrap">
+          <iframe
+            src="https://udify.app/chatbot/BDvOq3yHNlSSon5R"
+            frameborder="0" allow="microphone"
+            style="width:100%;height:100%;border:none;">
+          </iframe>
+        </div>
+      </div>
+
+      <!-- ─── TAB: ITBIS ─── -->
+      <div id="tab-itbis" class="mod-tab">
+        <div class="tax-panel">
+          <div class="tax-header">
+            <div class="tax-header-icon">📊</div>
+            <div>
+              <div class="tax-header-title">Simulador ITBIS — IT-1</div>
+              <div class="tax-header-sub">Impuesto sobre Transferencias de Bienes y Servicios · 18% · Declaración mensual</div>
+            </div>
+          </div>
+
+          <!-- Upload -->
+          <div class="upload-zone" id="upload-itbis" onclick="document.getElementById('file-itbis').click()"
+               ondragover="handleDragOver(event,'upload-itbis')" ondragleave="handleDragLeave('upload-itbis')"
+               ondrop="handleDrop(event,'itbis')">
+            <input type="file" id="file-itbis" accept=".pdf,.xlsx,.xls,.csv" onchange="handleFile(this,'itbis')">
+            <div class="uz-icon">📂</div>
+            <div class="uz-title">Arrastra tu IT-1 aquí o haz clic para seleccionar</div>
+            <div class="uz-sub">Acepta PDF, Excel (.xlsx) o CSV · Los datos se extraen automáticamente</div>
+            <div class="uz-filename" id="fn-itbis"></div>
+          </div>
+          <div class="upload-status" id="status-itbis"></div>
+
+          <!-- Form -->
+          <div class="tax-form-section">
+            <h3>📥 Ventas e Ingresos</h3>
+            <div class="tax-form-grid">
+              <div class="tax-field">
+                <span class="casilla">Casilla 1</span>
+                <label>Ventas gravadas (18%)</label>
+                <input type="number" id="itbis-ventas-gravadas" placeholder="RD$ 0.00" oninput="clearResult('itbis')">
+              </div>
+              <div class="tax-field">
+                <span class="casilla">Casilla 2</span>
+                <label>ITBIS cobrado en ventas</label>
+                <input type="number" id="itbis-cobrado" placeholder="RD$ 0.00" oninput="clearResult('itbis')">
+              </div>
+              <div class="tax-field">
+                <span class="casilla">Casilla 3</span>
+                <label>Ventas exentas de ITBIS</label>
+                <input type="number" id="itbis-ventas-exentas" placeholder="RD$ 0.00" oninput="clearResult('itbis')">
+              </div>
+            </div>
+          </div>
+
+          <div class="tax-form-section">
+            <h3>📤 Compras y Crédito Fiscal</h3>
+            <div class="tax-form-grid">
+              <div class="tax-field">
+                <span class="casilla">Casilla 10</span>
+                <label>Compras gravadas con ITBIS</label>
+                <input type="number" id="itbis-compras" placeholder="RD$ 0.00" oninput="clearResult('itbis')">
+              </div>
+              <div class="tax-field">
+                <span class="casilla">Casilla 11</span>
+                <label>ITBIS pagado en compras</label>
+                <input type="number" id="itbis-pagado" placeholder="RD$ 0.00" oninput="clearResult('itbis')">
+              </div>
+              <div class="tax-field">
+                <label>Período (mes/año)</label>
+                <input type="month" id="itbis-periodo" value="">
+              </div>
+            </div>
+          </div>
+
+          <button class="tax-calc-btn" onclick="calcITBIS()">⚡ Calcular ITBIS a Pagar</button>
+
+          <div class="tax-result" id="result-itbis">
+            <div class="tax-result-title">🧾 Resultado IT-1</div>
+            <div class="tax-result-main" id="result-itbis-main">RD$ 0.00</div>
+            <div class="tax-result-sub" id="result-itbis-sub"></div>
+            <div class="tax-result-breakdown" id="result-itbis-breakdown"></div>
+            <div class="tax-result-actions">
+              <button class="btn-save" onclick="saveCalc('itbis')">💾 Guardar resultado</button>
+              <button class="btn-ask-ia" onclick="askIAAbout('itbis')">🤖 Consultar con TaxIA</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── TAB: IR1 ─── -->
+      <div id="tab-ir1" class="mod-tab">
+        <div class="tax-panel">
+          <div class="tax-header">
+            <div class="tax-header-icon">👤</div>
+            <div>
+              <div class="tax-header-title">Simulador IR-1 — Personas Físicas</div>
+              <div class="tax-header-sub">Impuesto sobre la Renta · Declaración anual · Escala progresiva DGII 2024</div>
+            </div>
+          </div>
+
+          <div class="upload-zone" id="upload-ir1" onclick="document.getElementById('file-ir1').click()"
+               ondragover="handleDragOver(event,'upload-ir1')" ondragleave="handleDragLeave('upload-ir1')"
+               ondrop="handleDrop(event,'ir1')">
+            <input type="file" id="file-ir1" accept=".pdf,.xlsx,.xls,.csv" onchange="handleFile(this,'ir1')">
+            <div class="uz-icon">📂</div>
+            <div class="uz-title">Sube tu IR-1 anterior, estados de cuenta o resumen de ingresos</div>
+            <div class="uz-sub">PDF o Excel · Los datos se extraen automáticamente</div>
+            <div class="uz-filename" id="fn-ir1"></div>
+          </div>
+          <div class="upload-status" id="status-ir1"></div>
+
+          <div class="tax-form-section">
+            <h3>💰 Ingresos del período</h3>
+            <div class="tax-form-grid">
+              <div class="tax-field">
+                <label>Ingresos brutos anuales</label>
+                <input type="number" id="ir1-ingresos" placeholder="RD$ 0.00" oninput="clearResult('ir1')">
+              </div>
+              <div class="tax-field">
+                <label>Gastos deducibles</label>
+                <input type="number" id="ir1-gastos" placeholder="RD$ 0.00" oninput="clearResult('ir1')">
+              </div>
+              <div class="tax-field">
+                <label>Retenciones ya aplicadas</label>
+                <input type="number" id="ir1-retenciones" placeholder="RD$ 0.00" oninput="clearResult('ir1')">
+              </div>
+              <div class="tax-field">
+                <label>Año fiscal</label>
+                <select id="ir1-anio">
+                  <option value="2024">2024</option>
+                  <option value="2023">2023</option>
+                  <option value="2022">2022</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="tax-form-section">
+            <h3>📋 Escala progresiva DGII 2024 (referencia)</h3>
+            <div style="font-size:.78rem;color:rgba(255,255,255,.5);line-height:1.8;">
+              Hasta RD$416,220 → <strong style="color:#4ade80">0%</strong><br>
+              RD$416,220 – RD$624,329 → <strong style="color:#fcd34d">15%</strong> sobre el exceso<br>
+              RD$624,329 – RD$867,123 → RD$31,216 + <strong style="color:#fb923c">20%</strong> sobre el exceso<br>
+              Más de RD$867,123 → RD$79,776 + <strong style="color:#f87171">25%</strong> sobre el exceso
+            </div>
+          </div>
+
+          <button class="tax-calc-btn" onclick="calcIR1()">⚡ Calcular IR-1 Anual</button>
+
+          <div class="tax-result" id="result-ir1">
+            <div class="tax-result-title">🧾 Resultado IR-1</div>
+            <div class="tax-result-main" id="result-ir1-main">RD$ 0.00</div>
+            <div class="tax-result-sub" id="result-ir1-sub"></div>
+            <div class="tax-result-breakdown" id="result-ir1-breakdown"></div>
+            <div class="tax-result-actions">
+              <button class="btn-save" onclick="saveCalc('ir1')">💾 Guardar resultado</button>
+              <button class="btn-ask-ia" onclick="askIAAbout('ir1')">🤖 Consultar con TaxIA</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── TAB: IR2 ─── -->
+      <div id="tab-ir2" class="mod-tab">
+        <div class="tax-panel">
+          <div class="tax-header">
+            <div class="tax-header-icon">🏢</div>
+            <div>
+              <div class="tax-header-title">Simulador IR-2 — Personas Jurídicas</div>
+              <div class="tax-header-sub">Impuesto sobre la Renta empresarial · 27% sobre renta neta imponible</div>
+            </div>
+          </div>
+
+          <div class="upload-zone" id="upload-ir2" onclick="document.getElementById('file-ir2').click()"
+               ondragover="handleDragOver(event,'upload-ir2')" ondragleave="handleDragLeave('upload-ir2')"
+               ondrop="handleDrop(event,'ir2')">
+            <input type="file" id="file-ir2" accept=".pdf,.xlsx,.xls,.csv" onchange="handleFile(this,'ir2')">
+            <div class="uz-icon">📂</div>
+            <div class="uz-title">Sube estados financieros o IR-2 anterior</div>
+            <div class="uz-sub">PDF o Excel</div>
+            <div class="uz-filename" id="fn-ir2"></div>
+          </div>
+          <div class="upload-status" id="status-ir2"></div>
+
+          <div class="tax-form-section">
+            <h3>📈 Estado de Resultados</h3>
+            <div class="tax-form-grid">
+              <div class="tax-field">
+                <label>Ingresos brutos</label>
+                <input type="number" id="ir2-ingresos" placeholder="RD$ 0.00" oninput="clearResult('ir2')">
+              </div>
+              <div class="tax-field">
+                <label>Costo de ventas / servicios</label>
+                <input type="number" id="ir2-costos" placeholder="RD$ 0.00" oninput="clearResult('ir2')">
+              </div>
+              <div class="tax-field">
+                <label>Gastos operacionales</label>
+                <input type="number" id="ir2-gastos-op" placeholder="RD$ 0.00" oninput="clearResult('ir2')">
+              </div>
+              <div class="tax-field">
+                <label>Otros gastos deducibles</label>
+                <input type="number" id="ir2-gastos-otros" placeholder="RD$ 0.00" oninput="clearResult('ir2')">
+              </div>
+              <div class="tax-field">
+                <label>Retenciones a cuenta</label>
+                <input type="number" id="ir2-retenciones" placeholder="RD$ 0.00" oninput="clearResult('ir2')">
+              </div>
+              <div class="tax-field">
+                <label>Año fiscal</label>
+                <select id="ir2-anio">
+                  <option value="2024">2024</option>
+                  <option value="2023">2023</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <button class="tax-calc-btn" onclick="calcIR2()">⚡ Calcular IR-2 Empresarial</button>
+
+          <div class="tax-result" id="result-ir2">
+            <div class="tax-result-title">🧾 Resultado IR-2</div>
+            <div class="tax-result-main" id="result-ir2-main">RD$ 0.00</div>
+            <div class="tax-result-sub" id="result-ir2-sub"></div>
+            <div class="tax-result-breakdown" id="result-ir2-breakdown"></div>
+            <div class="tax-result-actions">
+              <button class="btn-save" onclick="saveCalc('ir2')">💾 Guardar resultado</button>
+              <button class="btn-ask-ia" onclick="askIAAbout('ir2')">🤖 Consultar con TaxIA</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── TAB: RST ─── -->
+      <div id="tab-rst" class="mod-tab">
+        <div class="tax-panel">
+          <div class="tax-header">
+            <div class="tax-header-icon">📋</div>
+            <div>
+              <div class="tax-header-title">Simulador RST — Régimen Simplificado</div>
+              <div class="tax-header-sub">Régimen Simplificado de Tributación · Declaración trimestral · 2% sobre ingresos brutos</div>
+            </div>
+          </div>
+
+          <div class="upload-zone" id="upload-rst" onclick="document.getElementById('file-rst').click()"
+               ondragover="handleDragOver(event,'upload-rst')" ondragleave="handleDragLeave('upload-rst')"
+               ondrop="handleDrop(event,'rst')">
+            <input type="file" id="file-rst" accept=".pdf,.xlsx,.xls,.csv" onchange="handleFile(this,'rst')">
+            <div class="uz-icon">📂</div>
+            <div class="uz-title">Sube tus registros de ingresos del trimestre</div>
+            <div class="uz-sub">PDF o Excel</div>
+            <div class="uz-filename" id="fn-rst"></div>
+          </div>
+          <div class="upload-status" id="status-rst"></div>
+
+          <div class="tax-form-section">
+            <h3>📅 Período Trimestral</h3>
+            <div class="tax-form-grid">
+              <div class="tax-field">
+                <label>Tipo de actividad</label>
+                <select id="rst-tipo" oninput="clearResult('rst')">
+                  <option value="servicios">Servicios</option>
+                  <option value="comercio">Comercio / Industria</option>
+                </select>
+              </div>
+              <div class="tax-field">
+                <label>Trimestre</label>
+                <select id="rst-trimestre">
+                  <option value="1">1er Trimestre (Ene–Mar)</option>
+                  <option value="2">2do Trimestre (Abr–Jun)</option>
+                  <option value="3">3er Trimestre (Jul–Sep)</option>
+                  <option value="4">4to Trimestre (Oct–Dic)</option>
+                </select>
+              </div>
+              <div class="tax-field">
+                <label>Ingresos brutos del trimestre</label>
+                <input type="number" id="rst-ingresos" placeholder="RD$ 0.00" oninput="clearResult('rst')">
+              </div>
+              <div class="tax-field">
+                <label>Pagos a cuenta anteriores</label>
+                <input type="number" id="rst-pagos-cuenta" placeholder="RD$ 0.00" oninput="clearResult('rst')">
+              </div>
+            </div>
+          </div>
+
+          <div class="tax-form-section">
+            <h3>📋 Tasas RST vigentes</h3>
+            <div style="font-size:.78rem;color:rgba(255,255,255,.5);line-height:1.8;">
+              Servicios → <strong style="color:#fcd34d">2%</strong> sobre ingresos brutos trimestrales<br>
+              Comercio / Industria → <strong style="color:#fcd34d">2%</strong> sobre ingresos brutos trimestrales<br>
+              <span style="color:rgba(255,255,255,.3)">* Sujeto a ajustes DGII. Siempre consulta la resolución vigente.</span>
+            </div>
+          </div>
+
+          <button class="tax-calc-btn" onclick="calcRST()">⚡ Calcular RST Trimestral</button>
+
+          <div class="tax-result" id="result-rst">
+            <div class="tax-result-title">🧾 Resultado RST</div>
+            <div class="tax-result-main" id="result-rst-main">RD$ 0.00</div>
+            <div class="tax-result-sub" id="result-rst-sub"></div>
+            <div class="tax-result-breakdown" id="result-rst-breakdown"></div>
+            <div class="tax-result-actions">
+              <button class="btn-save" onclick="saveCalc('rst')">💾 Guardar resultado</button>
+              <button class="btn-ask-ia" onclick="askIAAbout('rst')">🤖 Consultar con TaxIA</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── TAB: IR17 ─── -->
+      <div id="tab-ir17" class="mod-tab">
+        <div class="tax-panel">
+          <div class="tax-header">
+            <div class="tax-header-icon">💼</div>
+            <div>
+              <div class="tax-header-title">Simulador IR-17 — Retención de Asalariados</div>
+              <div class="tax-header-sub">Retención en la fuente sobre salarios · Escala progresiva mensual DGII 2024</div>
+            </div>
+          </div>
+
+          <div class="upload-zone" id="upload-ir17" onclick="document.getElementById('file-ir17').click()"
+               ondragover="handleDragOver(event,'upload-ir17')" ondragleave="handleDragLeave('upload-ir17')"
+               ondrop="handleDrop(event,'ir17')">
+            <input type="file" id="file-ir17" accept=".pdf,.xlsx,.xls,.csv" onchange="handleFile(this,'ir17')">
+            <div class="uz-icon">📂</div>
+            <div class="uz-title">Sube planilla de nómina en Excel o PDF</div>
+            <div class="uz-sub">Extrae automáticamente nombres y salarios de la planilla</div>
+            <div class="uz-filename" id="fn-ir17"></div>
+          </div>
+          <div class="upload-status" id="status-ir17"></div>
+
+          <div class="tax-form-section">
+            <h3>👥 Empleados — Calcula retención por empleado</h3>
+            <div id="ir17-employees">
+              <!-- Empleado row template -->
+              <div class="ir17-emp-row" style="display:flex;gap:.75rem;align-items:flex-end;margin-bottom:.75rem;">
+                <div class="tax-field" style="flex:2">
+                  <label>Nombre empleado</label>
+                  <input type="text" class="emp-nombre" placeholder="Nombre completo">
+                </div>
+                <div class="tax-field" style="flex:1.5">
+                  <label>Salario bruto mensual</label>
+                  <input type="number" class="emp-salario" placeholder="RD$ 0.00" oninput="clearResult('ir17')">
+                </div>
+                <div class="tax-field" style="flex:1">
+                  <label>Otras remuneraciones</label>
+                  <input type="number" class="emp-otros" placeholder="RD$ 0.00" oninput="clearResult('ir17')">
+                </div>
+              </div>
+            </div>
+            <button onclick="addEmployeeRow()"
+              style="background:rgba(37,99,235,.2);border:1px solid rgba(37,99,235,.3);color:#93c5fd;padding:.45rem .9rem;border-radius:7px;font-size:.78rem;cursor:pointer;font-weight:600;">
+              + Agregar empleado
+            </button>
+          </div>
+
+          <div class="tax-form-section">
+            <h3>📋 Escala mensual DGII 2024 (referencia)</h3>
+            <div style="font-size:.78rem;color:rgba(255,255,255,.5);line-height:1.8;">
+              Hasta RD$34,685/mes → <strong style="color:#4ade80">0%</strong><br>
+              RD$34,685 – RD$52,027/mes → <strong style="color:#fcd34d">15%</strong> sobre el exceso<br>
+              RD$52,027 – RD$72,260/mes → RD$2,601 + <strong style="color:#fb923c">20%</strong> sobre el exceso<br>
+              Más de RD$72,260/mes → RD$6,647 + <strong style="color:#f87171">25%</strong> sobre el exceso
+            </div>
+          </div>
+
+          <button class="tax-calc-btn" onclick="calcIR17()">⚡ Calcular Retenciones IR-17</button>
+
+          <div class="tax-result" id="result-ir17">
+            <div class="tax-result-title">🧾 Resultado IR-17</div>
+            <div class="tax-result-main" id="result-ir17-main">RD$ 0.00</div>
+            <div class="tax-result-sub" id="result-ir17-sub"></div>
+            <div class="tax-result-breakdown" id="result-ir17-breakdown"></div>
+            <div class="tax-result-actions">
+              <button class="btn-save" onclick="saveCalc('ir17')">💾 Guardar resultado</button>
+              <button class="btn-ask-ia" onclick="askIAAbout('ir17')">🤖 Consultar con TaxIA</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── TAB: HISTORIAL ─── -->
+      <div id="tab-history" class="mod-tab">
+        <div class="history-list" id="history-list"></div>
+      </div>
+
+    </div><!-- /mod-main -->
+  </div><!-- /mod-layout -->
+</div><!-- /taxia-module -->
+
+
 <!-- ═══════════════════════════════════════════
      FOOTER
 ═══════════════════════════════════════════════ -->
@@ -1357,15 +2024,45 @@ function updateUIWithProfile() {
 /* ═══════════════════════════════════════════════════════════
    AUTH FUNCTIONS
 ═══════════════════════════════════════════════════════════ */
+const LANDING_SECTIONS = ['inicio','como','temas','ejemplos','planes'];
+
 function showLoggedIn() {
   document.getElementById('nav-auth-loading').style.display = 'none';
   document.getElementById('nav-auth-out').style.display = 'none';
   document.getElementById('nav-auth-in').style.display = 'block';
+  // Ocultar landing y mostrar módulo de trabajo
+  LANDING_SECTIONS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  document.querySelector('footer').style.display = 'none';
+  document.getElementById('chat-widget').style.display = 'none';
+  document.getElementById('taxia-module').style.display = 'block';
+  updateModPlanStrip();
 }
+
 function showLoggedOut() {
   document.getElementById('nav-auth-loading').style.display = 'none';
   document.getElementById('nav-auth-out').style.display = 'flex';
   document.getElementById('nav-auth-in').style.display = 'none';
+  // Ocultar módulo y mostrar landing
+  LANDING_SECTIONS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = '';
+  });
+  document.querySelector('footer').style.display = '';
+  document.getElementById('chat-widget').style.display = '';
+  document.getElementById('taxia-module').style.display = 'none';
+}
+
+function updateModPlanStrip() {
+  if (!userProfile) return;
+  const plan = userProfile.plan || 'libre';
+  const used = userProfile.queries_used || 0;
+  const limit = userProfile.queries_limit || PLAN_LIMITS[plan] || 10;
+  const left = Math.max(0, limit - used);
+  document.getElementById('mod-plan-name').textContent = PLAN_LABELS[plan] || plan;
+  document.getElementById('mod-queries-left').textContent = left + ' consultas restantes';
 }
 
 async function doLogin() {
@@ -1694,6 +2391,453 @@ async function incrementQueryCount() {
   updateUIWithProfile();
   if (used >= limit) setTimeout(() => blockChatLimit(), 1500);
   return true;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MÓDULO DE TRABAJO — TABS
+═══════════════════════════════════════════════════════════ */
+function switchModTab(tabId) {
+  document.querySelectorAll('.mod-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.mod-nav-item').forEach(b => b.classList.remove('active'));
+  const tab = document.getElementById('tab-' + tabId);
+  if (tab) tab.classList.add('active');
+  const btn = document.querySelector(`.mod-nav-item[data-tab="${tabId}"]`);
+  if (btn) btn.classList.add('active');
+  if (tabId === 'history') renderHistory();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FORMATO DE MONEDA
+═══════════════════════════════════════════════════════════ */
+function fmtRD(n) {
+  return 'RD$ ' + Math.abs(n).toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CARGA Y PARSEO DE DOCUMENTOS
+═══════════════════════════════════════════════════════════ */
+// Configura worker de PDF.js
+if (typeof pdfjsLib !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+function handleDragOver(e, zoneId) {
+  e.preventDefault();
+  document.getElementById(zoneId).classList.add('dragover');
+}
+function handleDragLeave(zoneId) {
+  document.getElementById(zoneId).classList.remove('dragover');
+}
+function handleDrop(e, formId) {
+  e.preventDefault();
+  const zoneId = 'upload-' + formId;
+  document.getElementById(zoneId).classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) processUploadedFile(file, formId);
+}
+function handleFile(input, formId) {
+  const file = input.files[0];
+  if (file) processUploadedFile(file, formId);
+}
+
+async function processUploadedFile(file, formId) {
+  const fnEl     = document.getElementById('fn-' + formId);
+  const statusEl = document.getElementById('status-' + formId);
+
+  fnEl.textContent = '📄 ' + file.name;
+  fnEl.style.display = 'block';
+  statusEl.textContent = '⏳ Procesando documento...';
+
+  try {
+    let text = '';
+    const ext = file.name.split('.').pop().toLowerCase();
+
+    if (ext === 'pdf') {
+      text = await extractPDFText(file);
+    } else if (['xlsx','xls'].includes(ext)) {
+      text = await extractExcelText(file);
+    } else if (ext === 'csv') {
+      text = await file.text();
+    }
+
+    const numbers = parseNumbersFromText(text);
+    fillFormFromExtraction(formId, numbers, text);
+    statusEl.textContent = '✅ Datos extraídos — revisa y ajusta antes de calcular';
+    statusEl.style.color = '#4ade80';
+  } catch(err) {
+    statusEl.textContent = '⚠️ No se pudo extraer automáticamente — ingresa los datos manualmente';
+    statusEl.style.color = '#fbbf24';
+    console.warn('[TaxIA] Error parsing file:', err);
+  }
+}
+
+async function extractPDFText(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let text = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(item => item.str).join(' ') + '\n';
+  }
+  return text;
+}
+
+async function extractExcelText(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const wb = XLSX.read(arrayBuffer, { type: 'array' });
+  let text = '';
+  wb.SheetNames.forEach(name => {
+    const ws = wb.Sheets[name];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false });
+    rows.forEach(row => { text += row.join('\t') + '\n'; });
+  });
+  return text;
+}
+
+function parseNumbersFromText(text) {
+  // Extrae pares clave:número del texto
+  const numbers = {};
+  // Busca patrones como "ventas 1,234,567.00" o "total: 500000"
+  const lines = text.split('\n');
+  lines.forEach(line => {
+    const lc = line.toLowerCase();
+    // Extrae el último número de la línea
+    const numMatch = line.match(/[\d,\.]+(?:\.\d{2})?$/);
+    if (!numMatch) return;
+    const val = parseFloat(numMatch[0].replace(/,/g,''));
+    if (isNaN(val) || val <= 0) return;
+    if (lc.includes('venta') && lc.includes('grav'))  numbers.ventasGravadas = val;
+    if (lc.includes('itbis') && lc.includes('cobr'))  numbers.itbisCobrado   = val;
+    if (lc.includes('venta') && lc.includes('exent')) numbers.ventasExentas  = val;
+    if (lc.includes('compra'))                        numbers.compras        = val;
+    if (lc.includes('itbis') && lc.includes('pagad')) numbers.itbisPagado   = val;
+    if (lc.includes('ingreso') && lc.includes('brut')) numbers.ingresosBrutos = val;
+    if (lc.includes('gasto') && lc.includes('deduc'))  numbers.gastosDed     = val;
+    if (lc.includes('retencion'))                      numbers.retenciones   = val;
+    if (lc.includes('costo') && lc.includes('vent'))   numbers.costoVentas   = val;
+    if (lc.includes('gasto') && lc.includes('oper'))   numbers.gastosOp      = val;
+    if ((lc.includes('salario') || lc.includes('sueldo')) && numMatch) {
+      if (!numbers.salarios) numbers.salarios = [];
+      numbers.salarios.push(val);
+    }
+  });
+  return numbers;
+}
+
+function fillFormFromExtraction(formId, nums, rawText) {
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el && val !== undefined) {
+      el.value = val;
+      el.classList.add('auto-filled');
+    }
+  };
+  if (formId === 'itbis') {
+    setVal('itbis-ventas-gravadas', nums.ventasGravadas);
+    setVal('itbis-cobrado',         nums.itbisCobrado || (nums.ventasGravadas ? +(nums.ventasGravadas * 0.18).toFixed(2) : undefined));
+    setVal('itbis-ventas-exentas',  nums.ventasExentas);
+    setVal('itbis-compras',         nums.compras);
+    setVal('itbis-pagado',          nums.itbisPagado || (nums.compras ? +(nums.compras * 0.18).toFixed(2) : undefined));
+  } else if (formId === 'ir1') {
+    setVal('ir1-ingresos',    nums.ingresosBrutos);
+    setVal('ir1-gastos',      nums.gastosDed);
+    setVal('ir1-retenciones', nums.retenciones);
+  } else if (formId === 'ir2') {
+    setVal('ir2-ingresos',     nums.ingresosBrutos);
+    setVal('ir2-costos',       nums.costoVentas);
+    setVal('ir2-gastos-op',    nums.gastosOp);
+    setVal('ir2-retenciones',  nums.retenciones);
+  } else if (formId === 'rst') {
+    setVal('rst-ingresos', nums.ingresosBrutos);
+  } else if (formId === 'ir17' && nums.salarios?.length) {
+    // Llena filas de empleados con salarios extraídos
+    const rows = document.querySelectorAll('.ir17-emp-row');
+    nums.salarios.forEach((sal, i) => {
+      if (i < rows.length) {
+        const inp = rows[i].querySelector('.emp-salario');
+        if (inp) { inp.value = sal; inp.classList.add('auto-filled'); }
+      } else {
+        addEmployeeRow();
+        const newRows = document.querySelectorAll('.ir17-emp-row');
+        const inp = newRows[i].querySelector('.emp-salario');
+        if (inp) { inp.value = sal; inp.classList.add('auto-filled'); }
+      }
+    });
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CALCULADORAS FISCALES
+═══════════════════════════════════════════════════════════ */
+
+function clearResult(formId) {
+  const el = document.getElementById('result-' + formId);
+  if (el) { el.classList.remove('show','negative'); }
+}
+
+function showResult(formId, mainText, subText, breakdown, isNegative) {
+  const box = document.getElementById('result-' + formId);
+  document.getElementById('result-' + formId + '-main').textContent = mainText;
+  document.getElementById('result-' + formId + '-sub').textContent  = subText;
+  const bd = document.getElementById('result-' + formId + '-breakdown');
+  bd.innerHTML = breakdown.map(r =>
+    `<div class="tax-result-line"><span>${r.label}</span><strong>${r.value}</strong></div>`
+  ).join('');
+  box.classList.add('show');
+  box.classList.toggle('negative', !!isNegative);
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── ITBIS ──
+function calcITBIS() {
+  const cobrado = parseFloat(document.getElementById('itbis-cobrado').value) || 0;
+  const pagado  = parseFloat(document.getElementById('itbis-pagado').value)  || 0;
+  const ventasG = parseFloat(document.getElementById('itbis-ventas-gravadas').value) || 0;
+  const compras = parseFloat(document.getElementById('itbis-compras').value) || 0;
+  // Si no ingresaron ITBIS explícito, calcular del 18%
+  const itbisCobrado = cobrado || +(ventasG * 0.18).toFixed(2);
+  const itbisPagado  = pagado  || +(compras  * 0.18).toFixed(2);
+  const aPagar = +(itbisCobrado - itbisPagado).toFixed(2);
+
+  const isCredit = aPagar < 0;
+  showResult('itbis',
+    isCredit ? fmtRD(aPagar) + ' (Crédito)' : fmtRD(aPagar),
+    isCredit
+      ? 'Tienes un crédito fiscal a favor que puedes utilizar en el próximo período'
+      : 'Monto a pagar a la DGII por concepto de ITBIS este período',
+    [
+      { label: 'ITBIS cobrado en ventas', value: fmtRD(itbisCobrado) },
+      { label: 'ITBIS pagado en compras', value: fmtRD(itbisPagado) },
+      { label: 'Diferencia (ITBIS neto)', value: (isCredit ? '−' : '') + fmtRD(aPagar) },
+    ],
+    isCredit
+  );
+  if (!isCredit) saveAutoCalc('ITBIS', aPagar);
+}
+
+// ── IR1 (Tabla progresiva DGII 2024) ──
+function calcImpuestoProg(renta, tabla) {
+  for (let i = tabla.length - 1; i >= 0; i--) {
+    const tramo = tabla[i];
+    if (renta > tramo.desde) {
+      return +(tramo.base + (renta - tramo.desde) * tramo.tasa).toFixed(2);
+    }
+  }
+  return 0;
+}
+const TABLA_IR1_2024 = [
+  { desde: 0,       tasa: 0,    base: 0       },
+  { desde: 416220,  tasa: 0.15, base: 0       },
+  { desde: 624329,  tasa: 0.20, base: 31216   },
+  { desde: 867123,  tasa: 0.25, base: 79776   },
+];
+
+function calcIR1() {
+  const ingresos    = parseFloat(document.getElementById('ir1-ingresos').value)    || 0;
+  const gastos      = parseFloat(document.getElementById('ir1-gastos').value)      || 0;
+  const retenciones = parseFloat(document.getElementById('ir1-retenciones').value) || 0;
+  const rentaNeta   = Math.max(0, ingresos - gastos);
+  const impuesto    = calcImpuestoProg(rentaNeta, TABLA_IR1_2024);
+  const aPagar      = Math.max(0, +(impuesto - retenciones).toFixed(2));
+  const tasaEfec    = rentaNeta > 0 ? ((impuesto / rentaNeta) * 100).toFixed(1) + '%' : '0%';
+
+  showResult('ir1',
+    fmtRD(aPagar),
+    `Tasa efectiva: ${tasaEfec} · Renta neta imponible: ${fmtRD(rentaNeta)}`,
+    [
+      { label: 'Ingresos brutos',       value: fmtRD(ingresos) },
+      { label: 'Gastos deducibles',      value: fmtRD(gastos) },
+      { label: 'Renta neta imponible',   value: fmtRD(rentaNeta) },
+      { label: 'Impuesto calculado',     value: fmtRD(impuesto) },
+      { label: 'Retenciones aplicadas',  value: '− ' + fmtRD(retenciones) },
+      { label: 'IR-1 a pagar',           value: fmtRD(aPagar) },
+    ]
+  );
+  if (aPagar > 0) saveAutoCalc('IR-1', aPagar);
+}
+
+// ── IR2 (27% Personas Jurídicas) ──
+function calcIR2() {
+  const ingresos  = parseFloat(document.getElementById('ir2-ingresos').value)    || 0;
+  const costos    = parseFloat(document.getElementById('ir2-costos').value)      || 0;
+  const gastosOp  = parseFloat(document.getElementById('ir2-gastos-op').value)   || 0;
+  const gastosOtr = parseFloat(document.getElementById('ir2-gastos-otros').value)|| 0;
+  const retenc    = parseFloat(document.getElementById('ir2-retenciones').value)  || 0;
+  const rentaNeta = Math.max(0, ingresos - costos - gastosOp - gastosOtr);
+  const impuesto  = +(rentaNeta * 0.27).toFixed(2);
+  const aPagar    = Math.max(0, +(impuesto - retenc).toFixed(2));
+
+  showResult('ir2',
+    fmtRD(aPagar),
+    `Tasa: 27% · Renta neta: ${fmtRD(rentaNeta)}`,
+    [
+      { label: 'Ingresos brutos',       value: fmtRD(ingresos) },
+      { label: 'Costo de ventas',        value: '− ' + fmtRD(costos) },
+      { label: 'Gastos operacionales',   value: '− ' + fmtRD(gastosOp) },
+      { label: 'Otros gastos',           value: '− ' + fmtRD(gastosOtr) },
+      { label: 'Renta neta imponible',   value: fmtRD(rentaNeta) },
+      { label: 'Impuesto (27%)',         value: fmtRD(impuesto) },
+      { label: 'Retenciones',           value: '− ' + fmtRD(retenc) },
+      { label: 'IR-2 a pagar',           value: fmtRD(aPagar) },
+    ]
+  );
+  if (aPagar > 0) saveAutoCalc('IR-2', aPagar);
+}
+
+// ── RST (2% ingresos brutos) ──
+function calcRST() {
+  const ingresos = parseFloat(document.getElementById('rst-ingresos').value)       || 0;
+  const pagos    = parseFloat(document.getElementById('rst-pagos-cuenta').value)   || 0;
+  const tipo     = document.getElementById('rst-tipo').value;
+  const tasa     = 0.02; // 2% para ambas categorías
+  const impuesto = +(ingresos * tasa).toFixed(2);
+  const aPagar   = Math.max(0, +(impuesto - pagos).toFixed(2));
+
+  showResult('rst',
+    fmtRD(aPagar),
+    `Tasa RST ${tipo}: 2% · Ingresos base: ${fmtRD(ingresos)}`,
+    [
+      { label: 'Ingresos brutos trimestrales', value: fmtRD(ingresos) },
+      { label: `Tasa RST (${tipo})`,           value: '2%' },
+      { label: 'Impuesto calculado',            value: fmtRD(impuesto) },
+      { label: 'Pagos a cuenta',                value: '− ' + fmtRD(pagos) },
+      { label: 'RST a pagar',                   value: fmtRD(aPagar) },
+    ]
+  );
+  if (aPagar > 0) saveAutoCalc('RST', aPagar);
+}
+
+// ── IR17 (Retención asalariados) ──
+const TABLA_IR17_2024 = [
+  { desde: 0,      tasa: 0,    base: 0    },
+  { desde: 34685,  tasa: 0.15, base: 0    },
+  { desde: 52027,  tasa: 0.20, base: 2601 },
+  { desde: 72260,  tasa: 0.25, base: 6647 },
+];
+
+function calcIR17() {
+  const rows = document.querySelectorAll('.ir17-emp-row');
+  let totalRetencion = 0;
+  const breakdown = [];
+  let valid = false;
+  rows.forEach(row => {
+    const nombre  = row.querySelector('.emp-nombre').value  || 'Empleado';
+    const salario = parseFloat(row.querySelector('.emp-salario').value) || 0;
+    const otros   = parseFloat(row.querySelector('.emp-otros').value)   || 0;
+    const base    = salario + otros;
+    if (base <= 0) return;
+    valid = true;
+    const ret = calcImpuestoProg(base, TABLA_IR17_2024);
+    totalRetencion += ret;
+    breakdown.push({ label: nombre, value: fmtRD(ret) + '/mes' });
+  });
+  if (!valid) { showToast('⚠️ Ingresa al menos un salario'); return; }
+  breakdown.push({ label: 'TOTAL retención IR-17', value: fmtRD(totalRetencion) + '/mes' });
+
+  showResult('ir17',
+    fmtRD(totalRetencion) + '/mes',
+    `Retención mensual total para ${breakdown.length - 1} empleado(s)`,
+    breakdown
+  );
+  saveAutoCalc('IR-17', totalRetencion);
+}
+
+function addEmployeeRow() {
+  const container = document.getElementById('ir17-employees');
+  const div = document.createElement('div');
+  div.className = 'ir17-emp-row';
+  div.style.cssText = 'display:flex;gap:.75rem;align-items:flex-end;margin-bottom:.75rem;';
+  div.innerHTML = `
+    <div class="tax-field" style="flex:2">
+      <label>Nombre empleado</label>
+      <input type="text" class="emp-nombre" placeholder="Nombre completo">
+    </div>
+    <div class="tax-field" style="flex:1.5">
+      <label>Salario bruto mensual</label>
+      <input type="number" class="emp-salario" placeholder="RD$ 0.00" oninput="clearResult('ir17')">
+    </div>
+    <div class="tax-field" style="flex:1">
+      <label>Otras remuneraciones</label>
+      <input type="number" class="emp-otros" placeholder="RD$ 0.00" oninput="clearResult('ir17')">
+    </div>
+    <button onclick="this.parentElement.remove();clearResult('ir17')"
+      style="background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.3);color:#f87171;padding:.4rem .6rem;border-radius:7px;cursor:pointer;margin-bottom:0;flex-shrink:0;">✕</button>
+  `;
+  container.appendChild(div);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HISTORIAL DE CÁLCULOS
+═══════════════════════════════════════════════════════════ */
+const HISTORY_KEY = 'taxia_calc_history';
+
+function saveAutoCalc(tipo, monto) {
+  // Se guarda automáticamente
+}
+
+function saveCalc(formId) {
+  const LABELS = { itbis:'ITBIS', ir1:'IR-1', ir2:'IR-2', rst:'RST', ir17:'IR-17' };
+  const mainEl = document.getElementById('result-' + formId + '-main');
+  if (!mainEl || !document.getElementById('result-' + formId).classList.contains('show')) {
+    showToast('⚠️ Calcula primero para guardar el resultado'); return;
+  }
+  const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+  history.unshift({
+    id: Date.now(),
+    tipo: LABELS[formId] || formId.toUpperCase(),
+    monto: mainEl.textContent,
+    fecha: new Date().toLocaleDateString('es-DO', { year:'numeric', month:'short', day:'numeric' }),
+    breakdown: document.getElementById('result-' + formId + '-breakdown').innerText,
+  });
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 50)));
+  showToast('💾 Cálculo guardado en Mis cálculos');
+}
+
+function renderHistory() {
+  const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+  const container = document.getElementById('history-list');
+  if (!history.length) {
+    container.innerHTML = `
+      <div class="history-empty">
+        <div class="he-icon">📭</div>
+        <div style="font-size:.9rem;font-weight:600;color:rgba(255,255,255,.4)">Sin cálculos guardados</div>
+        <div style="font-size:.78rem;">Usa los simuladores y presiona "Guardar resultado"</div>
+      </div>`;
+    return;
+  }
+  container.innerHTML = history.map(h => `
+    <div class="history-card">
+      <div>
+        <div class="hc-type">${h.tipo}</div>
+        <div class="hc-date">📅 ${h.fecha}</div>
+      </div>
+      <div class="hc-amount">${h.monto}</div>
+      <button class="hc-del" onclick="deleteCalc(${h.id})" title="Eliminar">🗑</button>
+    </div>
+  `).join('');
+}
+
+function deleteCalc(id) {
+  let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+  history = history.filter(h => h.id !== id);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  renderHistory();
+}
+
+/* Botón "Consultar con TaxIA" */
+function askIAAbout(formId) {
+  const PROMPTS = {
+    itbis: '¿Cuándo debo presentar el IT-1 de ITBIS y cuáles son las penalidades por presentación tardía?',
+    ir1:   '¿Qué gastos son deducibles para personas físicas en el IR-1 según la DGII?',
+    ir2:   '¿Cómo calculo el pago mínimo del IR-2 para personas jurídicas?',
+    rst:   '¿Quiénes califican para el Régimen Simplificado de Tributación (RST) en República Dominicana?',
+    ir17:  '¿Cómo funciona la retención de IR-17 para empleados y cuáles son las obligaciones del empleador?',
+  };
+  const prompt = PROMPTS[formId] || '¿Puedes explicarme más sobre esta declaración tributaria?';
+  switchModTab('chat');
+  showToast('💬 Pregunta enviada al asistente');
 }
 
 /* ═══════════════════════════════════════════════════════════
