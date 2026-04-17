@@ -622,10 +622,112 @@
     /* ── Tab: Chat ── */
     .mod-chat-wrap {
       flex: 1; display: flex; flex-direction: column; overflow: hidden;
+      background: #0b1628; position: relative;
     }
-    .mod-chat-wrap iframe {
-      flex: 1; border: none; width: 100%; height: 100%;
+
+    /* Mensajes */
+    .ia-messages {
+      flex: 1; overflow-y: auto; padding: 1.5rem 1.5rem 1rem;
+      display: flex; flex-direction: column; gap: 1rem;
+      scroll-behavior: smooth;
     }
+    .ia-messages::-webkit-scrollbar { width: 4px; }
+    .ia-messages::-webkit-scrollbar-track { background: transparent; }
+    .ia-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
+
+    .ia-msg { display: flex; gap: .75rem; align-items: flex-start; max-width: 82%; }
+    .ia-msg-user { align-self: flex-end; flex-direction: row-reverse; }
+    .ia-msg-bot  { align-self: flex-start; }
+
+    .ia-avatar {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      background: #1e3a8a; display: flex; align-items: center;
+      justify-content: center; font-size: .9rem; margin-top: 2px;
+    }
+    .ia-msg-user .ia-avatar { background: var(--gold,#f59e0b); color: #000; font-weight:800; font-size:.78rem; }
+
+    .ia-bubble {
+      padding: .75rem 1rem; border-radius: 14px;
+      font-size: .875rem; line-height: 1.65; word-break: break-word;
+    }
+    .ia-msg-bot  .ia-bubble {
+      background: rgba(255,255,255,.07); color: rgba(255,255,255,.9);
+      border-bottom-left-radius: 4px;
+    }
+    .ia-msg-user .ia-bubble {
+      background: #1e3a8a; color: white;
+      border-bottom-right-radius: 4px;
+    }
+    .ia-bubble strong { color: white; }
+    .ia-bubble code {
+      background: rgba(255,255,255,.12); padding: .1rem .35rem;
+      border-radius: 4px; font-size: .82rem;
+    }
+
+    /* Typing indicator */
+    .ia-typing .ia-bubble {
+      display: flex; align-items: center; gap: 4px; padding: .9rem 1rem;
+    }
+    .ia-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: rgba(255,255,255,.4);
+      animation: ia-bounce .9s ease-in-out infinite;
+    }
+    .ia-dot:nth-child(2) { animation-delay: .15s; }
+    .ia-dot:nth-child(3) { animation-delay: .30s; }
+    @keyframes ia-bounce {
+      0%,80%,100% { transform: translateY(0); }
+      40%          { transform: translateY(-6px); }
+    }
+
+    /* Barra de uso */
+    .ia-usage-bar {
+      padding: .4rem 1.5rem;
+      border-top: 1px solid rgba(255,255,255,.06);
+      background: rgba(0,0,0,.2);
+    }
+    .ia-usage-inner {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: .73rem; color: rgba(255,255,255,.35);
+    }
+    .ia-upgrade-btn {
+      background: rgba(245,158,11,.15); border: 1px solid rgba(245,158,11,.3);
+      color: #fcd34d; padding: .25rem .7rem; border-radius: 20px;
+      font-size: .72rem; font-weight: 700; cursor: pointer;
+    }
+    .ia-upgrade-btn:hover { background: rgba(245,158,11,.25); }
+
+    /* Input */
+    .ia-input-area {
+      display: flex; gap: .6rem; align-items: flex-end;
+      padding: .85rem 1.2rem; border-top: 1px solid rgba(255,255,255,.08);
+      background: #0d1b35;
+    }
+    .ia-input {
+      flex: 1; background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.12); border-radius: 12px;
+      color: white; padding: .7rem 1rem; font-size: .875rem;
+      resize: none; outline: none; max-height: 120px; line-height: 1.5;
+      font-family: inherit; transition: border .2s;
+    }
+    .ia-input:focus { border-color: #2563eb; background: rgba(37,99,235,.1); }
+    .ia-input::placeholder { color: rgba(255,255,255,.3); }
+    .ia-input:disabled { opacity: .4; cursor: not-allowed; }
+
+    .ia-send-btn {
+      width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+      background: #2563eb; border: none; color: white;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background .2s, transform .1s;
+    }
+    .ia-send-btn:hover:not(:disabled) { background: #1d4ed8; transform: scale(1.05); }
+    .ia-send-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+    .ia-cursor {
+      display: inline-block; animation: ia-blink .6s step-end infinite;
+      color: #60a5fa; font-weight: 300;
+    }
+    @keyframes ia-blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
     /* ── Tab: Tax tools ── */
     .tax-panel {
@@ -1284,12 +1386,49 @@
 
       <!-- ─── TAB: CHAT ─── -->
       <div id="tab-chat" class="mod-tab active">
-        <div class="mod-chat-wrap">
-          <iframe
-            src="https://udify.app/chatbot/BDvOq3yHNlSSon5R"
-            frameborder="0" allow="microphone"
-            style="width:100%;height:100%;border:none;">
-          </iframe>
+        <div class="mod-chat-wrap" id="mod-chat-wrap">
+
+          <!-- Mensajes -->
+          <div class="ia-messages" id="ia-messages">
+            <!-- Mensaje de bienvenida inicial -->
+            <div class="ia-msg ia-msg-bot">
+              <div class="ia-avatar">🤖</div>
+              <div class="ia-bubble">
+                <strong>¡Hola! Soy TaxIA</strong>, tu asistente tributario para República Dominicana. 🇩🇴<br><br>
+                Puedo ayudarte con ITBIS, IR-1, IR-2, RST, IR-17, facturación electrónica (e-CF), vencimientos DGII y mucho más.<br><br>
+                ¿En qué te puedo ayudar hoy?
+              </div>
+            </div>
+          </div>
+
+          <!-- Barra de consultas -->
+          <div class="ia-usage-bar" id="ia-usage-bar">
+            <div class="ia-usage-inner">
+              <span id="ia-usage-text">— consultas restantes este mes</span>
+              <button class="ia-upgrade-btn" onclick="openUpgradeModal('limit')" id="ia-upgrade-btn" style="display:none;">
+                ⚡ Mejorar plan
+              </button>
+            </div>
+          </div>
+
+          <!-- Input -->
+          <div class="ia-input-area" id="ia-input-area">
+            <textarea
+              id="ia-input"
+              class="ia-input"
+              placeholder="Escribe tu consulta tributaria..."
+              rows="1"
+              onkeydown="handleChatKey(event)"
+              oninput="autoGrowInput(this)">
+            </textarea>
+            <button class="ia-send-btn" id="ia-send-btn" onclick="sendChatMessage()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </div>
+
         </div>
       </div>
 
@@ -1916,6 +2055,14 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 const PAYPAL_PLAN_PRO     = 'P-XXXXXXXXXXXXXXXXXXXXXXXX';          // ← ID plan PayPal Pro
 const PAYPAL_PLAN_PROMAX  = 'P-YYYYYYYYYYYYYYYYYYYYYYYY';          // ← ID plan PayPal Pro Max
 
+// ── DIFY API ─────────────────────────────────────────────────────────────────
+// Cómo obtener el API Key:
+//   1. Ve a https://udify.app  →  tu app  →  "API Access" (barra lateral)
+//   2. Haz clic en "API Key" → copia la clave que empieza con app-...
+//   3. Reemplaza el valor de abajo
+const DIFY_API_KEY = 'app-aSUCW2Lvn1EW87z2jxLXVAwj'; // Dify API Key
+const DIFY_API_URL = 'https://api.dify.ai/v1';       // Base URL de la API
+
 /* ═══════════════════════════════════════════════════════════
    PLAN LIMITS
 ═══════════════════════════════════════════════════════════ */
@@ -2055,6 +2202,9 @@ function updateUIWithProfile() {
     blockChat();
     blockModuleChat(); // También bloquea el chat dentro del módulo
   }
+
+  // Actualizar barra de uso dentro del chat del módulo
+  updateIAUsageBar();
 
   // Reset date
   if (userProfile.reset_date) {
@@ -2512,6 +2662,192 @@ async function incrementQueryCount() {
   updateUIWithProfile();
   if (used >= limit) setTimeout(() => blockChatLimit(), 1500);
   return true;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CHAT CON DIFY API — conteo real de consultas
+═══════════════════════════════════════════════════════════ */
+let difyConvId = sessionStorage.getItem('taxia_conv_id') || '';
+
+function updateIAUsageBar() {
+  if (!userProfile) return;
+  const plan  = userProfile.plan || 'libre';
+  const used  = userProfile.queries_used  || 0;
+  const limit = userProfile.queries_limit || PLAN_LIMITS[plan] || 10;
+  const left  = Math.max(0, limit - used);
+  const el    = document.getElementById('ia-usage-text');
+  const btn   = document.getElementById('ia-upgrade-btn');
+  if (el)  el.textContent  = `${left} de ${limit} consultas restantes este mes`;
+  if (btn) btn.style.display = left <= 3 ? 'block' : 'none';
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
+}
+
+function autoGrowInput(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function iaAppendMsg(role, html, id) {
+  const container = document.getElementById('ia-messages');
+  const isUser    = role === 'user';
+  const userInitial = (currentUser?.email?.[0] || 'U').toUpperCase();
+  const div = document.createElement('div');
+  div.className = `ia-msg ${isUser ? 'ia-msg-user' : 'ia-msg-bot'}`;
+  if (id) div.id = id;
+  div.innerHTML = `
+    <div class="ia-avatar">${isUser ? userInitial : '🤖'}</div>
+    <div class="ia-bubble">${html}</div>
+  `;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+function iaShowTyping() {
+  const id = 'typing-' + Date.now();
+  iaAppendMsg('bot', `<div class="ia-dot"></div><div class="ia-dot"></div><div class="ia-dot"></div>`, id);
+  document.getElementById(id)?.classList.add('ia-typing');
+  return id;
+}
+
+function iaRemoveTyping(id) {
+  document.getElementById(id)?.remove();
+}
+
+function iaUpdateBubble(id, html) {
+  const el = document.getElementById(id)?.querySelector('.ia-bubble');
+  if (el) { el.innerHTML = html; }
+  const c = document.getElementById('ia-messages');
+  if (c) c.scrollTop = c.scrollHeight;
+}
+
+function iaSetInputDisabled(disabled) {
+  const inp = document.getElementById('ia-input');
+  const btn = document.getElementById('ia-send-btn');
+  if (inp) inp.disabled = disabled;
+  if (btn) btn.disabled = disabled;
+}
+
+async function sendChatMessage() {
+  const inp = document.getElementById('ia-input');
+  const msg = inp?.value.trim();
+  if (!msg) return;
+
+  // ── 1. Verificar límite de consultas
+  if (currentUser && userProfile) {
+    const used  = userProfile.queries_used  || 0;
+    const limit = userProfile.queries_limit || PLAN_LIMITS[userProfile.plan || 'libre'] || 10;
+    if (used >= limit) { openUpgradeModal('limit'); return; }
+  }
+
+  // ── 2. Mostrar mensaje del usuario
+  iaAppendMsg('user', escapeHtml(msg));
+  inp.value = '';
+  inp.style.height = 'auto';
+  iaSetInputDisabled(true);
+  const typingId = iaShowTyping();
+
+  // ── 3. Verificar que el API key está configurado
+  if (!DIFY_API_KEY || DIFY_API_KEY.startsWith('app-XXXX')) {
+    iaRemoveTyping(typingId);
+    iaAppendMsg('bot',
+      '⚙️ <strong>API Key de Dify no configurada.</strong><br><br>' +
+      'Ve a <strong>udify.app</strong> → tu app → <em>API Access</em> → copia tu clave y reemplaza ' +
+      '<code>DIFY_API_KEY</code> en el código.<br><br>' +
+      'Mientras tanto, usa el asistente en <a href="https://udify.app/chatbot/BDvOq3yHNlSSon5R" ' +
+      'target="_blank" style="color:#60a5fa">este enlace</a>.'
+    );
+    iaSetInputDisabled(false);
+    return;
+  }
+
+  // ── 4. Llamar Dify API con streaming
+  const botMsgId = 'bot-' + Date.now();
+  try {
+    const res = await fetch(`${DIFY_API_URL}/chat-messages`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${DIFY_API_KEY}`,
+        'Content-Type':  'application/json'
+      },
+      body: JSON.stringify({
+        inputs:          {},
+        query:           msg,
+        response_mode:   'streaming',
+        conversation_id: difyConvId,
+        user:            currentUser?.id || 'guest-' + Date.now()
+      })
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    iaRemoveTyping(typingId);
+    iaAppendMsg('bot', '', botMsgId);
+
+    // ── 5. Leer stream SSE
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText  = '';
+    let buffer    = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop(); // guarda línea incompleta
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        try {
+          const data = JSON.parse(line.slice(6));
+          if (data.event === 'message' && data.answer) {
+            fullText += data.answer;
+            iaUpdateBubble(botMsgId, formatBotText(fullText) + '<span class="ia-cursor">▍</span>');
+          }
+          if (data.event === 'message_end') {
+            if (data.conversation_id) {
+              difyConvId = data.conversation_id;
+              sessionStorage.setItem('taxia_conv_id', difyConvId);
+            }
+          }
+        } catch(_) {}
+      }
+    }
+
+    // Quitar cursor parpadeante
+    iaUpdateBubble(botMsgId, formatBotText(fullText));
+
+    // ── 6. Contar consulta en Supabase SOLO si hubo respuesta
+    if (fullText && currentUser) await incrementQueryCount();
+
+  } catch(err) {
+    iaRemoveTyping(typingId);
+    const errMsg = err.message.includes('Failed to fetch')
+      ? '🔌 No se pudo conectar con el asistente. Verifica tu conexión e inténtalo de nuevo.'
+      : `❌ Error: ${err.message}`;
+    iaAppendMsg('bot', errMsg);
+  }
+
+  iaSetInputDisabled(false);
+  document.getElementById('ia-input')?.focus();
+  updateIAUsageBar();
+}
+
+/* Formatea texto del bot: negrita, código, saltos de línea */
+function formatBotText(text) {
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\n/g, '<br>');
+}
+
+function escapeHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 /* ═══════════════════════════════════════════════════════════
