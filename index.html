@@ -2777,12 +2777,16 @@ async function sendChatMessage() {
         inputs:          {},
         query:           msg,
         response_mode:   'streaming',
-        conversation_id: difyConvId,
-        user:            currentUser?.id || 'guest-' + Date.now()
+        conversation_id: difyConvId || '',
+        user:            'taxia-user-' + (currentUser?.id?.slice(0,8) || 'guest')
       })
     });
 
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+      let errDetail = '';
+      try { const j = await res.json(); errDetail = j.message || j.error || JSON.stringify(j); } catch(_) {}
+      throw new Error(`HTTP ${res.status}${errDetail ? ': ' + errDetail : ''}`);
+    }
 
     iaRemoveTyping(typingId);
     iaAppendMsg('bot', '', botMsgId);
