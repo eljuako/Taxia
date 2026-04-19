@@ -2127,18 +2127,32 @@ function initSupabase() {
         // Estado definitivo post-carga (incluye resultado del PKCE exchange de OAuth)
         resolveInitialAuth(session);
 
+      } else if (event === 'TOKEN_REFRESHED') {
+        // Refresco silencioso del JWT — solo actualizar referencia, sin tocar UI
+        console.log('[TaxIA] Token refreshed silently');
+        currentUser = session.user;
+
       } else if (event === 'SIGNED_IN') {
         if (!initialAuthDone) {
           // SIGNED_IN llegó antes que INITIAL_SESSION (raro) — tratarlo igual
           resolveInitialAuth(session);
         } else {
-          // Login activo del usuario (modal email/password o Google)
           currentUser = session.user;
           await loadProfile();
-          showLoggedIn();
-          closeModal('login');
-          closeModal('register');
-          showToast('✅ ¡Bienvenido a TaxIA!');
+          // Solo hacer showLoggedIn si el usuario NO estaba ya en el módulo.
+          // Si el módulo YA está visible, esto es un SIGNED_IN por token refresh
+          // (Supabase a veces lo emite como SIGNED_IN en vez de TOKEN_REFRESHED).
+          // En ese caso, actualizamos perfil silenciosamente sin tocar el UI.
+          const yaEnModulo = document.getElementById('taxia-module')?.style.display === 'block';
+          if (!yaEnModulo) {
+            // Login nuevo desde modal email/password o Google
+            showLoggedIn();
+            closeModal('login');
+            closeModal('register');
+            showToast('✅ ¡Bienvenido a TaxIA!');
+          } else {
+            console.log('[TaxIA] SIGNED_IN con módulo ya activo — token refresh silencioso');
+          }
         }
 
       } else if (event === 'SIGNED_OUT') {
