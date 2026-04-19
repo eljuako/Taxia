@@ -2727,6 +2727,7 @@ function iaUpdateBubble(id, html) {
 function iaSetInputDisabled(disabled) {
   const inp = document.getElementById('ia-input');
   const btn = document.getElementById('ia-send-btn');
+  console.log('[TaxIA] iaSetInputDisabled(' + disabled + ')', new Error().stack.split('\n')[2]?.trim());
   if (inp) inp.disabled = disabled;
   if (btn) btn.disabled = disabled;
 }
@@ -2895,10 +2896,11 @@ async function sendChatMessage() {
     if (fullText && currentUser) await incrementQueryCount();
 
   } catch(err) {
+    console.error('[TaxIA] catch block:', err.name, err.message);
     clearTimeout(abortTimer);
     iaRemoveTyping(typingId);
     const isAbort   = err.name === 'AbortError';
-    const isNetwork = err.message.includes('Failed to fetch') || err.message.includes('NetworkError');
+    const isNetwork = (err.message || '').includes('Failed to fetch') || (err.message || '').includes('NetworkError');
     const errMsg = isAbort
       ? '⏱️ La respuesta tardó demasiado. Intenta de nuevo.'
       : isNetwork
@@ -2906,6 +2908,7 @@ async function sendChatMessage() {
         : `❌ Error: ${err.message}`;
     iaAppendMsg('bot', errMsg);
   } finally {
+    console.log('[TaxIA] finally block — re-enabling input');
     clearTimeout(abortTimer);
     // SIEMPRE re-habilitar el input, sin importar lo que pasó
     iaSetInputDisabled(false);
