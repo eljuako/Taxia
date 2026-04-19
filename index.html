@@ -2767,9 +2767,10 @@ async function sendChatMessage() {
   // ── 4. Llamar Dify API con streaming
   const botMsgId = 'bot-' + Date.now();
 
-  // AbortController: cancela automáticamente si Dify no responde en 60s
+  // AbortController: protege TODA la operación (conexión + streaming)
   const abortCtrl = new AbortController();
-  const abortTimer = setTimeout(() => abortCtrl.abort(), 60000);
+  // Timeout total: 3 min (modelos de razonamiento pueden tardar)
+  const abortTimer = setTimeout(() => abortCtrl.abort(), 180000);
 
   try {
     const res = await fetch(`${DIFY_API_URL}/chat-messages`, {
@@ -2788,7 +2789,7 @@ async function sendChatMessage() {
       signal: abortCtrl.signal
     });
 
-    clearTimeout(abortTimer); // respuesta recibida → cancelar timeout
+    // NO cancelar el abortTimer aquí — debe proteger también el streaming
 
     if (!res.ok) {
       let errDetail = '';
@@ -2805,9 +2806,23 @@ async function sendChatMessage() {
     let fullText   = '';
     let buffer     = '';
     let streamDone = false;
+    let chunkTimer = null; // timeout por chunk: aborta si no llegan datos en 20s
+
+    const resetChunkTimer = () => {
+      clearTimeout(chunkTimer);
+      chunkTimer = setTimeout(() => abortCtrl.abort(), 20000);
+    };
 
     while (!streamDone) {
-      const { done, value } = await reader.read();
+      resetChunkTimer(); // reiniciar timer en cada lectura
+      let done, value;
+      try {
+        ({ done, value } = await reader.read());
+      } catch(readErr) {
+        clearTimeout(chunkTimer);
+        throw readErr; // AbortError u otro error de red
+      }
+      clearTimeout(chunkTimer);
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
@@ -2864,7 +2879,8 @@ async function sendChatMessage() {
       }
     }
 
-    // Cancelar reader si el stream no cerró solo
+    // Limpiar timers y cancelar reader
+    clearTimeout(chunkTimer);
     try { reader.cancel(); } catch(_) {}
 
     // Quitar cursor parpadeante
