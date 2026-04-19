@@ -2794,46 +2794,67 @@ async function sendChatMessage() {
     // ── 5. Leer stream SSE
     const reader  = res.body.getReader();
     const decoder = new TextDecoder();
-    let fullText  = '';
-    let buffer    = '';
+    let fullText   = '';
+    let buffer     = '';
+    let streamDone = false;
 
-    while (true) {
+    while (!streamDone) {
       const { done, value } = await reader.read();
       if (done) break;
+
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
-      buffer = lines.pop(); // guarda línea incompleta
+      buffer = lines.pop();
 
       for (const line of lines) {
         if (!line.startsWith('data: ')) continue;
         try {
           const data = JSON.parse(line.slice(6));
+
           if (data.event === 'message' && data.answer) {
             fullText += data.answer;
             iaUpdateBubble(botMsgId, formatBotText(fullText) + '<span class="ia-cursor">▍</span>');
           }
+
           if (data.event === 'message_end') {
             if (data.conversation_id) {
               difyConvId = data.conversation_id;
               sessionStorage.setItem('taxia_conv_id', difyConvId);
             }
+            streamDone = true; // ← salir del loop cuando Dify termina
+            break;
           }
-        } catch(_) {}
+
+          // Errores devueltos dentro del stream
+          if (data.event === 'error') {
+            throw new Error(data.message || 'Error en el stream de Dify');
+          }
+        } catch(parseErr) {
+          if (parseErr.message && !parseErr.message.includes('JSON')) throw parseErr;
+        }
       }
     }
+
+    // Cancelar reader si el stream no cerró solo
+    try { reader.cancel(); } catch(_) {}
 
     // Quitar cursor parpadeante
     iaUpdateBubble(botMsgId, formatBotText(fullText));
 
-    // ── 6. Contar consulta en Supabase SOLO si hubo respuesta
+    // ── 6. Contar consulta SOLO si hubo respuesta
     if (fullText && currentUser) await incrementQueryCount();
 
   } catch(err) {
     iaRemoveTyping(typingId);
     const errMsg = err.message.includes('Failed to fetch')
-      ? '🔌 No se pudo conectar con el asistente. Verifica tu conexión e inténtalo de nuevo.'
+      ? '🔌 No se pudo conectar. Verifica tu conexión e inténtalo de nuevo.'
       : `❌ Error: ${err.message}`;
     iaAppendMsg('bot', errMsg);
+  } finally {
+    // SIEMPRE re-habilitar el input, sin importar lo que pasó
+    iaSetInputDisabled(false);
+    document.getElementById('ia-input')?.focus();
+    updateIAUsageBar();
   }
 
   iaSetInputDisabled(false);
