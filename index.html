@@ -2900,7 +2900,24 @@ async function sendChatMessage() {
 
 /* Formatea texto del bot: negrita, código, saltos de línea */
 function formatBotText(text) {
-  return text
+  let t = text;
+
+  // 1. Quitar bloques <think>...</think> completos (razonamiento interno del modelo)
+  t = t.replace(/<think>[\s\S]*?<\/think>/gi, '');
+
+  // 2. Si el bloque <think> aún no cerró (stream en curso), ocultarlo
+  //    y mostrar indicador de análisis
+  const openThink = t.search(/<think>/i);
+  if (openThink !== -1) {
+    t = t.slice(0, openThink).trim();
+    if (!t) return '<em style="color:var(--text-muted);font-size:.85rem">⏳ Analizando tu consulta...</em>';
+  }
+
+  t = t.trim();
+  if (!t) return '';
+
+  // 3. Escapar HTML y aplicar formato
+  return t
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/`([^`]+)`/g, '<code>$1</code>')
