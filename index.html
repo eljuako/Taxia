@@ -2766,6 +2766,11 @@ async function sendChatMessage() {
 
   // ── 4. Llamar Dify API con streaming
   const botMsgId = 'bot-' + Date.now();
+
+  // AbortController: cancela automáticamente si Dify no responde en 60s
+  const abortCtrl = new AbortController();
+  const abortTimer = setTimeout(() => abortCtrl.abort(), 60000);
+
   try {
     const res = await fetch(`${DIFY_API_URL}/chat-messages`, {
       method: 'POST',
@@ -2779,8 +2784,11 @@ async function sendChatMessage() {
         response_mode:   'streaming',
         conversation_id: difyConvId || '',
         user:            'taxia-user-' + (currentUser?.id?.slice(0,8) || 'guest')
-      })
+      }),
+      signal: abortCtrl.signal
     });
+
+    clearTimeout(abortTimer); // respuesta recibida → cancelar timeout
 
     if (!res.ok) {
       let errDetail = '';
@@ -2811,17 +2819,37 @@ async function sendChatMessage() {
         try {
           const data = JSON.parse(line.slice(6));
 
+          // Chatbot mode: event = "message"
           if (data.event === 'message' && data.answer) {
             fullText += data.answer;
             iaUpdateBubble(botMsgId, formatBotText(fullText) + '<span class="ia-cursor">▍</span>');
           }
 
+          // Agent mode: event = "agent_message"
+          if (data.event === 'agent_message' && data.answer) {
+            fullText += data.answer;
+            iaUpdateBubble(botMsgId, formatBotText(fullText) + '<span class="ia-cursor">▍</span>');
+          }
+
+          // Workflow mode: event = "text_chunk"
+          if (data.event === 'text_chunk' && data.data?.text) {
+            fullText += data.data.text;
+            iaUpdateBubble(botMsgId, formatBotText(fullText) + '<span class="ia-cursor">▍</span>');
+          }
+
+          // Fin del stream (chatbot / agent)
           if (data.event === 'message_end') {
             if (data.conversation_id) {
               difyConvId = data.conversation_id;
               sessionStorage.setItem('taxia_conv_id', difyConvId);
             }
-            streamDone = true; // ← salir del loop cuando Dify termina
+            streamDone = true;
+            break;
+          }
+
+          // Fin del stream (workflow)
+          if (data.event === 'workflow_finished') {
+            streamDone = true;
             break;
           }
 
@@ -2830,7 +2858,8 @@ async function sendChatMessage() {
             throw new Error(data.message || 'Error en el stream de Dify');
           }
         } catch(parseErr) {
-          if (parseErr.message && !parseErr.message.includes('JSON')) throw parseErr;
+          // Solo relanzar si NO es error de parseo JSON
+          if (parseErr.message && !parseErr.message.includes('JSON') && !parseErr.message.includes('Unexpected')) throw parseErr;
         }
       }
     }
@@ -2841,25 +2870,32 @@ async function sendChatMessage() {
     // Quitar cursor parpadeante
     iaUpdateBubble(botMsgId, formatBotText(fullText));
 
+    // Si no llegó texto (modo no reconocido), mostrar aviso
+    if (!fullText) {
+      iaUpdateBubble(botMsgId, '⚠️ No se recibió respuesta. Verifica la configuración de tu app en Dify.');
+    }
+
     // ── 6. Contar consulta SOLO si hubo respuesta
     if (fullText && currentUser) await incrementQueryCount();
 
   } catch(err) {
+    clearTimeout(abortTimer);
     iaRemoveTyping(typingId);
-    const errMsg = err.message.includes('Failed to fetch')
-      ? '🔌 No se pudo conectar. Verifica tu conexión e inténtalo de nuevo.'
-      : `❌ Error: ${err.message}`;
+    const isAbort   = err.name === 'AbortError';
+    const isNetwork = err.message.includes('Failed to fetch') || err.message.includes('NetworkError');
+    const errMsg = isAbort
+      ? '⏱️ La respuesta tardó demasiado. Intenta de nuevo.'
+      : isNetwork
+        ? '🔌 No se pudo conectar. Verifica tu conexión e inténtalo de nuevo.'
+        : `❌ Error: ${err.message}`;
     iaAppendMsg('bot', errMsg);
   } finally {
+    clearTimeout(abortTimer);
     // SIEMPRE re-habilitar el input, sin importar lo que pasó
     iaSetInputDisabled(false);
     document.getElementById('ia-input')?.focus();
     updateIAUsageBar();
   }
-
-  iaSetInputDisabled(false);
-  document.getElementById('ia-input')?.focus();
-  updateIAUsageBar();
 }
 
 /* Formatea texto del bot: negrita, código, saltos de línea */
