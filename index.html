@@ -2668,6 +2668,16 @@ async function incrementQueryCount() {
    CHAT CON DIFY API — conteo real de consultas
 ═══════════════════════════════════════════════════════════ */
 let difyConvId = sessionStorage.getItem('taxia_conv_id') || '';
+let iaSending  = false; // flag global para saber si hay una consulta activa
+
+// ── Safety net: si el input queda bloqueado sin consulta activa, lo reactiva
+setInterval(() => {
+  const inp = document.getElementById('ia-input');
+  if (inp && inp.disabled && !iaSending) {
+    console.warn('[TaxIA] SAFETY NET activado — input estaba bloqueado sin consulta activa');
+    iaSetInputDisabled(false);
+  }
+}, 3000);
 
 function updateIAUsageBar() {
   if (!userProfile) return;
@@ -2733,9 +2743,12 @@ function iaSetInputDisabled(disabled) {
 }
 
 async function sendChatMessage() {
+  if (iaSending) { console.warn('[TaxIA] sendChatMessage ignorado — ya hay una consulta activa'); return; }
   const inp = document.getElementById('ia-input');
   const msg = inp?.value.trim();
   if (!msg) return;
+  iaSending = true;
+  console.log('[TaxIA] sendChatMessage START');
 
   // ── 1. Verificar límite de consultas
   if (currentUser && userProfile) {
@@ -2908,7 +2921,8 @@ async function sendChatMessage() {
         : `❌ Error: ${err.message}`;
     iaAppendMsg('bot', errMsg);
   } finally {
-    console.log('[TaxIA] finally block — re-enabling input');
+    console.log('[TaxIA] finally block — re-enabling input, iaSending → false');
+    iaSending = false;
     clearTimeout(abortTimer);
     // SIEMPRE re-habilitar el input, sin importar lo que pasó
     iaSetInputDisabled(false);
