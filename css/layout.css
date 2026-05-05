@@ -63,6 +63,24 @@ nav {
   box-shadow: 0 4px 15px var(--gold-glow);
 }
 
+.btn-outline {
+  background: transparent;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s;
+  font-family: var(--font-body);
+}
+
+.btn-outline:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: white;
+}
+
 /* ═══════════════════════════════════════════
    HERO SECTION
 ═══════════════════════════════════════════════ */

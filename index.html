@@ -45,10 +45,28 @@
       <div class="orbit-area">
         <div class="orbit-ring"></div>
         <div class="avatar-circle" onclick="window.app.showModal('register')" title="Iniciar consulta">
-          <!-- Mascot (Simplified inline SVG based on original) -->
-          <svg class="avatar-svg" viewBox="0 0 130 130" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="65" cy="65" r="50" fill="url(#faceG2)"/>
-            <text x="65" y="75" font-family="'Outfit', sans-serif" font-size="30" font-weight="900" fill="#F59E0B" text-anchor="middle">🤖</text>
+          <!-- Professional AI Advisor SVG -->
+          <svg class="avatar-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.3"/>
+                <stop offset="100%" stop-color="#3B82F6" stop-opacity="0"/>
+              </radialGradient>
+              <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#FCD34D"/>
+                <stop offset="100%" stop-color="#F59E0B"/>
+              </linearGradient>
+            </defs>
+            <!-- Glow background -->
+            <circle cx="50" cy="50" r="50" fill="url(#glow)"/>
+            
+            <!-- Professional Silhouette -->
+            <path d="M50 20 C42 20 36 26 36 34 C36 42 42 48 50 48 C58 48 64 42 64 34 C64 26 58 20 50 20 Z" fill="url(#goldGradient)"/>
+            <path d="M25 80 C25 65 35 55 50 55 C65 55 75 65 75 80 L25 80 Z" fill="#3B82F6"/>
+            <!-- Tie detail -->
+            <path d="M47 56 L53 56 L50 70 Z" fill="url(#goldGradient)"/>
+            <!-- AI Spark -->
+            <path d="M68 25 L70 20 L75 18 L70 16 L68 11 L66 16 L61 18 L66 20 Z" fill="#fff" opacity="0.9"/>
           </svg>
         </div>
         <div class="chip chip-1"><div class="chip-icon" style="background:rgba(59,130,246,.2);">📊</div> ITBIS & ISR</div>
