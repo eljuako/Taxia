@@ -47,6 +47,27 @@ const app = {
   updateUIWithProfile(profile) {
     const nameEl = document.getElementById('user-name-display');
     if (nameEl) nameEl.textContent = profile.full_name || 'Usuario';
+    
+    const plan = profile.plan || 'libre';
+    const used = profile.queries_used || 0;
+    const limit = profile.queries_limit || window.CONFIG.PLAN_LIMITS[plan] || 10;
+    const remaining = Math.max(0, limit - used);
+    
+    const planDisplay = document.getElementById('user-plan-display');
+    if (planDisplay) planDisplay.textContent = window.CONFIG.PLAN_LABELS[plan] || 'Plan Libre';
+    
+    const usageText = document.getElementById('ia-usage-text');
+    if (usageText) usageText.textContent = `${remaining} de ${limit} consultas restantes`;
+    
+    const upgradeBtn = document.getElementById('btn-upgrade-top');
+    if (upgradeBtn) {
+      if (remaining <= 3) {
+        upgradeBtn.style.display = 'block';
+        upgradeBtn.textContent = remaining === 0 ? '🚫 Sin consultas - Mejorar' : '⚡ Mejorar plan';
+      } else {
+        upgradeBtn.style.display = 'none';
+      }
+    }
   },
 
   openSmartCard(type) {
