@@ -209,36 +209,46 @@
         <div class="sidebar-logo">Tax<span>IA</span> Pro</div>
       </div>
       
-      <div class="nav-section-title">Asistente</div>
-      <div class="nav-item active" data-tab="chat">💬 Consultar IA</div>
+      <div class="sidebar-scrollable">
+        <div class="nav-section-title">Asistente</div>
+        <div class="nav-item active" data-tab="chat">💬 Consultar IA</div>
+        
+        <div class="nav-section-title">Smart Tools</div>
+        <div class="nav-item" onclick="window.app.openSmartCard('itbis')">📊 Simular ITBIS</div>
+        <div class="nav-item" onclick="window.app.openSmartCard('ir1')">👤 Simular IR-1</div>
+        <div class="nav-item" onclick="window.app.openSmartCard('ir2')">🏢 Simular IR-2</div>
+        <div class="nav-item" onclick="window.app.openSmartCard('rst')">📋 Simular RST</div>
+        <div class="nav-item" onclick="window.app.openSmartCard('ir17')">💼 Simular IR-17</div>
+      </div>
       
-      <div class="nav-section-title">Smart Tools</div>
-      <div class="nav-item" onclick="window.app.openSmartCard('itbis')">📊 Simular ITBIS</div>
-      <div class="nav-item" onclick="window.app.openSmartCard('ir1')">👤 Simular IR-1</div>
-      <div class="nav-item" onclick="window.app.openSmartCard('ir2')">🏢 Simular IR-2</div>
-      <div class="nav-item" onclick="window.app.openSmartCard('rst')">📋 Simular RST</div>
-      <div class="nav-item" onclick="window.app.openSmartCard('ir17')">💼 Simular IR-17</div>
-      
-      <div class="user-profile-strip" onclick="window.auth.signOut()" title="Cerrar sesión">
-        <div class="avatar-mini" id="user-initial">U</div>
-        <div style="flex:1; overflow:hidden;">
-          <div id="user-name-display" style="font-size:0.85rem; font-weight:bold; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">Usuario</div>
-          <div id="user-plan-display" style="font-size:0.75rem; color:var(--gold-primary)">Plan Libre</div>
+      <div class="sidebar-bottom">
+        <!-- Indicador Dinámico de Consultas -->
+        <div class="usage-container">
+          <div class="usage-text">
+            <span>Uso mensual</span>
+            <span id="ia-usage-text">0 / 10</span>
+          </div>
+          <div class="usage-bar-bg">
+            <div class="usage-bar-fill" id="ia-usage-bar" style="width: 0%;"></div>
+          </div>
+          <button class="btn-upgrade-sidebar" onclick="document.getElementById('app-console').style.display='none'; document.getElementById('landing-page').style.display='block'; window.location.hash='#planes';">⚡ Mejorar Plan</button>
+        </div>
+
+        <!-- Logout / Profile -->
+        <div class="user-profile-strip" onclick="window.auth.signOut()" title="Cerrar sesión">
+          <div class="avatar-mini" id="user-initial">U</div>
+          <div style="flex:1; overflow:hidden;">
+            <div id="user-name-display" style="font-size:0.85rem; font-weight:bold; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">Usuario</div>
+            <div id="user-plan-display" style="font-size:0.75rem; color:var(--gold-primary)">Plan Libre</div>
+          </div>
+          <div style="color: var(--danger); font-size: 1.2rem;" title="Cerrar sesión">⍈</div>
         </div>
       </div>
     </div>
 
     <!-- MAIN CHAT WORKSPACE -->
     <div class="app-main">
-      <!-- Usage bar superior -->
-      <div style="position:absolute; top:0; left:0; right:0; background:rgba(13,25,48,0.8); backdrop-filter:blur(10px); padding:0.5rem 2rem; display:flex; justify-content:flex-end; align-items:center; z-index:10; border-bottom:1px solid rgba(255,255,255,0.05);">
-        <div style="font-size:0.8rem; color:var(--text-muted); display:flex; gap:1rem; align-items:center;">
-          <span id="ia-usage-text">-- consultas restantes</span>
-          <button id="btn-upgrade-top" class="btn-primary" style="padding:0.3rem 0.8rem; font-size:0.75rem; display:none;" onclick="document.getElementById('app-console').style.display='none'; document.getElementById('landing-page').style.display='block'; window.location.hash='#planes';">⚡ Mejorar</button>
-        </div>
-      </div>
-
-      <div class="chat-container" id="ia-messages" style="padding-top:60px;">
+      <div class="chat-container" id="ia-messages">
         <div class="chat-message msg-bot">
           <div class="msg-avatar" style="background: linear-gradient(135deg, #1e3a8a, #0f172a); border: 1px solid var(--gold-primary);">🤖</div>
           <div class="msg-content">

@@ -57,15 +57,16 @@ const app = {
     if (planDisplay) planDisplay.textContent = window.CONFIG.PLAN_LABELS[plan] || 'Plan Libre';
     
     const usageText = document.getElementById('ia-usage-text');
-    if (usageText) usageText.textContent = `${remaining} de ${limit} consultas restantes`;
+    if (usageText) usageText.textContent = `${used} / ${limit}`;
     
-    const upgradeBtn = document.getElementById('btn-upgrade-top');
-    if (upgradeBtn) {
-      if (remaining <= 3) {
-        upgradeBtn.style.display = 'block';
-        upgradeBtn.textContent = remaining === 0 ? '🚫 Sin consultas - Mejorar' : '⚡ Mejorar plan';
+    const usageBar = document.getElementById('ia-usage-bar');
+    if (usageBar) {
+      const pct = Math.min(100, (used / limit) * 100);
+      usageBar.style.width = `${pct}%`;
+      if (pct >= 90) {
+        usageBar.style.background = 'var(--danger)';
       } else {
-        upgradeBtn.style.display = 'none';
+        usageBar.style.background = 'linear-gradient(90deg, var(--blue-accent), var(--gold-primary))';
       }
     }
   },
