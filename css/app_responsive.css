@@ -1,0 +1,43 @@
+/* Add to end of app.css */
+.mobile-header {
+  display: none;
+  padding: 1rem 1.5rem;
+  background: var(--bg-deep);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  align-items: center;
+  justify-content: space-between;
+  z-index: 10;
+}
+.mobile-menu-btn {
+  background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .mobile-header { display: flex; }
+  
+  .app-sidebar {
+    position: absolute;
+    top: 0; bottom: 0; left: -100%;
+    width: 85%;
+    max-width: 320px;
+    transition: left 0.3s ease;
+    box-shadow: 10px 0 30px rgba(0,0,0,0.8);
+  }
+  .app-sidebar.open { left: 0; }
+  
+  .smart-card-panel {
+    width: 100%;
+    right: -100%;
+  }
+  
+  .chat-input-box {
+    margin: 0;
+    width: 100%;
+  }
+  .input-area-wrapper {
+    padding: 1rem;
+  }
+  .chat-container {
+    padding: 1rem;
+  }
+}

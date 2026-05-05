@@ -384,4 +384,14 @@ section {
   .orbit-ring { width: 260px; height: 260px; }
   .chip-1 { left: -10px; }
   .chip-2 { right: -20px; }
+  
+  .hero-title { font-size: 2.2rem; }
+  .hero-sub { font-size: 0.95rem; }
+  .stats-row { gap: 1.5rem; }
+  
+  .como-grid { grid-template-columns: 1fr !important; }
+  .ejemplos-grid { grid-template-columns: 1fr !important; }
+  .nav-auth { display: flex; flex-direction: column; gap: 0.5rem; }
+  .nav-auth .btn-outline { display: none; }
+  nav { padding: 0 5%; }
 }

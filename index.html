@@ -38,9 +38,9 @@
 
     <!-- HERO -->
     <section id="inicio">
-      <div class="hero-tag">🚀 IA Tributaria de Última Generación</div>
-      <h1 class="hero-title">Tu Asesor Tributario <br> <span class="text-gradient">Potenciado por IA</span></h1>
-      <p class="hero-sub">Despídete de la complejidad fiscal. TaxIA utiliza Inteligencia Artificial avanzada para resolver dudas, calcular impuestos y optimizar tu carga tributaria en República Dominicana.</p>
+      <div class="hero-tag">🎯 La herramienta definitiva para asesores</div>
+      <h1 class="hero-title">Optimiza y automatiza <br> <span class="text-gradient">tus consultas fiscales</span></h1>
+      <p class="hero-sub">Ahorra horas de investigación. Resuelve dudas normativas, calcula impuestos y analiza casos de la DGII al instante con precisión absoluta.</p>
       
       <div class="orbit-area">
         <div class="orbit-ring"></div>
@@ -225,6 +225,7 @@
     <div class="app-sidebar">
       <div class="sidebar-header">
         <div class="sidebar-logo">Tax<span>IA</span> Pro</div>
+        <button class="sidebar-close-btn" onclick="document.querySelector('.app-sidebar').classList.remove('open')" style="margin-left:auto; background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
       </div>
       
       <div class="sidebar-scrollable">
@@ -266,6 +267,12 @@
 
     <!-- MAIN CHAT WORKSPACE -->
     <div class="app-main">
+      <!-- Mobile Header -->
+      <div class="mobile-header">
+        <div style="font-weight:bold;">TaxIA Pro</div>
+        <button class="mobile-menu-btn" onclick="document.querySelector('.app-sidebar').classList.toggle('open')">☰</button>
+      </div>
+      
       <div class="chat-container" id="ia-messages">
         <div class="chat-message msg-bot">
           <div class="msg-avatar" style="background: linear-gradient(135deg, #1e3a8a, #0f172a); border: 1px solid var(--gold-primary);">🤖</div>
