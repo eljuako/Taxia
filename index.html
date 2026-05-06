@@ -25,102 +25,86 @@
       <a href="#inicio" class="nav-logo">Tax<span>IA</span></a>
       <ul class="nav-links">
         <li><a href="#inicio">Inicio</a></li>
-        <li><a href="#como">Cómo Funciona</a></li>
+        <li><a href="#como-funciona">Cómo Funciona</a></li>
         <li><a href="#temas">Temáticas</a></li>
-        <li><a href="#ejemplos">Ejemplos</a></li>
-        <li><a href="#planes">Planes</a></li>
+        <li><a href="#planes">Precios</a></li>
       </ul>
       <div class="nav-auth" id="nav-auth-out">
         <button onclick="window.app.showModal('login')" class="btn-outline">Iniciar sesión</button>
-        <button onclick="window.app.showModal('register')" class="nav-cta">Comenzar gratis</button>
+        <button onclick="window.app.showModal('register')" class="btn-primary">Comenzar gratis</button>
       </div>
     </nav>
 
     <!-- HERO -->
     <section id="inicio">
-      <div class="hero-tag">🎯 La herramienta definitiva para asesores</div>
-      <h1 class="hero-title" style="font-size: clamp(2rem, 4.5vw, 3.8rem); line-height: 1.2; max-width: 1000px; margin-left: auto; margin-right: auto;">
+      <div class="hero-tag">La herramienta definitiva para asesores en RD</div>
+      <h1 class="hero-title" style="font-size: clamp(2.5rem, 5vw, 4.5rem); line-height: 1.1; max-width: 900px; margin-bottom: 1.5rem;">
         Ahorra horas de investigación.<br>
-        <span class="text-gradient">Resuelve dudas normativas y analiza casos de la DGII al instante.</span>
+        <span class="text-gradient">Resuelve dudas de la DGII al instante.</span>
       </h1>
-      <p class="hero-sub" style="font-size: 1.2rem; font-weight: 500; letter-spacing: 0.5px; margin-top: 1.5rem;">
-        Optimiza y automatiza tus consultas fiscales con precisión absoluta.
+      <p class="hero-sub" style="font-size: 1.25rem; max-width: 700px; margin-bottom: 3rem;">
+        Optimiza y automatiza tus consultas fiscales. Encuentra normativas, calcula impuestos y valida comprobantes con precisión absoluta.
       </p>
       
-      <div class="orbit-area">
-        <div class="orbit-ring"></div>
-        <div class="avatar-circle" onclick="window.app.showModal('register')" title="Iniciar consulta">
-          <!-- Professional AI Advisor SVG -->
-          <svg class="avatar-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.3"/>
-                <stop offset="100%" stop-color="#3B82F6" stop-opacity="0"/>
-              </radialGradient>
-              <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#FCD34D"/>
-                <stop offset="100%" stop-color="#F59E0B"/>
-              </linearGradient>
-            </defs>
-            <!-- Glow background -->
-            <circle cx="50" cy="50" r="50" fill="url(#glow)"/>
-            
-            <!-- Professional Silhouette -->
-            <path d="M50 20 C42 20 36 26 36 34 C36 42 42 48 50 48 C58 48 64 42 64 34 C64 26 58 20 50 20 Z" fill="url(#goldGradient)"/>
-            <path d="M25 80 C25 65 35 55 50 55 C65 55 75 65 75 80 L25 80 Z" fill="#3B82F6"/>
-            <!-- Tie detail -->
-            <path d="M47 56 L53 56 L50 70 Z" fill="url(#goldGradient)"/>
-            <!-- AI Spark -->
-            <path d="M68 25 L70 20 L75 18 L70 16 L68 11 L66 16 L61 18 L66 20 Z" fill="#fff" opacity="0.9"/>
-          </svg>
-        </div>
-        <div class="chip chip-1"><div class="chip-icon" style="background:rgba(59,130,246,.2);">📊</div> ITBIS & ISR</div>
-        <div class="chip chip-2"><div class="chip-icon" style="background:rgba(245,158,11,.2);">📅</div> Calendario DGII</div>
-        <div class="chip chip-3"><div class="chip-icon" style="background:rgba(16,185,129,.2);">🧾</div> Facturación e-CF</div>
+      <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <button class="btn-primary" style="font-size: 1.1rem; padding: 1.2rem 2.5rem;" onclick="window.app.showModal('register')">Empezar gratis ahora</button>
+        <button class="btn-outline" style="font-size: 1.1rem; padding: 1.2rem 2.5rem;" onclick="document.getElementById('como-funciona').scrollIntoView({behavior: 'smooth'})">Ver cómo funciona</button>
       </div>
 
-      <div class="hero-bottom" style="text-align: center;">
-        <button class="btn-primary" style="font-size: 1.1rem; padding: 1rem 2.5rem;" onclick="window.app.showModal('register')">Hablar con TaxIA ahora</button>
-      </div>
-
-      <!-- Stats -->
-      <div class="stats-row">
-        <div class="stat"><div class="stat-num">+500</div><div class="stat-lbl">Artículos tributarios</div></div>
-        <div class="stat"><div class="stat-num">12</div><div class="stat-lbl">Áreas del derecho</div></div>
-        <div class="stat"><div class="stat-num">24/7</div><div class="stat-lbl">Disponible siempre</div></div>
+      <div class="trust-banner">
+        <div class="trust-stars">★★★★★</div>
+        <div class="trust-text">Calificado 4.9/5 por más de 500 contadores y empresas dominicanas</div>
       </div>
     </section>
 
-    <!-- CÓMO FUNCIONA -->
-    <section id="como">
+    <!-- COMO FUNCIONA (FEATURE BLOCKS) -->
+    <section id="como-funciona">
       <div class="section-header">
-        <div class="hero-tag" style="display:inline-block;">¿Cómo funciona?</div>
-        <h2>Tu experto tributario potenciado por IA</h2>
-        <p class="section-sub">Tecnología RAG para buscar en toda la normativa dominicana.</p>
+        <h2>Impulsa tu práctica fiscal con IA</h2>
+        <p class="section-sub">TaxIA procesa toda la normativa de la DGII para darte respuestas precisas en segundos, no en horas.</p>
       </div>
-      <div class="grid-cards como-grid" style="grid-template-columns: 1fr 1fr;">
-        <div class="steps-list" style="display:flex; flex-direction:column; gap:1.5rem;">
-          <div class="card" style="display:flex; gap:1rem; padding:1.5rem;">
-            <div class="step-num" style="background:var(--blue-accent); color:white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; flex-shrink:0;">1</div>
-            <div><h4>Haz tu consulta</h4><p>Escribe tu pregunta en lenguaje natural. TaxIA entiende el contexto.</p></div>
-          </div>
-          <div class="card" style="display:flex; gap:1rem; padding:1.5rem;">
-            <div class="step-num" style="background:var(--blue-accent); color:white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; flex-shrink:0;">2</div>
-            <div><h4>Búsqueda inteligente</h4><p>Busca en +500 artículos de leyes, reglamentos y circulares de la DGII.</p></div>
-          </div>
-          <div class="card" style="display:flex; gap:1rem; padding:1.5rem;">
-            <div class="step-num" style="background:var(--blue-accent); color:white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; flex-shrink:0;">3</div>
-            <div><h4>Respuesta fundamentada</h4><p>Recibes citas precisas de la normativa aplicable.</p></div>
-          </div>
+
+      <div class="feature-block">
+        <div class="feature-content">
+          <div class="hero-tag" style="display:inline-block;">Paso 1</div>
+          <h3>Haz consultas en lenguaje natural</h3>
+          <p>Olvida buscar entre cientos de PDFs y leyes. Simplemente pregúntale a TaxIA como si hablaras con un colega experto.</p>
+          <ul style="list-style: none; margin-top: 1.5rem; color: var(--text-muted);">
+            <li style="margin-bottom: 0.5rem;">✓ Entiende el contexto fiscal dominicano</li>
+            <li style="margin-bottom: 0.5rem;">✓ Aclara dudas sobre retenciones y exenciones</li>
+            <li>✓ Valida formatos de facturación e-CF</li>
+          </ul>
         </div>
-        <div class="card chat-demo" style="background:rgba(13,25,48,0.8); border:1px solid var(--gold-glow);">
-          <div style="font-size:0.8rem; color:var(--gold-primary); text-transform:uppercase; margin-bottom:1rem; font-weight:bold;">Ejemplo de consulta</div>
-          <div style="background:rgba(59,130,246,0.1); padding:1rem; border-radius:10px; margin-bottom:1rem; color:white; font-size:0.9rem;">
-            ¿Cuál es la tasa del ITBIS para servicios médicos?
-          </div>
-          <div style="background:rgba(255,255,255,0.05); padding:1rem; border-radius:10px; color:var(--text-muted); font-size:0.9rem;">
-            De acuerdo con el Art. 343 del Código Tributario (Ley 11-92), los servicios de salud están <strong>exentos del ITBIS</strong>. Esto incluye consultas, hospitalización y análisis.<br><br><em style="color:var(--gold-primary)">📌 Fuente: Art. 343, Ley 11-92</em>
-          </div>
+        <div class="feature-image">
+          <div class="feature-icon-large">💬</div>
+        </div>
+      </div>
+
+      <div class="feature-block">
+        <div class="feature-content">
+          <div class="hero-tag" style="display:inline-block; background:rgba(0,209,178,0.1); color:var(--secondary); border-color:rgba(0,209,178,0.2);">Paso 2</div>
+          <h3>Respuestas con base legal exacta</h3>
+          <p>Nunca más adivines. Cada respuesta de TaxIA viene acompañada de la cita exacta del Código Tributario, Reglamento o Norma General que la sustenta.</p>
+          <ul style="list-style: none; margin-top: 1.5rem; color: var(--text-muted);">
+            <li style="margin-bottom: 0.5rem;">✓ Citas precisas (Ej. Art. 343 Ley 11-92)</li>
+            <li style="margin-bottom: 0.5rem;">✓ Jurisprudencia y resoluciones actualizadas</li>
+            <li>✓ Links directos a la normativa de la DGII</li>
+          </ul>
+        </div>
+        <div class="feature-image" style="background: #F0FDF4; border-color: #BBF7D0;">
+          <div class="feature-icon-large">⚖️</div>
+        </div>
+      </div>
+
+      <div class="feature-block">
+        <div class="feature-content">
+          <div class="hero-tag" style="display:inline-block; background:rgba(255,107,107,0.1); color:var(--accent-warm); border-color:rgba(255,107,107,0.2);">Paso 3</div>
+          <h3>Simuladores y calculadoras integradas</h3>
+          <p>No solo responde preguntas. TaxIA incluye herramientas inteligentes para proyectar ITBIS, ISR, IR-17 y retenciones al instante.</p>
+          <button class="btn-outline" style="margin-top: 1.5rem;" onclick="window.app.showModal('register')">Probar Calculadora ITBIS</button>
+        </div>
+        <div class="feature-image" style="background: #FEF2F2; border-color: #FECACA;">
+          <div class="feature-icon-large">🧮</div>
         </div>
       </div>
     </section>
@@ -128,97 +112,103 @@
     <!-- TEMÁTICAS -->
     <section id="temas">
       <div class="section-header">
-        <div class="hero-tag" style="display:inline-block;">Temáticas</div>
-        <h2>12 áreas tributarias cubiertas</h2>
-        <p class="section-sub">Domina toda la normativa tributaria dominicana.</p>
+        <h2>Domina todas las áreas tributarias</h2>
+        <p class="section-sub">TaxIA está entrenado con la biblioteca virtual completa de la DGII.</p>
       </div>
       <div class="grid-cards temas-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
-        <div class="card"><div class="card-icon">📊</div><h3>ITBIS</h3><p>Impuesto a la transferencia de bienes y servicios.</p></div>
-        <div class="card"><div class="card-icon">💰</div><h3>ISR</h3><p>Impuesto sobre la renta (físicas y jurídicas).</p></div>
-        <div class="card"><div class="card-icon">🏢</div><h3>RNC</h3><p>Registro Nacional y obligaciones formales.</p></div>
-        <div class="card"><div class="card-icon">📅</div><h3>Declaraciones</h3><p>Plazos, formularios y procedimientos.</p></div>
-        <div class="card"><div class="card-icon">🧾</div><h3>e-CF</h3><p>Facturación electrónica y comprobantes.</p></div>
-        <div class="card"><div class="card-icon">🚗</div><h3>Vehículos</h3><p>Importación, placa y transferencia.</p></div>
-        <div class="card"><div class="card-icon">🏠</div><h3>Inmuebles</h3><p>IPI y transferencia inmobiliaria.</p></div>
-        <div class="card"><div class="card-icon">📋</div><h3>RST</h3><p>Régimen simplificado de tributación.</p></div>
+        <div class="card"><div class="card-icon">📊</div><h3>ITBIS</h3><p>Transferencia de bienes y servicios.</p></div>
+        <div class="card"><div class="card-icon">💰</div><h3>ISR</h3><p>Renta para personas físicas y jurídicas.</p></div>
+        <div class="card"><div class="card-icon">🏢</div><h3>RNC</h3><p>Obligaciones y comprobantes fiscales.</p></div>
+        <div class="card"><div class="card-icon">🧾</div><h3>e-CF</h3><p>Facturación electrónica paso a paso.</p></div>
       </div>
     </section>
 
-    <!-- EJEMPLOS -->
-    <section id="ejemplos">
-      <div class="section-header">
-        <div class="hero-tag" style="display:inline-block;">Ejemplos</div>
-        <h2>Preguntas frecuentes</h2>
-        <p class="section-sub">Haz clic en cualquier pregunta para iniciar una consulta.</p>
-      </div>
-      <div class="grid-cards ejemplos-grid" style="grid-template-columns: 1fr 1fr 1fr;">
-        <div class="card" style="cursor:pointer;" onclick="window.app.showModal('register')">¿Cómo se calcula el ITBIS en servicios profesionales?</div>
-        <div class="card" style="cursor:pointer;" onclick="window.app.showModal('register')">¿Cuáles son los plazos para declarar ISR?</div>
-        <div class="card" style="cursor:pointer;" onclick="window.app.showModal('register')">¿Qué documentos necesito para el RNC?</div>
-        <div class="card" style="cursor:pointer;" onclick="window.app.showModal('register')">¿Cómo funciona la facturación electrónica?</div>
-        <div class="card" style="cursor:pointer;" onclick="window.app.showModal('register')">¿Exenciones de ITBIS para exportaciones?</div>
-        <div class="card" style="cursor:pointer;" onclick="window.app.showModal('register')">¿Sanciones por declaración tardía?</div>
-      </div>
-    </section>
-
-    <!-- PLANES -->
+    <!-- PLANES / PRECIOS -->
     <section id="planes">
       <div class="section-header">
-        <div class="hero-tag" style="display:inline-block;">Precios</div>
-        <h2>Planes para cada necesidad</h2>
-        <p class="section-sub">Empieza gratis y escala cuando lo necesites.</p>
+        <h2>Precios simples y transparentes</h2>
+        <p class="section-sub">Comienza gratis hoy. Escala a medida que tu cartera de clientes crece.</p>
       </div>
-      <div class="grid-cards planes-grid">
-        
+      
+      <div class="pricing-grid planes-grid">
         <!-- Plan Libre -->
-        <div class="card plan-card" style="display:flex; flex-direction:column;">
-          <h3 style="font-size:1.5rem; color:white;">Libre</h3>
-          <div style="font-size:2.5rem; font-weight:800; color:var(--gold-primary); margin:1rem 0;">RD$0 <span style="font-size:1rem; color:var(--text-muted); font-weight:normal;">/ mes</span></div>
-          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem; flex:1;">Para explorar TaxIA y resolver consultas puntuales.</p>
-          <ul style="list-style:none; padding:0; margin-bottom:2rem; font-size:0.9rem; color:white; line-height:2;">
-            <li>✓ 10 consultas mensuales</li>
-            <li>✓ Acceso a las 12 temáticas</li>
-            <li>✓ Respuestas fundamentadas</li>
+        <div class="plan-card">
+          <h3>Libre</h3>
+          <div class="plan-price">RD$0 <span>/ mes</span></div>
+          <p style="color:var(--text-muted); font-size:0.9rem;">Para explorar la plataforma.</p>
+          <ul class="plan-features">
+            <li>10 consultas mensuales</li>
+            <li>Acceso a todas las temáticas</li>
+            <li>Citas de normativa básica</li>
           </ul>
-          <button class="btn-outline" style="width:100%; padding:1rem; border-radius:8px; cursor:pointer; background:transparent; border:1px solid rgba(255,255,255,0.2); color:white; font-weight:bold;" onclick="window.app.showModal('register')">Comenzar gratis</button>
+          <button class="btn-outline" style="width:100%;" onclick="window.app.showModal('register')">Empezar gratis</button>
         </div>
 
-        <!-- Plan Pro -->
-        <div class="card plan-card featured" style="display:flex; flex-direction:column; border-color:var(--gold-primary); transform:scale(1.05); box-shadow:0 10px 40px var(--gold-glow); position:relative;">
-          <div style="position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--gold-primary); color:black; font-size:0.8rem; font-weight:bold; padding:4px 12px; border-radius:20px;">Más popular</div>
-          <h3 style="font-size:1.5rem; color:white;">Pro</h3>
-          <div style="font-size:2.5rem; font-weight:800; color:var(--gold-primary); margin:1rem 0;">RD$1,500 <span style="font-size:1rem; color:var(--text-muted); font-weight:normal;">/ mes</span></div>
-          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem; flex:1;">Para contadores y empresas con consultas frecuentes.</p>
-          <ul style="list-style:none; padding:0; margin-bottom:2rem; font-size:0.9rem; color:white; line-height:2;">
-            <li>✓ 100 consultas mensuales</li>
-            <li>✓ Calendario DGII integrado</li>
-            <li>✓ Alertas de vencimientos</li>
-            <li>✓ Todo lo del plan Libre</li>
+        <!-- Plan Pro (Destacado) -->
+        <div class="plan-card popular">
+          <div class="popular-badge">Más Popular</div>
+          <h3>Pro</h3>
+          <div class="plan-price">RD$1,500 <span>/ mes</span></div>
+          <p style="color:var(--text-muted); font-size:0.9rem;">Para asesores y firmas contables.</p>
+          <ul class="plan-features">
+            <li>100 consultas mensuales</li>
+            <li>Simuladores tributarios (ITBIS, ISR)</li>
+            <li>Alertas de vencimientos</li>
+            <li>Soporte prioritario</li>
           </ul>
-          <div id="paypal-pro" style="min-height:45px; background:rgba(255,255,255,0.05); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:0.8rem; color:var(--text-muted);">Cargando PayPal...</div>
+          <!-- Placeholder de PayPal -->
+          <div id="paypal-pro" style="background:#F7F9FC; border:1px solid #E2E8F0; border-radius:8px; padding:1rem; font-size:0.85rem; color:var(--text-muted);">
+            Botón PayPal (Configurar en Producción)
+          </div>
         </div>
 
         <!-- Plan Pro Max -->
-        <div class="card plan-card" style="display:flex; flex-direction:column;">
-          <h3 style="font-size:1.5rem; color:white;">Pro Max</h3>
-          <div style="font-size:2.5rem; font-weight:800; color:var(--gold-primary); margin:1rem 0;">RD$5,500 <span style="font-size:1rem; color:var(--text-muted); font-weight:normal;">/ mes</span></div>
-          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem; flex:1;">Para firmas contables con alta carga fiscal.</p>
-          <ul style="list-style:none; padding:0; margin-bottom:2rem; font-size:0.9rem; color:white; line-height:2;">
-            <li>✓ 1,000 consultas mensuales</li>
-            <li>✓ Llenado asistido (IR-1, IT-1)</li>
-            <li>✓ Memos tributarios automáticos</li>
-            <li>✓ Todo lo del plan Pro</li>
+        <div class="plan-card">
+          <h3>Pro Max</h3>
+          <div class="plan-price">RD$5,500 <span>/ mes</span></div>
+          <p style="color:var(--text-muted); font-size:0.9rem;">Para grandes despachos y empresas.</p>
+          <ul class="plan-features">
+            <li>Consultas ilimitadas</li>
+            <li>Auditoría de comprobantes</li>
+            <li>Llenado asistido de formularios</li>
+            <li>API de integración</li>
           </ul>
-          <div id="paypal-promax" style="min-height:45px; background:rgba(255,255,255,0.05); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:0.8rem; color:var(--text-muted);">Cargando PayPal...</div>
+          <!-- Placeholder de PayPal -->
+          <div id="paypal-promax" style="background:#F7F9FC; border:1px solid #E2E8F0; border-radius:8px; padding:1rem; font-size:0.85rem; color:var(--text-muted);">
+            Botón PayPal (Configurar en Producción)
+          </div>
         </div>
-
       </div>
     </section>
 
     <!-- FOOTER -->
-    <footer style="text-align:center; padding:3rem 0; color:var(--text-muted); font-size:0.85rem; border-top:1px solid rgba(255,255,255,0.05); margin-top:4rem;">
-      <p>© 2025 <strong>TaxIA</strong> — Asistente Tributario para República Dominicana</p>
-      <p style="margin-top:0.5rem;">No constituye asesoría legal. Consulte siempre con un contador certificado.</p>
+    <footer>
+      <div class="footer-grid">
+        <div class="footer-col">
+          <h3 style="font-family:var(--font-display); font-weight:900;">Tax<span>IA</span></h3>
+          <p style="margin-top:1rem; max-width:300px;">El primer consultor tributario con Inteligencia Artificial diseñado exclusivamente para la normativa fiscal de República Dominicana.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Plataforma</h4>
+          <ul>
+            <li><a href="#como-funciona">Características</a></li>
+            <li><a href="#planes">Precios</a></li>
+            <li><a href="#temas">Base de Conocimiento</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="#">Términos de Servicio</a></li>
+            <li><a href="#">Privacidad</a></li>
+            <li><a href="#">Aviso Legal</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 TaxIA RD. Todos los derechos reservados.</p>
+        <p style="margin-top:0.5rem; font-size:0.8rem;">Esta plataforma provee información basada en la IA y no sustituye la asesoría formal de un CPA certificado.</p>
+      </div>
     </footer>
   </div>
 
