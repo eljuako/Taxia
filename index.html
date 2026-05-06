@@ -697,12 +697,273 @@
       .v2-float-badge.b1, .v2-float-badge.b2 { display: none; }
     }
     @media (max-width: 600px) {
-      section#inicio.v2-hero { padding-top: 110px; }
+      section#inicio.v2-hero { padding-top: 110px; padding-bottom: 50px; }
       .v2-temas-grid { grid-template-columns: 1fr; }
       .v2-footer-grid { grid-template-columns: 1fr; }
-      .v2-hero h1 { font-size: 2.4rem; }
-      .v2-stats-grid { grid-template-columns: 1fr 1fr; }
+      .v2-hero h1 { font-size: 2.2rem; line-height: 1.1; }
+      .v2-hero-sub { font-size: 1rem; }
+      .v2-stats-grid { grid-template-columns: 1fr 1fr; gap: 1.8rem; }
       .v2-logos-inner { flex-direction: column; align-items: flex-start; }
+      .v2-stat-num { font-size: 2rem; }
+      .v2-stat-label { font-size: 0.85rem; }
+      .v2-section-title { font-size: 1.7rem; }
+      .v2-section-sub { font-size: 1rem; }
+    }
+
+    /* ═════════════════════════════════
+       HAMBURGUESA + DRAWER MÓVIL
+    ═════════════════════════════════ */
+    .v2-hamburger {
+      display: none;
+      width: 44px; height: 44px;
+      background: transparent; border: none; cursor: pointer;
+      flex-direction: column; justify-content: center; align-items: center; gap: 5px;
+      padding: 0;
+    }
+    .v2-hamburger span {
+      display: block; width: 24px; height: 2.5px;
+      background: var(--text-main); border-radius: 2px;
+      transition: transform .3s, opacity .3s;
+    }
+    body.v2-menu-open .v2-hamburger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    body.v2-menu-open .v2-hamburger span:nth-child(2) { opacity: 0; }
+    body.v2-menu-open .v2-hamburger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    .v2-mobile-drawer {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px);
+      z-index: 99;
+    }
+    body.v2-menu-open .v2-mobile-drawer { display: block; }
+    .v2-drawer-content {
+      position: absolute; top: 0; right: 0; bottom: 0;
+      width: 85%; max-width: 320px;
+      background: #fff; padding: 5rem 1.5rem 2rem;
+      box-shadow: -10px 0 30px rgba(0,0,0,0.15);
+      display: flex; flex-direction: column; gap: 0.4rem;
+      animation: slideInRight .3s ease;
+    }
+    @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+    .v2-drawer-content a {
+      padding: 0.9rem 0.6rem; color: var(--text-main); font-weight: 600;
+      border-radius: 8px; text-decoration: none; font-size: 1rem;
+    }
+    .v2-drawer-content a:hover { background: #F8FAFC; color: var(--primary); }
+    .v2-drawer-close {
+      position: absolute; top: 1.2rem; right: 1.2rem;
+      background: #F1F5F9; border: none; width: 36px; height: 36px;
+      border-radius: 50%; cursor: pointer; font-size: 1.1rem; color: var(--text-main);
+    }
+
+    /* ═════════════════════════════════
+       MEJORAS RESPONSIVE GENERALES
+    ═════════════════════════════════ */
+    @media (max-width: 768px) {
+      /* Mostrar hamburguesa, ocultar nav-auth desktop */
+      .v2-hamburger { display: flex; }
+      .v2-nav .nav-auth { display: none !important; }
+      .v2-nav { padding: 0 5%; height: 70px; }
+      .nav-logo { font-size: 1.5rem; }
+
+      /* Tighten section padding */
+      section { padding: 4rem 5%; }
+      .v2-benefits, .v2-steps, .v2-compare, .v2-temas,
+      .v2-testimonios, .v2-pricing, .v2-faq, .v2-final-cta,
+      .v2-stats { padding: 4rem 5%; }
+
+      /* Hero padding */
+      section#inicio.v2-hero { padding: 110px 5% 60px; }
+      .v2-hero-grid { gap: 2.5rem; }
+
+      /* CTAs apilados full-width */
+      .v2-hero-cta-row { flex-direction: column; gap: 0.7rem; }
+      .v2-hero-cta-row > button,
+      .v2-final-inner > div > button { width: 100%; }
+      .v2-btn-large { padding: 1rem 1.5rem; font-size: 0.95rem; }
+
+      /* Trust banner alineado a izquierda */
+      .v2-hero-trust { flex-wrap: wrap; gap: 0.8rem; padding-top: 1rem; }
+
+      /* Pill responsive */
+      .v2-pill { font-size: 0.75rem; padding: 0.4rem 0.85rem; }
+
+      /* Mock chat más compacto */
+      .v2-mock-frame { transform: none; box-shadow: 0 14px 30px -10px rgba(15,23,42,.18); }
+      .v2-mock-body { padding: 1rem; }
+      .v2-mock-bubble { font-size: 0.82rem; padding: 0.65rem 0.9rem; }
+      .v2-mock-url { font-size: 0.7rem; max-width: 160px; }
+
+      /* Step visuals */
+      .v2-step h3 { font-size: 1.5rem; }
+      .v2-step-visual { padding: 1.2rem; min-height: auto; }
+      .v2-step-num { width: 44px; height: 44px; font-size: 1.2rem; }
+
+      /* Compare cards */
+      .v2-compare-col { padding: 1.8rem 1.4rem; }
+      .v2-compare-col h4 { font-size: 1.15rem; }
+
+      /* Testimonios */
+      .v2-test-card { padding: 1.6rem; }
+
+      /* Pricing */
+      .v2-plan { padding: 2rem 1.5rem; }
+      .v2-plan-price { font-size: 2.5rem; }
+
+      /* FAQ */
+      .v2-faq-q { font-size: 0.95rem; gap: 0.5rem; }
+
+      /* Final CTA */
+      .v2-final-cta { padding: 4rem 5%; }
+      .v2-final-cta h2 { font-size: 1.9rem; }
+      .v2-final-cta p { font-size: 1rem; }
+      .v2-final-inner > div { flex-direction: column; gap: 0.7rem; }
+
+      /* Footer */
+      footer.v2-footer { padding: 3rem 5% 2rem; }
+      .v2-footer-bottom { flex-direction: column; text-align: center; }
+      .v2-footer-bottom p { text-align: center !important; }
+
+      /* Modal upgrade — scrollable y stack */
+      #modal-upgrade .modal {
+        max-width: 95%; padding: 1.3rem; max-height: 92vh;
+      }
+      #modal-upgrade h2 { font-size: 1.3rem; }
+      .upgrade-grid { grid-template-columns: 1fr; gap: 0.8rem; margin-top: 1rem; }
+      .upgrade-plan { padding: 1.2rem 1rem; }
+      .upgrade-plan .price { font-size: 1.7rem; }
+      .upgrade-plan ul { margin: 0.6rem 0; }
+      .upgrade-plan li { font-size: 0.78rem; padding: 0.25rem 0; }
+
+      /* Modal login/register en mobile */
+      .modal { padding: 1.6rem 1.3rem; max-height: 92vh; }
+      .modal h2 { font-size: 1.4rem; }
+
+      /* Sidebar app-console: logout siempre visible */
+      .sidebar-bottom { padding: 1rem; }
+      .btn-logout { padding: 0.85rem; font-size: 0.9rem; }
+
+      /* Chat container más compacto */
+      .chat-container { padding: 1rem 0.8rem; gap: 1rem; }
+      .chat-message { max-width: 95%; }
+      .msg-content { padding: 0.9rem; font-size: 0.92rem; }
+    }
+
+    @media (max-width: 420px) {
+      .v2-hero h1 { font-size: 1.95rem; letter-spacing: -1px; }
+      .v2-hero-sub { font-size: 0.95rem; }
+      .v2-stats-grid { grid-template-columns: 1fr; }
+      .v2-section-title { font-size: 1.55rem; }
+      .v2-plan-price { font-size: 2.2rem; }
+      .v2-final-cta h2 { font-size: 1.7rem; }
+      .v2-float-badge { display: none !important; }
+      .v2-mock-bar .v2-mock-url { max-width: 110px; }
+      footer.v2-footer { padding: 2.5rem 5% 1.5rem; }
+    }
+
+    /* Evitar scroll del body cuando el drawer/modal está abierto */
+    body.v2-menu-open { overflow: hidden; }
+
+    /* ═════════════════════════════════
+       TOAST NOTIFICATIONS
+    ═════════════════════════════════ */
+    .toast-container {
+      position: fixed; top: 1.2rem; right: 1.2rem; z-index: 9999;
+      display: flex; flex-direction: column; gap: 0.6rem;
+      pointer-events: none;
+    }
+    .toast {
+      background: #fff; border: 1px solid var(--v2-border, #E5EAF2);
+      border-left: 4px solid var(--primary);
+      border-radius: 12px; padding: 0.9rem 1.2rem;
+      box-shadow: 0 12px 32px -10px rgba(15,23,42,0.25);
+      min-width: 280px; max-width: 380px;
+      font-size: 0.92rem; color: var(--text-main);
+      pointer-events: auto;
+      animation: toastIn .3s ease;
+      display: flex; align-items: center; gap: 0.7rem;
+    }
+    .toast.success { border-left-color: var(--success); }
+    .toast.error { border-left-color: var(--danger); }
+    .toast.info { border-left-color: var(--primary); }
+    .toast .icon {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.95rem; flex-shrink: 0;
+    }
+    .toast.success .icon { background: rgba(16,185,129,0.12); color: var(--success); }
+    .toast.error .icon { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .toast.info .icon { background: rgba(37,99,235,0.12); color: var(--primary); }
+    .toast.fadeout { animation: toastOut .3s ease forwards; }
+    @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes toastOut { to { transform: translateX(100%); opacity: 0; } }
+
+    /* Form feedback inline en modales */
+    .form-feedback {
+      padding: 0.7rem 0.9rem; border-radius: 10px; margin-bottom: 0.8rem;
+      font-size: 0.85rem; line-height: 1.45;
+    }
+    .form-feedback.error { background: rgba(239,68,68,0.08); color: #B91C1C; border: 1px solid rgba(239,68,68,0.2); }
+    .form-feedback.success { background: rgba(16,185,129,0.08); color: #047857; border: 1px solid rgba(16,185,129,0.2); }
+    .btn-auth:disabled, button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* ═════════════════════════════════
+       BOTÓN PAPERCLIP + PREVIEW DE ADJUNTO
+    ═════════════════════════════════ */
+    .chat-input-box { gap: 0.3rem; }
+    .btn-attach {
+      width: 42px; height: 42px; min-width: 42px;
+      background: transparent; border: none; cursor: pointer;
+      color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 8px; transition: all .2s; align-self: flex-end;
+      margin-bottom: 0.2rem; margin-left: 0.2rem;
+    }
+    .btn-attach:hover { background: rgba(37,99,235,0.08); color: var(--primary); }
+
+    .chat-attachment-preview {
+      display: flex; align-items: center; gap: 0.8rem;
+      background: #fff; border: 1px solid #E2E8F0;
+      border-radius: 12px; padding: 0.6rem 0.8rem;
+      margin-bottom: 0.6rem;
+      box-shadow: 0 2px 6px rgba(15,23,42,0.05);
+    }
+    .chat-attachment-preview img {
+      width: 50px; height: 50px; object-fit: cover;
+      border-radius: 8px; flex-shrink: 0;
+    }
+    .chat-attachment-preview .att-info { flex: 1; min-width: 0; }
+    .chat-attachment-preview .att-name {
+      font-size: 0.88rem; font-weight: 600; color: var(--text-main);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .chat-attachment-preview .att-status {
+      font-size: 0.78rem; color: var(--text-muted); margin-top: 0.1rem;
+    }
+    .chat-attachment-preview.uploading .att-status { color: var(--primary); }
+    .chat-attachment-preview.error { border-color: rgba(239,68,68,0.3); }
+    .chat-attachment-preview.error .att-status { color: var(--danger); }
+    .att-remove {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: #F1F5F9; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 0.9rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s; flex-shrink: 0;
+    }
+    .att-remove:hover { background: var(--danger); color: #fff; }
+
+    /* Imagen dentro del bubble del usuario */
+    .msg-image {
+      max-width: 100%; max-height: 280px; border-radius: 8px;
+      margin-bottom: 0.5rem; display: block;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    @media (max-width: 768px) {
+      .toast-container { top: auto; bottom: 1rem; right: 0.6rem; left: 0.6rem; }
+      .toast { min-width: 0; max-width: none; width: 100%; }
+      .chat-attachment-preview img { width: 42px; height: 42px; }
+      .btn-attach { width: 38px; height: 38px; min-width: 38px; }
     }
 
     /* ═════════════════════════════════
@@ -862,6 +1123,9 @@
 </head>
 <body>
 
+  <!-- Toast container (notificaciones) -->
+  <div id="toast-container" class="toast-container"></div>
+
   <!-- ════════════════════════════════════════════════════════
        LANDING PAGE v2
   ════════════════════════════════════════════════════════ -->
@@ -881,7 +1145,26 @@
         <button onclick="window.app.showModal('login')" class="btn-outline">Iniciar sesión</button>
         <button onclick="document.getElementById('planes').scrollIntoView({behavior:'smooth'})" class="v2-cta-btn">Probar gratis</button>
       </div>
+      <!-- Hamburguesa mobile -->
+      <button class="v2-hamburger" aria-label="Menú" onclick="document.body.classList.toggle('v2-menu-open')">
+        <span></span><span></span><span></span>
+      </button>
     </nav>
+
+    <!-- Drawer móvil -->
+    <div class="v2-mobile-drawer" onclick="if(event.target===this) document.body.classList.remove('v2-menu-open')">
+      <div class="v2-drawer-content">
+        <button class="v2-drawer-close" onclick="document.body.classList.remove('v2-menu-open')" aria-label="Cerrar">✕</button>
+        <a href="#beneficios" onclick="document.body.classList.remove('v2-menu-open')">Beneficios</a>
+        <a href="#como-funciona" onclick="document.body.classList.remove('v2-menu-open')">Cómo funciona</a>
+        <a href="#temas" onclick="document.body.classList.remove('v2-menu-open')">Temáticas</a>
+        <a href="#planes" onclick="document.body.classList.remove('v2-menu-open')">Precios</a>
+        <a href="#faq" onclick="document.body.classList.remove('v2-menu-open')">FAQ</a>
+        <hr style="border:none; border-top:1px solid var(--v2-border); margin:1rem 0;">
+        <button class="btn-outline" style="width:100%; margin-bottom:0.7rem;" onclick="document.body.classList.remove('v2-menu-open'); window.app.showModal('login')">Iniciar sesión</button>
+        <button class="v2-cta-btn" style="width:100%;" onclick="document.body.classList.remove('v2-menu-open'); window.app.showModal('register')">Probar gratis →</button>
+      </div>
+    </div>
 
     <!-- HERO ASIMÉTRICO -->
     <section id="inicio" class="v2-hero">
@@ -1398,6 +1681,7 @@
 
         <div class="nav-section-title">Smart Tools</div>
         <div class="nav-item" data-tool="itbis" onclick="window.app.openSmartCard('itbis')"><span class="nav-item-label">📊 Simular ITBIS</span></div>
+        <div class="nav-item" data-tool="rst" onclick="window.app.openSmartCard('rst')"><span class="nav-item-label">📋 Simular RST</span></div>
         <div class="nav-item" data-tool="ir1" onclick="window.app.openSmartCard('ir1')"><span class="nav-item-label">👤 Simular IR-1</span><span class="lock-badge">🔒 Pro</span></div>
         <div class="nav-item" data-tool="ir2" onclick="window.app.openSmartCard('ir2')"><span class="nav-item-label">🏢 Simular IR-2</span><span class="lock-badge">🔒 Pro</span></div>
         <div class="nav-item" data-tool="ir17" onclick="window.app.openSmartCard('ir17')"><span class="nav-item-label">💼 Simular IR-17</span><span class="lock-badge">🔒 Pro</span></div>
@@ -1453,7 +1737,20 @@
       </div>
 
       <div class="input-area-wrapper">
+        <!-- Preview de imagen adjunta -->
+        <div id="chat-attachment-preview" class="chat-attachment-preview" style="display:none;">
+          <img id="chat-preview-img" src="" alt="Adjunto">
+          <div class="att-info">
+            <div class="att-name" id="chat-preview-name">imagen.jpg</div>
+            <div class="att-status" id="chat-preview-status">Lista para enviar</div>
+          </div>
+          <button class="att-remove" onclick="window.chat.removeAttachment()" title="Quitar adjunto">✕</button>
+        </div>
         <div class="chat-input-box">
+          <button class="btn-attach" onclick="document.getElementById('chat-file-input').click()" title="Adjuntar imagen" aria-label="Adjuntar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <input type="file" id="chat-file-input" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif" style="display:none;" onchange="window.chat.handleFileSelect(event)">
           <textarea id="chat-input" rows="1" placeholder="Hazme una pregunta tributaria... (Presiona Enter para enviar)"></textarea>
           <div class="btn-send" onclick="window.chat.sendChatMessage()">➤</div>
         </div>
@@ -1481,7 +1778,8 @@
         <label>Contraseña</label>
         <input type="password" id="login-pass" placeholder="••••••••">
       </div>
-      <button class="btn-auth v2-cta-btn" style="width:100%; margin-top:0.5rem;" onclick="window.auth.doLogin(document.getElementById('login-email').value, document.getElementById('login-pass').value)">Entrar</button>
+      <div id="login-feedback" class="form-feedback" style="display:none;"></div>
+      <button id="btn-login-submit" class="btn-auth v2-cta-btn" style="width:100%; margin-top:0.5rem;" onclick="window.app.handleLogin()">Entrar</button>
 
       <div style="text-align:center; margin:1.5rem 0; color:var(--text-muted); font-size:0.8rem; position:relative;">
         <span style="background:#fff; padding:0 10px; position:relative; z-index:1;">o</span>
@@ -1516,7 +1814,8 @@
         <label>Contraseña</label>
         <input type="password" id="register-pass" placeholder="••••••••">
       </div>
-      <button class="btn-auth v2-cta-btn" style="width:100%; margin-top:0.5rem;" onclick="window.auth.doRegister(document.getElementById('register-name').value, document.getElementById('register-email').value, document.getElementById('register-pass').value)">Crear cuenta gratis</button>
+      <div id="register-feedback" class="form-feedback" style="display:none;"></div>
+      <button id="btn-register-submit" class="btn-auth v2-cta-btn" style="width:100%; margin-top:0.5rem;" onclick="window.app.handleRegister()">Crear cuenta gratis</button>
 
       <div style="text-align:center; margin:1.5rem 0; color:var(--text-muted); font-size:0.8rem; position:relative;">
         <span style="background:#fff; padding:0 10px; position:relative; z-index:1;">o</span>

@@ -2,16 +2,15 @@
 
 // Herramientas disponibles por plan
 const PLAN_TOOLS = {
-  libre:   ['itbis'],
-  pro:     ['itbis', 'ir1', 'ir2', 'ir17'],
-  pro_max: ['itbis', 'ir1', 'ir2', 'ir17'],
+  libre:   ['itbis', 'rst'],
+  pro:     ['itbis', 'rst', 'ir1', 'ir2', 'ir17'],
+  pro_max: ['itbis', 'rst', 'ir1', 'ir2', 'ir17'],
 };
 
 const app = {
   init() {
     window.auth.initSupabase();
     this.setupListeners();
-    // Por defecto (sin perfil cargado aún), tratar como libre
     this.applyPlanLocks('libre');
   },
 
@@ -34,12 +33,9 @@ const app = {
       });
     }
 
-    // Cerrar modales al hacer click fuera del contenido
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
       overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
-          overlay.classList.remove('open');
-        }
+        if (e.target === overlay) overlay.classList.remove('open');
       });
     });
   },
@@ -47,6 +43,9 @@ const app = {
   showModal(id) {
     const el = document.getElementById(`modal-${id}`);
     if (el) el.classList.add('open');
+    // Limpiar feedback al abrir
+    if (id === 'login') this.setFormFeedback('login', '');
+    if (id === 'register') this.setFormFeedback('register', '');
   },
 
   closeModal(id) {
@@ -64,19 +63,109 @@ const app = {
     document.getElementById('app-console').style.display = 'none';
   },
 
-  // Marca como bloqueadas las herramientas que el plan actual no incluye
+  // ─────────── TOAST ───────────
+  showToast(message, type = 'info', duration = 4000) {
+    const cont = document.getElementById('toast-container');
+    if (!cont) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    const icons = { success: '✓', error: '✕', info: 'ℹ' };
+    toast.innerHTML = `<div class="icon">${icons[type] || 'ℹ'}</div><div>${message}</div>`;
+    cont.appendChild(toast);
+    setTimeout(() => {
+      toast.classList.add('fadeout');
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
+  },
+
+  // ─────────── FORM FEEDBACK ───────────
+  setFormFeedback(form, message, type) {
+    const el = document.getElementById(`${form}-feedback`);
+    if (!el) return;
+    if (!message) {
+      el.style.display = 'none';
+      el.textContent = '';
+      return;
+    }
+    el.className = `form-feedback ${type || ''}`;
+    el.textContent = message;
+    el.style.display = 'block';
+  },
+
+  // ─────────── LOGIN HANDLER ───────────
+  async handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const pass = document.getElementById('login-pass').value;
+    const btn = document.getElementById('btn-login-submit');
+
+    if (!email || !pass) {
+      this.setFormFeedback('login', 'Completa email y contraseña.', 'error');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Entrando...';
+    this.setFormFeedback('login', '');
+
+    try {
+      await window.auth.doLogin(email, pass);
+      this.showToast('¡Bienvenido a TaxIA!', 'success');
+      this.closeModal('login');
+    } catch (err) {
+      this.setFormFeedback('login', err.message || 'Error al iniciar sesión.', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+    }
+  },
+
+  // ─────────── REGISTER HANDLER ───────────
+  async handleRegister() {
+    const name = document.getElementById('register-name').value.trim();
+    const email = document.getElementById('register-email').value.trim();
+    const pass = document.getElementById('register-pass').value;
+    const btn = document.getElementById('btn-register-submit');
+
+    if (!name) { this.setFormFeedback('register', 'Ingresa tu nombre completo.', 'error'); return; }
+    if (!email || !email.includes('@')) { this.setFormFeedback('register', 'Ingresa un correo válido.', 'error'); return; }
+    if (!pass || pass.length < 6) { this.setFormFeedback('register', 'La contraseña debe tener al menos 6 caracteres.', 'error'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Creando cuenta...';
+    this.setFormFeedback('register', '');
+
+    try {
+      const result = await window.auth.doRegister(name, email, pass);
+      if (result.needsConfirmation) {
+        // Supabase pidió confirmación de email
+        this.setFormFeedback('register',
+          `✉️ Te enviamos un correo a ${email} para confirmar tu cuenta. Revisa tu bandeja (y spam) y haz clic en el enlace para activarla.`,
+          'success'
+        );
+        btn.textContent = 'Revisa tu correo';
+        // No cerramos el modal — el usuario debe ver el mensaje
+      } else {
+        // Cuenta creada y sesión iniciada
+        this.showToast('¡Cuenta creada con éxito!', 'success');
+        this.closeModal('register');
+        btn.textContent = 'Crear cuenta gratis';
+      }
+    } catch (err) {
+      this.setFormFeedback('register', err.message || 'Error al crear la cuenta.', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Crear cuenta gratis';
+    }
+  },
+
+  // ─────────── PLAN LOCKS ───────────
   applyPlanLocks(plan) {
     const allowed = PLAN_TOOLS[plan] || PLAN_TOOLS.libre;
     document.querySelectorAll('.nav-item[data-tool]').forEach(el => {
       const tool = el.dataset.tool;
-      if (allowed.includes(tool)) {
-        el.classList.remove('locked');
-      } else {
-        el.classList.add('locked');
-      }
+      if (allowed.includes(tool)) el.classList.remove('locked');
+      else el.classList.add('locked');
     });
 
-    // Marcar plan actual en el modal de upgrade
     ['libre', 'pro', 'promax'].forEach(key => {
       const tag = document.getElementById('tag-current-' + key);
       const card = document.getElementById('upgrade-' + key);
@@ -107,9 +196,7 @@ const app = {
     const limit = profile.queries_limit || (window.CONFIG && window.CONFIG.PLAN_LIMITS[plan]) || 10;
 
     const planDisplay = document.getElementById('user-plan-display');
-    if (planDisplay) {
-      planDisplay.textContent = (window.CONFIG && window.CONFIG.PLAN_LABELS[plan]) || 'Plan Libre';
-    }
+    if (planDisplay) planDisplay.textContent = (window.CONFIG && window.CONFIG.PLAN_LABELS[plan]) || 'Plan Libre';
 
     const usageText = document.getElementById('ia-usage-text');
     if (usageText) usageText.textContent = `${used} / ${limit}`;
@@ -118,25 +205,19 @@ const app = {
     if (usageBar) {
       const pct = Math.min(100, (used / limit) * 100);
       usageBar.style.width = `${pct}%`;
-      if (pct >= 90) {
-        usageBar.style.background = 'var(--danger)';
-      } else {
-        usageBar.style.background = 'var(--secondary)';
-      }
+      usageBar.style.background = pct >= 90 ? 'var(--danger)' : 'var(--secondary)';
     }
 
-    // Aplicar candados según plan
     this.applyPlanLocks(plan);
   },
 
+  // ─────────── SMART CARDS ───────────
   openSmartCard(type) {
-    // Validar plan antes de abrir el simulador
     const profile = window.auth.getUserProfile();
     const plan = profile?.plan || 'libre';
     const allowed = PLAN_TOOLS[plan] || PLAN_TOOLS.libre;
 
     if (!allowed.includes(type)) {
-      // Herramienta bloqueada → mostrar modal de upgrade
       this.showModal('upgrade');
       return;
     }
@@ -147,62 +228,60 @@ const app = {
     let html = '';
     if (type === 'itbis') {
       html = `
-        <div class="sc-header">
-          <h3>Calculadora ITBIS</h3>
-          <button class="sc-close" onclick="window.app.closeSmartCard()">✕</button>
-        </div>
+        <div class="sc-header"><h3>Calculadora ITBIS</h3>
+          <button class="sc-close" onclick="window.app.closeSmartCard()">✕</button></div>
         <div class="sc-body">
-          <div class="sc-form-group">
-            <label>ITBIS Cobrado (RD$)</label>
-            <input type="number" id="itbis-cobrado" placeholder="0.00">
-          </div>
-          <div class="sc-form-group">
-            <label>ITBIS Pagado (RD$)</label>
-            <input type="number" id="itbis-pagado" placeholder="0.00">
-          </div>
+          <div class="sc-form-group"><label>ITBIS Cobrado (RD$)</label>
+            <input type="number" id="itbis-cobrado" placeholder="0.00"></div>
+          <div class="sc-form-group"><label>ITBIS Pagado (RD$)</label>
+            <input type="number" id="itbis-pagado" placeholder="0.00"></div>
           <button class="btn-calc v2-cta-btn" style="width:100%;" onclick="window.calc.runCalc('itbis')">Calcular ITBIS</button>
           <div id="calc-result"></div>
-        </div>
-      `;
+        </div>`;
+    } else if (type === 'rst') {
+      html = `
+        <div class="sc-header"><h3>Simulador RST</h3>
+          <button class="sc-close" onclick="window.app.closeSmartCard()">✕</button></div>
+        <div class="sc-body">
+          <p style="color:var(--text-muted); font-size:0.88rem; margin-bottom:1rem;">
+            Régimen Simplificado de Tributación (RC-02). Estima tu cuota mensual según ingresos brutos.
+          </p>
+          <div class="sc-form-group"><label>Ingresos Brutos Anuales (RD$)</label>
+            <input type="number" id="rst-ingresos" placeholder="0.00"></div>
+          <div class="sc-form-group"><label>Tipo de actividad</label>
+            <select id="rst-tipo" style="width:100%; padding:0.8rem; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; font-family:var(--font-body);">
+              <option value="comercial">Comercial / Industrial</option>
+              <option value="servicios">Servicios</option>
+            </select></div>
+          <button class="btn-calc v2-cta-btn" style="width:100%;" onclick="window.calc.runCalc('rst')">Calcular RST</button>
+          <div id="calc-result"></div>
+        </div>`;
     } else if (type === 'ir1') {
       html = `
-        <div class="sc-header">
-          <h3>Simulador IR-1</h3>
-          <button class="sc-close" onclick="window.app.closeSmartCard()">✕</button>
-        </div>
+        <div class="sc-header"><h3>Simulador IR-1</h3>
+          <button class="sc-close" onclick="window.app.closeSmartCard()">✕</button></div>
         <div class="sc-body">
-          <div class="sc-form-group">
-            <label>Ingresos Brutos Anuales (RD$)</label>
-            <input type="number" id="ir1-ingresos" placeholder="0.00">
-          </div>
-          <div class="sc-form-group">
-            <label>Gastos Deducibles (RD$)</label>
-            <input type="number" id="ir1-gastos" placeholder="0.00">
-          </div>
+          <div class="sc-form-group"><label>Ingresos Brutos Anuales (RD$)</label>
+            <input type="number" id="ir1-ingresos" placeholder="0.00"></div>
+          <div class="sc-form-group"><label>Gastos Deducibles (RD$)</label>
+            <input type="number" id="ir1-gastos" placeholder="0.00"></div>
           <button class="btn-calc v2-cta-btn" style="width:100%;" onclick="window.calc.runCalc('ir1')">Calcular IR-1</button>
           <div id="calc-result"></div>
-        </div>
-      `;
+        </div>`;
     } else if (type === 'ir2') {
       html = `
-        <div class="sc-header">
-          <h3>Simulador IR-2</h3>
-          <button class="sc-close" onclick="window.app.closeSmartCard()">✕</button>
-        </div>
+        <div class="sc-header"><h3>Simulador IR-2</h3>
+          <button class="sc-close" onclick="window.app.closeSmartCard()">✕</button></div>
         <div class="sc-body">
           <p style="color:var(--text-muted); font-size:0.9rem;">Próximamente: cálculo de ISR para personas jurídicas (27% sobre renta neta imponible).</p>
-        </div>
-      `;
+        </div>`;
     } else if (type === 'ir17') {
       html = `
-        <div class="sc-header">
-          <h3>Simulador IR-17</h3>
-          <button class="sc-close" onclick="window.app.closeSmartCard()">✕</button>
-        </div>
+        <div class="sc-header"><h3>Simulador IR-17</h3>
+          <button class="sc-close" onclick="window.app.closeSmartCard()">✕</button></div>
         <div class="sc-body">
           <p style="color:var(--text-muted); font-size:0.9rem;">Próximamente: cálculo de retenciones en la fuente.</p>
-        </div>
-      `;
+        </div>`;
     }
 
     content.innerHTML = html;
@@ -211,7 +290,7 @@ const app = {
 
   closeSmartCard() {
     document.getElementById('smart-card-panel').classList.remove('open');
-  }
+  },
 };
 
 window.app = app;

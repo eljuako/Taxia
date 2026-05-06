@@ -34,12 +34,29 @@ export default async function handler(req) {
   }
 
   // Validación mínima de input
-  const { query, conversation_id, user, inputs } = body || {};
+  const { query, conversation_id, user, inputs, files } = body || {};
   if (!query || typeof query !== 'string') {
     return new Response(
       JSON.stringify({ error: 'Missing or invalid "query" field' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
+  }
+
+  // Construir el payload para Dify
+  const payload = {
+    inputs: inputs || {},
+    query,
+    response_mode: 'streaming',
+    conversation_id: conversation_id || '',
+    user: user || 'taxia-anon',
+  };
+  // Si vienen archivos adjuntos (imágenes ya subidas via /api/upload)
+  if (Array.isArray(files) && files.length > 0) {
+    payload.files = files.map(f => ({
+      type: f.type || 'image',
+      transfer_method: f.transfer_method || 'local_file',
+      upload_file_id: f.upload_file_id,
+    }));
   }
 
   // Llamada a Dify con la key del servidor
@@ -49,13 +66,7 @@ export default async function handler(req) {
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      inputs: inputs || {},
-      query,
-      response_mode: 'streaming',
-      conversation_id: conversation_id || '',
-      user: user || 'taxia-anon',
-    }),
+    body: JSON.stringify(payload),
   });
 
   // Si Dify falla, devolvemos el código y mensaje sin filtrar la key

@@ -3,6 +3,19 @@ let sb = null;
 let currentUser = null;
 let userProfile = null;
 
+// Traduce mensajes de error de Supabase a español
+function translateAuthError(msg) {
+  const m = (msg || '').toLowerCase();
+  if (m.includes('invalid login credentials')) return 'Email o contraseña incorrectos.';
+  if (m.includes('email not confirmed')) return 'Tu correo aún no está confirmado. Revisa tu bandeja de entrada.';
+  if (m.includes('user already registered') || m.includes('already been registered')) return 'Este correo ya está registrado. Intenta iniciar sesión.';
+  if (m.includes('password should be at least')) return 'La contraseña debe tener al menos 6 caracteres.';
+  if (m.includes('unable to validate email')) return 'El formato del correo no es válido.';
+  if (m.includes('rate limit')) return 'Demasiados intentos. Espera unos segundos e intenta de nuevo.';
+  if (m.includes('signup') && m.includes('disabled')) return 'El registro por email está desactivado en este momento.';
+  return msg || 'Ocurrió un error. Intenta de nuevo.';
+}
+
 function initSupabase() {
   try {
     sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON, {
@@ -60,7 +73,7 @@ function initSupabase() {
       }
     }, 5000);
 
-  } catch(e) {
+  } catch (e) {
     console.warn('Supabase init error:', e);
     window.app.showLoggedOut();
   }
@@ -76,22 +89,28 @@ async function loadProfile() {
 }
 
 async function doLogin(email, pass) {
-  if (!sb) return;
+  if (!sb) throw new Error('Servicio no disponible');
   const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-  if (error) throw error;
+  if (error) throw new Error(translateAuthError(error.message));
 }
 
 async function doRegister(name, email, pass) {
-  if (!sb) return;
-  const { error } = await sb.auth.signUp({ email, password: pass, options: { data: { full_name: name } } });
-  if (error) throw error;
+  if (!sb) throw new Error('Servicio no disponible');
+  const { data, error } = await sb.auth.signUp({
+    email,
+    password: pass,
+    options: { data: { full_name: name } },
+  });
+  if (error) throw new Error(translateAuthError(error.message));
+  // Si Supabase requiere confirmación de email, no hay session todavía
+  return { needsConfirmation: !data.session, user: data.user };
 }
 
 async function doGoogleAuth() {
   if (!sb) return;
   await sb.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.origin }
+    options: { redirectTo: window.location.origin },
   });
 }
 
@@ -116,5 +135,5 @@ window.auth = {
     userProfile.queries_used = used;
     window.app.updateUIWithProfile(userProfile);
     return true;
-  }
+  },
 };
