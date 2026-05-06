@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crear cuenta — TaxIA</title>
+  <meta name="description" content="Regístrate en TaxIA y obtén respuestas tributarias precisas con base legal. 10 consultas gratis al mes.">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+
+  <link rel="stylesheet" href="./css/theme.css">
+
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="./js/config.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: var(--font-body);
+      background: #FAFBFD;
+      color: var(--text-main);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ═════════════════════════════════
+       TOP NAV
+    ═════════════════════════════════ */
+    .signup-nav {
+      max-width: 1280px; margin: 0 auto;
+      padding: 1.5rem 2rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .signup-nav .logo {
+      font-family: var(--font-display);
+      font-weight: 900; font-size: 1.6rem;
+      color: var(--text-main); text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+    .signup-nav .logo span { color: var(--primary); }
+    .signup-nav .top-help {
+      font-size: 0.9rem; color: var(--text-muted);
+    }
+    .signup-nav .top-help a {
+      color: var(--primary); font-weight: 600; text-decoration: none;
+    }
+    .signup-nav .top-help a:hover { text-decoration: underline; }
+
+    /* ═════════════════════════════════
+       LAYOUT 2 COLUMNAS
+    ═════════════════════════════════ */
+    .signup-grid {
+      max-width: 1280px; margin: 0 auto;
+      padding: 1rem 2rem 4rem;
+      display: grid; grid-template-columns: 1.1fr 1fr;
+      gap: 4rem; align-items: flex-start;
+    }
+
+    /* ═════════════════════════════════
+       FORM (LEFT)
+    ═════════════════════════════════ */
+    .signup-form-card {
+      background: #FFFFFF;
+      border: 1px solid #E5EAF2;
+      border-radius: 18px;
+      padding: 2.5rem;
+      box-shadow: 0 4px 14px rgba(15,23,42,0.04);
+    }
+    .signup-form-card h1 {
+      font-family: var(--font-display);
+      font-size: 2rem; font-weight: 800;
+      letter-spacing: -1px; line-height: 1.15;
+      margin-bottom: 0.5rem;
+    }
+    .signup-form-card .lead {
+      color: var(--text-muted); font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Google */
+    .btn-google-signup {
+      width: 100%; padding: 0.9rem;
+      background: #fff; color: var(--text-main);
+      border: 1px solid #E5EAF2; border-radius: 10px;
+      font-family: var(--font-body); font-weight: 600; font-size: 0.95rem;
+      cursor: pointer; transition: all .2s;
+      display: flex; align-items: center; justify-content: center; gap: 0.7rem;
+    }
+    .btn-google-signup:hover { background: #F8FAFC; border-color: #CBD5E1; }
+    .btn-google-signup:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .divider {
+      display: flex; align-items: center; gap: 1rem;
+      margin: 1.6rem 0; color: var(--text-muted); font-size: 0.85rem;
+    }
+    .divider::before, .divider::after {
+      content: ""; flex: 1; height: 1px; background: #E5EAF2;
+    }
+
+    /* Form */
+    .field { margin-bottom: 1.1rem; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+    .field label {
+      display: block; font-size: 0.85rem;
+      color: var(--text-main); font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+    .field label .req { color: var(--danger); }
+    .field input, .field select {
+      width: 100%; padding: 0.85rem 1rem;
+      background: #F8FAFC; border: 1px solid #E2E8F0;
+      border-radius: 10px; color: var(--text-main);
+      font-family: var(--font-body); font-size: 0.95rem;
+      transition: all .2s;
+    }
+    .field input:focus, .field select:focus {
+      outline: none; border-color: var(--primary); background: #fff;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+    }
+    .field input.invalid, .field select.invalid {
+      border-color: var(--danger); background: #FFFBFA;
+    }
+    .field-hint {
+      font-size: 0.78rem; color: var(--text-muted);
+      margin-top: 0.3rem;
+    }
+    .field-error {
+      font-size: 0.78rem; color: var(--danger);
+      margin-top: 0.3rem; display: none;
+    }
+    .field.has-error .field-error { display: block; }
+
+    /* Password strength */
+    .pw-strength {
+      display: flex; gap: 4px; margin-top: 0.45rem;
+    }
+    .pw-strength .bar {
+      flex: 1; height: 4px; background: #E2E8F0; border-radius: 2px;
+      transition: background .2s;
+    }
+    .pw-strength.weak .bar:nth-child(1) { background: #EF4444; }
+    .pw-strength.medium .bar:nth-child(-n+2) { background: #F59E0B; }
+    .pw-strength.strong .bar { background: #10B981; }
+
+    /* Terms */
+    .field-checkbox {
+      display: flex; align-items: flex-start; gap: 0.6rem;
+      margin: 1.5rem 0;
+      font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;
+    }
+    .field-checkbox input { margin-top: 3px; cursor: pointer; }
+    .field-checkbox a { color: var(--primary); font-weight: 600; }
+
+    /* Submit */
+    .btn-submit {
+      width: 100%; padding: 1rem;
+      background: linear-gradient(135deg, #2563EB 0%, #00D1B2 100%);
+      color: #fff; border: none; border-radius: 999px;
+      font-family: var(--font-body); font-weight: 700; font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 8px 24px -8px rgba(37,99,235,0.4);
+      transition: transform .2s;
+    }
+    .btn-submit:hover:not(:disabled) { transform: translateY(-1px); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* Feedback box */
+    .feedback {
+      padding: 0.95rem 1.1rem; border-radius: 10px;
+      font-size: 0.9rem; line-height: 1.5; margin-bottom: 1rem;
+      display: none;
+    }
+    .feedback.error { background: rgba(239,68,68,0.08); color: #B91C1C; border: 1px solid rgba(239,68,68,0.2); display: block; }
+    .feedback.success { background: rgba(16,185,129,0.08); color: #047857; border: 1px solid rgba(16,185,129,0.2); display: block; }
+
+    .signup-bottom-link {
+      text-align: center; margin-top: 1.5rem;
+      font-size: 0.9rem; color: var(--text-muted);
+    }
+    .signup-bottom-link a { color: var(--primary); font-weight: 600; text-decoration: none; }
+    .signup-bottom-link a:hover { text-decoration: underline; }
+
+    /* ═════════════════════════════════
+       SIDE PANEL (RIGHT)
+    ═════════════════════════════════ */
+    .signup-side {
+      padding-top: 1rem;
+    }
+    .side-eyebrow {
+      display: inline-block; color: var(--primary);
+      font-weight: 700; text-transform: uppercase;
+      font-size: 0.78rem; letter-spacing: 1.5px; margin-bottom: 1rem;
+    }
+    .side-title {
+      font-family: var(--font-display);
+      font-size: 1.7rem; font-weight: 800;
+      letter-spacing: -0.5px; line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+    .side-title em {
+      font-style: normal;
+      background: linear-gradient(135deg, #2563EB, #00D1B2);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .side-sub { color: var(--text-muted); font-size: 1rem; margin-bottom: 2rem; }
+
+    .side-benefits { list-style: none; padding: 0; margin-bottom: 2rem; }
+    .side-benefits li {
+      display: flex; gap: 0.8rem; padding: 0.7rem 0;
+      align-items: flex-start; font-size: 0.95rem;
+    }
+    .side-benefits .check {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: rgba(16,185,129,0.12); color: #10B981;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.8rem; flex-shrink: 0; margin-top: 1px;
+    }
+
+    .side-testimonial {
+      background: #fff; border: 1px solid #E5EAF2;
+      border-radius: 14px; padding: 1.4rem;
+      box-shadow: 0 4px 14px rgba(15,23,42,0.04);
+    }
+    .side-testimonial .stars { color: #F59E0B; letter-spacing: 2px; margin-bottom: 0.6rem; }
+    .side-testimonial .quote {
+      font-size: 0.92rem; line-height: 1.55; color: var(--text-main);
+      margin-bottom: 0.8rem;
+    }
+    .side-testimonial .author {
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .side-testimonial .av {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg,#2563EB,#7C3AED);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.8rem;
+    }
+    .side-testimonial .author strong { display: block; font-size: 0.88rem; }
+    .side-testimonial .author span { font-size: 0.78rem; color: var(--text-muted); }
+
+    /* ═════════════════════════════════
+       LOADING SUCCESS STATE
+    ═════════════════════════════════ */
+    .signup-success {
+      text-align: center; padding: 2rem 0;
+    }
+    .signup-success .check-circle {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: rgba(16,185,129,0.12); color: #10B981;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; font-weight: 800;
+      margin: 0 auto 1.2rem;
+    }
+    .signup-success h2 { font-size: 1.5rem; margin-bottom: 0.6rem; }
+    .signup-success p { color: var(--text-muted); margin-bottom: 1.5rem; }
+    .signup-success .em { color: var(--primary); font-weight: 600; }
+
+    /* ═════════════════════════════════
+       RESPONSIVE
+    ═════════════════════════════════ */
+    @media (max-width: 900px) {
+      .signup-grid { grid-template-columns: 1fr; gap: 2rem; padding: 1rem 1.2rem 3rem; }
+      .signup-side { display: none; }
+      .signup-form-card { padding: 1.8rem 1.5rem; }
+      .signup-form-card h1 { font-size: 1.7rem; }
+      .field-row { grid-template-columns: 1fr; gap: 0; }
+      .signup-nav { padding: 1rem 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP NAV -->
+  <nav class="signup-nav">
+    <a href="index.html" class="logo">Tax<span>IA</span></a>
+    <div class="top-help">¿Ya tienes cuenta? <a href="index.html?login=1">Inicia sesión</a></div>
+  </nav>
+
+  <!-- LAYOUT -->
+  <div class="signup-grid">
+
+    <!-- FORM -->
+    <div>
+      <div class="signup-form-card" id="form-card">
+        <h1>Crea tu cuenta TaxIA</h1>
+        <p class="lead">Empieza con <strong>10 consultas gratuitas</strong> al mes. Sin tarjeta de crédito.</p>
+
+        <button class="btn-google-signup" id="btn-google" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Continuar con Google
+        </button>
+
+        <div class="divider">o regístrate con tu correo</div>
+
+        <div id="feedback" class="feedback"></div>
+
+        <form id="signup-form" novalidate>
+
+          <div class="field">
+            <label for="f-nombre">Nombre completo <span class="req">*</span></label>
+            <input id="f-nombre" name="nombre" type="text" autocomplete="name" placeholder="Juan Pérez Martínez" required>
+            <div class="field-error">Ingresa tu nombre completo.</div>
+          </div>
+
+          <div class="field">
+            <label for="f-email">Correo electrónico <span class="req">*</span></label>
+            <input id="f-email" name="email" type="email" autocomplete="email" placeholder="tucorreo@empresa.com" required>
+            <div class="field-error">Ingresa un correo válido.</div>
+          </div>
+
+          <div class="field">
+            <label for="f-provincia">Provincia donde vives <span class="req">*</span></label>
+            <select id="f-provincia" name="provincia" required>
+              <option value="">Selecciona tu provincia...</option>
+              <option value="distrito-nacional">Distrito Nacional</option>
+              <option value="santo-domingo">Santo Domingo</option>
+              <option value="santiago">Santiago</option>
+              <option value="azua">Azua</option>
+              <option value="baoruco">Baoruco</option>
+              <option value="barahona">Barahona</option>
+              <option value="dajabon">Dajabón</option>
+              <option value="duarte">Duarte</option>
+              <option value="elias-pina">Elías Piña</option>
+              <option value="el-seibo">El Seibo</option>
+              <option value="espaillat">Espaillat</option>
+              <option value="hato-mayor">Hato Mayor</option>
+              <option value="hermanas-mirabal">Hermanas Mirabal</option>
+              <option value="independencia">Independencia</option>
+              <option value="la-altagracia">La Altagracia</option>
+              <option value="la-romana">La Romana</option>
+              <option value="la-vega">La Vega</option>
+              <option value="maria-trinidad-sanchez">María Trinidad Sánchez</option>
+              <option value="monsenor-nouel">Monseñor Nouel</option>
+              <option value="monte-cristi">Monte Cristi</option>
+              <option value="monte-plata">Monte Plata</option>
+              <option value="pedernales">Pedernales</option>
+              <option value="peravia">Peravia</option>
+              <option value="puerto-plata">Puerto Plata</option>
+              <option value="samana">Samaná</option>
+              <option value="san-cristobal">San Cristóbal</option>
+              <option value="san-jose-de-ocoa">San José de Ocoa</option>
+              <option value="san-juan">San Juan</option>
+              <option value="san-pedro-de-macoris">San Pedro de Macorís</option>
+              <option value="sanchez-ramirez">Sánchez Ramírez</option>
+              <option value="santiago-rodriguez">Santiago Rodríguez</option>
+              <option value="valverde">Valverde</option>
+              <option disabled>──────────</option>
+              <option value="fuera-rd">🌎 Vivo fuera de República Dominicana</option>
+            </select>
+            <div class="field-error">Selecciona una opción.</div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="f-pass">Contraseña <span class="req">*</span></label>
+              <input id="f-pass" name="password" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres" required minlength="6">
+              <div class="pw-strength" id="pw-strength"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+              <div class="field-error">Mínimo 6 caracteres.</div>
+            </div>
+            <div class="field">
+              <label for="f-pass2">Confirmar contraseña <span class="req">*</span></label>
+              <input id="f-pass2" name="passwordConfirm" type="password" autocomplete="new-password" placeholder="Repite tu contraseña" required>
+              <div class="field-error">Las contraseñas no coinciden.</div>
+            </div>
+          </div>
+
+          <label class="field-checkbox">
+            <input type="checkbox" id="f-terms" required>
+            <span>Acepto los <a href="#" target="_blank">Términos de Servicio</a> y la <a href="#" target="_blank">Política de Privacidad</a> de TaxIA.</span>
+          </label>
+
+          <button type="submit" class="btn-submit" id="btn-submit">Crear mi cuenta</button>
+        </form>
+
+        <div class="signup-bottom-link">
+          ¿Ya tienes cuenta? <a href="index.html?login=1">Inicia sesión</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIDE PANEL -->
+    <div class="signup-side">
+      <div class="side-eyebrow">¿Por qué TaxIA?</div>
+      <h2 class="side-title">Tu consultor tributario, <em>siempre disponible</em>.</h2>
+      <p class="side-sub">Únete a más de 500 contadores y asesores dominicanos que ya ahorran horas cada semana.</p>
+
+      <ul class="side-benefits">
+        <li><div class="check">✓</div><div><strong>+82 documentos DGII indexados</strong><br><span style="color:var(--text-muted); font-size:0.88rem;">Respuestas con base legal exacta — Código Tributario, Normas Generales, guías oficiales.</span></div></li>
+        <li><div class="check">✓</div><div><strong>Calculadoras integradas</strong><br><span style="color:var(--text-muted); font-size:0.88rem;">Simula ITBIS, IR-1, RST y más sin salir de la plataforma.</span></div></li>
+        <li><div class="check">✓</div><div><strong>Sin tarjeta de crédito</strong><br><span style="color:var(--text-muted); font-size:0.88rem;">Empieza gratis con 10 consultas mensuales. Pasa a Pro cuando quieras.</span></div></li>
+        <li><div class="check">✓</div><div><strong>Disponible 24/7</strong><br><span style="color:var(--text-muted); font-size:0.88rem;">Resuelve dudas a las 11 PM o domingo a la mañana. Igual de rápido.</span></div></li>
+      </ul>
+
+      <div class="side-testimonial">
+        <div class="stars">★★★★★</div>
+        <p class="quote">"Antes me tomaba media hora encontrar una norma específica. Con TaxIA tengo la respuesta y la cita en menos de un minuto. Es como tener un asistente legal 24/7."</p>
+        <div class="author">
+          <div class="av">JM</div>
+          <div><strong>Jorge Méndez</strong><span>Contador · Santo Domingo</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       LÓGICA DE REGISTRO (inline para no depender de auth.js)
+  ════════════════════════════════════════════════ -->
+  <script>
+    let sb;
+    try {
+      sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON, {
+        auth: {
+          autoRefreshToken: true,
+          persistSession: true,
+          detectSessionInUrl: true,
+          flowType: 'pkce',
+        },
+      });
+    } catch (e) {
+      console.error('Supabase init error:', e);
+    }
+
+    // Si ya está logueado, ir directo a la app
+    if (sb) {
+      sb.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) window.location.href = 'index.html';
+      });
+    }
+
+    // ─── Form refs
+    const form = document.getElementById('signup-form');
+    const formCard = document.getElementById('form-card');
+    const fNombre = document.getElementById('f-nombre');
+    const fEmail = document.getElementById('f-email');
+    const fProv = document.getElementById('f-provincia');
+    const fPass = document.getElementById('f-pass');
+    const fPass2 = document.getElementById('f-pass2');
+    const fTerms = document.getElementById('f-terms');
+    const btnSubmit = document.getElementById('btn-submit');
+    const btnGoogle = document.getElementById('btn-google');
+    const feedback = document.getElementById('feedback');
+    const pwStrength = document.getElementById('pw-strength');
+
+    // ─── Password strength
+    function strengthClass(pw) {
+      if (!pw) return '';
+      let score = 0;
+      if (pw.length >= 6) score++;
+      if (pw.length >= 10) score++;
+      if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+      if (/[0-9]/.test(pw)) score++;
+      if (/[^A-Za-z0-9]/.test(pw)) score++;
+      if (score <= 1) return 'weak';
+      if (score <= 3) return 'medium';
+      return 'strong';
+    }
+    fPass.addEventListener('input', () => {
+      pwStrength.className = 'pw-strength ' + strengthClass(fPass.value);
+    });
+
+    // ─── Validation helpers
+    function setError(field, hasError) {
+      const wrap = field.closest('.field');
+      if (hasError) { wrap.classList.add('has-error'); field.classList.add('invalid'); }
+      else { wrap.classList.remove('has-error'); field.classList.remove('invalid'); }
+    }
+    function showFeedback(message, type) {
+      feedback.className = 'feedback ' + type;
+      feedback.textContent = message;
+    }
+    function clearFeedback() { feedback.className = 'feedback'; feedback.textContent = ''; }
+
+    // ─── Translate Supabase errors
+    function translate(msg) {
+      const m = (msg || '').toLowerCase();
+      if (m.includes('invalid login credentials')) return 'Email o contraseña incorrectos.';
+      if (m.includes('email not confirmed')) return 'Tu correo aún no está confirmado.';
+      if (m.includes('user already registered') || m.includes('already been registered')) return 'Este correo ya está registrado. Inicia sesión.';
+      if (m.includes('password should be at least')) return 'La contraseña debe tener al menos 6 caracteres.';
+      if (m.includes('unable to validate email')) return 'El formato del correo no es válido.';
+      if (m.includes('rate limit')) return 'Demasiados intentos. Espera unos segundos.';
+      if (m.includes('signup') && m.includes('disabled')) return 'El registro por email está desactivado.';
+      return msg || 'Ocurrió un error. Intenta de nuevo.';
+    }
+
+    // ─── Submit
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearFeedback();
+
+      const nombre = fNombre.value.trim();
+      const email = fEmail.value.trim();
+      const provincia = fProv.value;
+      const pass = fPass.value;
+      const pass2 = fPass2.value;
+
+      // Validaciones
+      let hasErr = false;
+      setError(fNombre, !nombre); if (!nombre) hasErr = true;
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      setError(fEmail, !emailOk); if (!emailOk) hasErr = true;
+      setError(fProv, !provincia); if (!provincia) hasErr = true;
+      setError(fPass, pass.length < 6); if (pass.length < 6) hasErr = true;
+      setError(fPass2, pass !== pass2); if (pass !== pass2) hasErr = true;
+      if (!fTerms.checked) {
+        showFeedback('Debes aceptar los términos para continuar.', 'error');
+        hasErr = true;
+      }
+      if (hasErr) return;
+
+      if (!sb) {
+        showFeedback('No se pudo conectar al servicio. Intenta de nuevo.', 'error');
+        return;
+      }
+
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = 'Creando cuenta...';
+
+      try {
+        const { data, error } = await sb.auth.signUp({
+          email,
+          password: pass,
+          options: {
+            data: {
+              full_name: nombre,
+              provincia: provincia,
+            },
+            emailRedirectTo: window.location.origin,
+          },
+        });
+
+        if (error) throw new Error(translate(error.message));
+
+        // Guardar provincia/nombre en profiles si la columna existe (silencioso si falla)
+        if (data.user) {
+          try {
+            await sb.from('profiles').update({
+              full_name: nombre,
+              provincia: provincia,
+            }).eq('id', data.user.id);
+          } catch (e) { /* columnas pueden no existir aún */ }
+        }
+
+        if (!data.session) {
+          // Necesita confirmación de email
+          formCard.innerHTML = `
+            <div class="signup-success">
+              <div class="check-circle">✓</div>
+              <h2>¡Casi listo, ${nombre.split(' ')[0]}!</h2>
+              <p>Te enviamos un correo de confirmación a <span class="em">${email}</span>.<br>Haz clic en el enlace para activar tu cuenta y empezar a usar TaxIA.</p>
+              <p style="font-size:0.85rem; color:var(--text-muted);">No olvides revisar tu carpeta de spam.</p>
+              <a href="index.html" style="display:inline-block; margin-top:1rem; padding:0.85rem 1.6rem; background:linear-gradient(135deg,#2563EB,#00D1B2); color:#fff; border-radius:999px; font-weight:700; text-decoration:none;">Volver al inicio</a>
+            </div>
+          `;
+        } else {
+          // Sesión iniciada — redirigir
+          formCard.innerHTML = `
+            <div class="signup-success">
+              <div class="check-circle">✓</div>
+              <h2>¡Bienvenido, ${nombre.split(' ')[0]}!</h2>
+              <p>Tu cuenta fue creada. Te llevamos a TaxIA en un momento...</p>
+            </div>
+          `;
+          setTimeout(() => { window.location.href = 'index.html'; }, 1600);
+        }
+      } catch (err) {
+        showFeedback(err.message || 'Error al crear la cuenta.', 'error');
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Crear mi cuenta';
+      }
+    });
+
+    // ─── Google
+    btnGoogle.addEventListener('click', async () => {
+      if (!sb) return;
+      btnGoogle.disabled = true;
+      try {
+        await sb.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: window.location.origin },
+        });
+      } catch (err) {
+        showFeedback('No se pudo iniciar Google: ' + err.message, 'error');
+        btnGoogle.disabled = false;
+      }
+    });
+  </script>
+
+</body>
+</html>

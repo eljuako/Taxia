@@ -12,6 +12,10 @@ const app = {
     window.auth.initSupabase();
     this.setupListeners();
     this.applyPlanLocks('libre');
+    // Si llegamos desde /registro.html con ?login=1, abrir el modal de login
+    if (new URLSearchParams(window.location.search).get('login') === '1') {
+      setTimeout(() => this.showModal('login'), 300);
+    }
   },
 
   setupListeners() {
@@ -41,11 +45,14 @@ const app = {
   },
 
   showModal(id) {
+    // El registro vive en su propia página
+    if (id === 'register') {
+      window.location.href = 'registro.html';
+      return;
+    }
     const el = document.getElementById(`modal-${id}`);
     if (el) el.classList.add('open');
-    // Limpiar feedback al abrir
     if (id === 'login') this.setFormFeedback('login', '');
-    if (id === 'register') this.setFormFeedback('register', '');
   },
 
   closeModal(id) {
@@ -116,44 +123,6 @@ const app = {
     } finally {
       btn.disabled = false;
       btn.textContent = 'Entrar';
-    }
-  },
-
-  // ─────────── REGISTER HANDLER ───────────
-  async handleRegister() {
-    const name = document.getElementById('register-name').value.trim();
-    const email = document.getElementById('register-email').value.trim();
-    const pass = document.getElementById('register-pass').value;
-    const btn = document.getElementById('btn-register-submit');
-
-    if (!name) { this.setFormFeedback('register', 'Ingresa tu nombre completo.', 'error'); return; }
-    if (!email || !email.includes('@')) { this.setFormFeedback('register', 'Ingresa un correo válido.', 'error'); return; }
-    if (!pass || pass.length < 6) { this.setFormFeedback('register', 'La contraseña debe tener al menos 6 caracteres.', 'error'); return; }
-
-    btn.disabled = true;
-    btn.textContent = 'Creando cuenta...';
-    this.setFormFeedback('register', '');
-
-    try {
-      const result = await window.auth.doRegister(name, email, pass);
-      if (result.needsConfirmation) {
-        // Supabase pidió confirmación de email
-        this.setFormFeedback('register',
-          `✉️ Te enviamos un correo a ${email} para confirmar tu cuenta. Revisa tu bandeja (y spam) y haz clic en el enlace para activarla.`,
-          'success'
-        );
-        btn.textContent = 'Revisa tu correo';
-        // No cerramos el modal — el usuario debe ver el mensaje
-      } else {
-        // Cuenta creada y sesión iniciada
-        this.showToast('¡Cuenta creada con éxito!', 'success');
-        this.closeModal('register');
-        btn.textContent = 'Crear cuenta gratis';
-      }
-    } catch (err) {
-      this.setFormFeedback('register', err.message || 'Error al crear la cuenta.', 'error');
-      btn.disabled = false;
-      btn.textContent = 'Crear cuenta gratis';
     }
   },
 
