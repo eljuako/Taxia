@@ -210,8 +210,16 @@
       display: flex; gap: 0.5rem;
       background: #fff; border: 1px solid var(--v2-border); border-radius: 10px;
       padding: 0.5rem;
+      cursor: pointer; transition: border-color .2s;
     }
-    .v2-mock-input-field { flex:1; font-size: 0.85rem; color: #94A3B8; padding: 0.4rem 0.6rem; }
+    .v2-mock-input:hover { border-color: var(--primary); }
+    .v2-mock-input-field {
+      flex:1; font-size: 0.85rem; color: #94A3B8; padding: 0.4rem 0.6rem;
+      border: none; outline: none; background: transparent;
+      font-family: var(--font-body); cursor: pointer;
+    }
+    .v2-mock-send { cursor: pointer; transition: transform .2s; }
+    .v2-mock-input:hover .v2-mock-send { transform: translateX(2px); }
     .v2-mock-send {
       width: 32px; height: 32px; border-radius: 8px;
       background: var(--primary); color: #fff;
@@ -696,6 +704,160 @@
       .v2-stats-grid { grid-template-columns: 1fr 1fr; }
       .v2-logos-inner { flex-direction: column; align-items: flex-start; }
     }
+
+    /* ═════════════════════════════════
+       SIDEBAR — items con lock + logout claro
+    ═════════════════════════════════ */
+    .nav-item { justify-content: space-between; }
+    .nav-item-label { display: inline-flex; align-items: center; gap: 0.5rem; }
+    .lock-badge {
+      font-size: 0.65rem; font-weight: 700;
+      background: rgba(0,209,178,0.15); color: var(--secondary);
+      padding: 0.15rem 0.5rem; border-radius: 999px;
+      letter-spacing: 0.5px; text-transform: uppercase;
+      display: none;
+    }
+    .nav-item.locked .lock-badge { display: inline-block; }
+    .nav-item.locked { opacity: 0.65; }
+    .nav-item.locked:hover { opacity: 1; background: rgba(0,209,178,0.08); }
+
+    .user-info-strip {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.7rem 0.5rem;
+      margin-bottom: 0.6rem;
+    }
+    .user-info-text { flex: 1; overflow: hidden; }
+    .user-info-text > div:first-child {
+      font-size: 0.85rem; font-weight: bold; color: #fff;
+      white-space: nowrap; text-overflow: ellipsis; overflow: hidden;
+    }
+    .user-info-text > div:last-child {
+      font-size: 0.72rem; color: var(--secondary); font-weight: 600;
+    }
+
+    .btn-logout {
+      width: 100%; padding: 0.7rem 0.9rem;
+      background: rgba(239, 68, 68, 0.12);
+      color: #FCA5A5;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 10px;
+      font-weight: 600; font-size: 0.85rem;
+      cursor: pointer; transition: all .2s;
+      display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+      font-family: var(--font-body);
+    }
+    .btn-logout:hover {
+      background: rgba(239, 68, 68, 0.22);
+      color: #fff; border-color: rgba(239, 68, 68, 0.5);
+    }
+    .btn-logout svg { flex-shrink: 0; }
+
+    /* ═════════════════════════════════
+       MODAL BASE (.modal) — los modales del HTML
+    ═════════════════════════════════ */
+    .modal {
+      background: #fff;
+      border-radius: 18px;
+      width: 92%;
+      max-width: 460px;
+      padding: 2.2rem 2rem;
+      position: relative;
+      box-shadow: 0 30px 80px -20px rgba(15,23,42,0.35);
+      max-height: 92vh;
+      overflow-y: auto;
+    }
+    .modal h2 { font-size: 1.6rem; letter-spacing: -0.5px; }
+    .form-group, .input-group { margin-bottom: 1.1rem; }
+    .form-group label, .input-group label {
+      display: block; font-size: 0.85rem; color: var(--text-main);
+      margin-bottom: 0.4rem; font-weight: 600;
+    }
+    .form-group input, .input-group input {
+      width: 100%; padding: 0.85rem 1rem;
+      background: #F8FAFC; border: 1px solid #E2E8F0;
+      border-radius: 10px; color: var(--text-main);
+      font-family: var(--font-body); font-size: 0.95rem;
+      transition: all .2s;
+    }
+    .form-group input:focus, .input-group input:focus {
+      outline: none; border-color: var(--primary); background: #fff;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+    }
+    .modal .modal-close {
+      position: absolute; top: 1rem; right: 1.2rem;
+      background: none; border: none; font-size: 1.4rem;
+      color: var(--text-muted); cursor: pointer;
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal .modal-close:hover { background: #F1F5F9; }
+
+    /* ═════════════════════════════════
+       MODAL UPGRADE (in-app, sin sacar al usuario)
+    ═════════════════════════════════ */
+    #modal-upgrade .modal { max-width: 920px; padding: 2.2rem; }
+    .upgrade-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .upgrade-plan {
+      background: #fff; border: 1px solid var(--v2-border, #E5EAF2);
+      border-radius: 14px; padding: 1.4rem 1.2rem;
+      display: flex; flex-direction: column; position: relative;
+    }
+    .upgrade-plan.featured {
+      border: 2px solid var(--primary);
+      box-shadow: 0 16px 40px -16px rgba(37,99,235,0.3);
+    }
+    .upgrade-plan .badge-top {
+      position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, #2563EB, #00D1B2);
+      color: #fff; padding: 0.25rem 0.8rem; border-radius: 999px;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    }
+    .upgrade-plan h4 {
+      font-size: 0.78rem; font-weight: 700; color: var(--primary);
+      text-transform: uppercase; letter-spacing: 1.2px;
+    }
+    .upgrade-plan .price {
+      font-family: var(--font-display); font-weight: 900; font-size: 2rem;
+      margin-top: 0.4rem; color: var(--text-main); line-height: 1;
+    }
+    .upgrade-plan .price small { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+    .upgrade-plan ul {
+      list-style: none; padding: 0; margin: 1rem 0; flex: 1;
+    }
+    .upgrade-plan li {
+      padding: 0.35rem 0; font-size: 0.82rem; color: var(--text-main);
+      display: flex; gap: 0.4rem; line-height: 1.4;
+    }
+    .upgrade-plan li::before { content: "✓"; color: var(--success); font-weight: 800; }
+    .upgrade-plan .btn-pick {
+      width: 100%; padding: 0.7rem; border-radius: 999px;
+      font-weight: 700; font-size: 0.85rem; cursor: pointer; border: none;
+      transition: all .2s;
+    }
+    .upgrade-plan .btn-pick.primary {
+      background: linear-gradient(135deg, #2563EB, #00D1B2); color: #fff;
+    }
+    .upgrade-plan .btn-pick.outline {
+      background: transparent; color: var(--text-main);
+      border: 1px solid var(--v2-border, #E5EAF2);
+    }
+    .upgrade-plan .btn-pick:hover { transform: translateY(-2px); }
+    .upgrade-plan.current {
+      background: #F8FAFC; opacity: 0.85;
+    }
+    .upgrade-plan .current-tag {
+      display: inline-block;
+      background: rgba(0,0,0,0.08); color: var(--text-muted);
+      padding: 0.2rem 0.6rem; border-radius: 999px;
+      font-size: 0.7rem; font-weight: 600; margin-top: 0.5rem;
+    }
+    @media (max-width: 768px) {
+      #modal-upgrade .modal { max-width: 95%; padding: 1.5rem; }
+      .upgrade-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -776,10 +938,10 @@
                   <cite>📚 Guía 7 ITBIS DGII · Art. 353 Ley 11-92</cite>
                 </div>
               </div>
-              <div class="v2-mock-input">
-                <div class="v2-mock-input-field">Escribe tu pregunta tributaria…</div>
-                <div class="v2-mock-send">➤</div>
-              </div>
+              <form class="v2-mock-input" onsubmit="event.preventDefault(); window.app.showModal('register');" onclick="window.app.showModal('register')">
+                <input type="text" class="v2-mock-input-field" placeholder="Escribe tu pregunta tributaria…" readonly onfocus="window.app.showModal('register')">
+                <button type="submit" class="v2-mock-send" aria-label="Enviar">➤</button>
+              </form>
             </div>
           </div>
         </div>
@@ -843,7 +1005,7 @@
           <div class="v2-benefit">
             <div class="v2-benefit-icon">🧮</div>
             <h3>Calculadoras integradas</h3>
-            <p>Simula ITBIS, IR-1, IR-2, IR-17 y RST sin salir de la plataforma. Resultados instantáneos con desglose paso a paso.</p>
+            <p>Simula ITBIS, IR-1, IR-2 e IR-17 sin salir de la plataforma. Resultados instantáneos con desglose paso a paso.</p>
           </div>
         </div>
       </div>
@@ -1235,11 +1397,10 @@
         <div class="nav-item active" data-tab="chat">💬 Consultar IA</div>
 
         <div class="nav-section-title">Smart Tools</div>
-        <div class="nav-item" onclick="window.app.openSmartCard('itbis')">📊 Simular ITBIS</div>
-        <div class="nav-item" onclick="window.app.openSmartCard('ir1')">👤 Simular IR-1</div>
-        <div class="nav-item" onclick="window.app.openSmartCard('ir2')">🏢 Simular IR-2</div>
-        <div class="nav-item" onclick="window.app.openSmartCard('rst')">📋 Simular RST</div>
-        <div class="nav-item" onclick="window.app.openSmartCard('ir17')">💼 Simular IR-17</div>
+        <div class="nav-item" data-tool="itbis" onclick="window.app.openSmartCard('itbis')"><span class="nav-item-label">📊 Simular ITBIS</span></div>
+        <div class="nav-item" data-tool="ir1" onclick="window.app.openSmartCard('ir1')"><span class="nav-item-label">👤 Simular IR-1</span><span class="lock-badge">🔒 Pro</span></div>
+        <div class="nav-item" data-tool="ir2" onclick="window.app.openSmartCard('ir2')"><span class="nav-item-label">🏢 Simular IR-2</span><span class="lock-badge">🔒 Pro</span></div>
+        <div class="nav-item" data-tool="ir17" onclick="window.app.openSmartCard('ir17')"><span class="nav-item-label">💼 Simular IR-17</span><span class="lock-badge">🔒 Pro</span></div>
       </div>
 
       <div class="sidebar-bottom">
@@ -1251,17 +1412,25 @@
           <div class="usage-bar-bg">
             <div class="usage-bar-fill" id="ia-usage-bar" style="width: 0%;"></div>
           </div>
-          <button class="btn-upgrade-sidebar" onclick="document.getElementById('app-console').style.display='none'; document.getElementById('landing-page').style.display='block'; window.location.hash='#planes';">⚡ Mejorar Plan</button>
+          <button class="btn-upgrade-sidebar" onclick="window.app.showModal('upgrade')">⚡ Mejorar Plan</button>
         </div>
 
-        <div class="user-profile-strip" onclick="window.auth.signOut()" title="Cerrar sesión">
+        <!-- User info (no clickeable) + botón logout separado y claro -->
+        <div class="user-info-strip">
           <div class="avatar-mini" id="user-initial">U</div>
-          <div style="flex:1; overflow:hidden;">
-            <div id="user-name-display" style="font-size:0.85rem; font-weight:bold; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">Usuario</div>
-            <div id="user-plan-display" style="font-size:0.75rem; color:var(--secondary)">Plan Libre</div>
+          <div class="user-info-text">
+            <div id="user-name-display">Usuario</div>
+            <div id="user-plan-display">Plan Libre</div>
           </div>
-          <div style="color: var(--danger); font-size: 1.2rem;" title="Cerrar sesión">⍈</div>
         </div>
+        <button class="btn-logout" onclick="window.auth.signOut()" title="Cerrar sesión">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          <span>Cerrar sesión</span>
+        </button>
       </div>
     </div>
 
@@ -1362,6 +1531,71 @@
       <div style="text-align:center; margin-top:1.5rem; font-size:0.9rem; color:var(--text-muted);">
         ¿Ya tienes cuenta? <a href="#" onclick="window.app.closeModal('register'); window.app.showModal('login'); return false;" style="color:var(--primary); font-weight:600;">Inicia sesión</a>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal de Upgrade — sin sacar al usuario de la app -->
+  <div class="modal-overlay" id="modal-upgrade">
+    <div class="modal">
+      <button class="modal-close" onclick="window.app.closeModal('upgrade')">✕</button>
+      <h2 style="text-align:center; margin-bottom:0.5rem;">Mejora tu plan</h2>
+      <p style="color:var(--text-muted); font-size:0.95rem; text-align:center; margin-bottom:0.5rem;">
+        Desbloquea más consultas y los simuladores avanzados de IR-1, IR-2 e IR-17.
+      </p>
+
+      <div class="upgrade-grid">
+        <!-- LIBRE -->
+        <div class="upgrade-plan" id="upgrade-libre">
+          <h4>Libre</h4>
+          <div class="price">RD$0<small> /mes</small></div>
+          <ul>
+            <li>10 consultas mensuales</li>
+            <li>Simulador ITBIS</li>
+            <li>Citas básicas DGII</li>
+          </ul>
+          <span class="current-tag" id="tag-current-libre" style="display:none;">Tu plan actual</span>
+          <button class="btn-pick outline" id="btn-pick-libre" onclick="window.app.closeModal('upgrade')">Continuar gratis</button>
+        </div>
+
+        <!-- PRO (FEATURED) -->
+        <div class="upgrade-plan featured" id="upgrade-pro">
+          <span class="badge-top">★ Más popular</span>
+          <h4>Pro</h4>
+          <div class="price">RD$1,500<small> /mes</small></div>
+          <ul>
+            <li>100 consultas mensuales</li>
+            <li>Simuladores IR-1, IR-2 e IR-17</li>
+            <li>Citas avanzadas con texto literal</li>
+            <li>Alertas de vencimientos</li>
+            <li>Soporte prioritario</li>
+          </ul>
+          <span class="current-tag" id="tag-current-pro" style="display:none;">Tu plan actual</span>
+          <div id="upgrade-paypal-pro" style="background:#F7F9FC; border:1px solid #E5EAF2; border-radius:10px; padding:0.7rem; font-size:0.78rem; color:var(--text-muted); text-align:center;">
+            💳 PayPal (Configurar)
+          </div>
+        </div>
+
+        <!-- PRO MAX -->
+        <div class="upgrade-plan" id="upgrade-promax">
+          <h4>Pro Max</h4>
+          <div class="price">RD$5,500<small> /mes</small></div>
+          <ul>
+            <li>Consultas ilimitadas</li>
+            <li>Todos los simuladores</li>
+            <li>Auditoría de comprobantes</li>
+            <li>API de integración</li>
+            <li>Soporte WhatsApp dedicado</li>
+          </ul>
+          <span class="current-tag" id="tag-current-promax" style="display:none;">Tu plan actual</span>
+          <div id="upgrade-paypal-promax" style="background:#F7F9FC; border:1px solid #E5EAF2; border-radius:10px; padding:0.7rem; font-size:0.78rem; color:var(--text-muted); text-align:center;">
+            💳 PayPal (Configurar)
+          </div>
+        </div>
+      </div>
+
+      <p style="text-align:center; margin-top:1.5rem; color:var(--text-muted); font-size:0.8rem;">
+        🔒 Pagos seguros vía PayPal · ↺ Cancela cuando quieras
+      </p>
     </div>
   </div>
 
