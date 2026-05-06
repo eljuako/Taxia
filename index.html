@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaxIA — Tu consultor tributario con IA para República Dominicana</title>
+  <meta name="description" content="Resuelve cualquier duda sobre la DGII al instante. ITBIS, ISR, RNC, e-CF y más. Respuestas con base legal exacta en segundos, no horas.">
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+
+  <!-- CSS Modular existente -->
+  <link rel="stylesheet" href="./css/theme.css">
+  <link rel="stylesheet" href="./css/layout.css">
+  <link rel="stylesheet" href="./css/app.css">
+
+  <!-- CDNs -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD&intent=subscription" id="paypal-sdk"></script>
+
+  <!-- ════════════════════════════════════════
+       Estilos del nuevo landing (v2)
+       Inspirado en expatfile.tax
+  ════════════════════════════════════════ -->
+  <style>
+    :root {
+      --v2-radius: 18px;
+      --v2-radius-sm: 12px;
+      --v2-shadow-soft: 0 12px 40px -10px rgba(30, 58, 138, 0.10);
+      --v2-shadow-card: 0 4px 14px rgba(15, 23, 42, 0.06);
+      --v2-grad: linear-gradient(135deg, #2563EB 0%, #00D1B2 100%);
+      --v2-grad-soft: linear-gradient(180deg, #F8FAFF 0%, #FFFFFF 100%);
+      --v2-border: #E5EAF2;
+    }
+
+    /* Reset visual diferenciador */
+    body { background: #FFFFFF; }
+
+    /* ═════════════════════════════════
+       NAVBAR v2
+    ═════════════════════════════════ */
+    nav.v2-nav {
+      padding: 0 5%;
+      max-width: 1400px;
+      margin: 0 auto;
+      left: 0; right: 0;
+    }
+    .v2-nav .nav-logo span { color: var(--secondary); }
+    .v2-cta-btn {
+      background: var(--v2-grad);
+      color: #fff !important;
+      padding: 0.75rem 1.6rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      box-shadow: 0 6px 20px -6px rgba(37, 99, 235, 0.5);
+      transition: transform .2s, box-shadow .2s;
+      cursor: pointer;
+      border: none;
+    }
+    .v2-cta-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 28px -8px rgba(37, 99, 235, 0.55); }
+
+    /* ═════════════════════════════════
+       HERO v2 — ASIMÉTRICO
+    ═════════════════════════════════ */
+    section#inicio.v2-hero {
+      min-height: auto;
+      padding: 140px 5% 80px;
+      background:
+        radial-gradient(80% 60% at 80% 0%, rgba(0,209,178,0.08) 0%, transparent 60%),
+        radial-gradient(60% 50% at 0% 100%, rgba(37,99,235,0.06) 0%, transparent 60%),
+        var(--v2-grad-soft);
+      max-width: none;
+      display: block;
+      text-align: left;
+    }
+    .v2-hero-grid {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.05fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+    .v2-hero-left .v2-pill {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(37,99,235,0.08);
+      color: var(--primary);
+      padding: 0.45rem 1rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.82rem;
+      margin-bottom: 1.6rem;
+      border: 1px solid rgba(37,99,235,0.15);
+    }
+    .v2-pill-dot {
+      width: 8px; height: 8px; background: var(--secondary); border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(0,209,178,0.18);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(0,209,178,0.0); } }
+
+    .v2-hero h1 {
+      font-size: clamp(2.4rem, 4.8vw, 4.2rem);
+      line-height: 1.05;
+      letter-spacing: -1.5px;
+      margin-bottom: 1.5rem;
+      color: var(--text-main);
+    }
+    .v2-hero h1 em {
+      font-style: normal;
+      background: var(--v2-grad);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .v2-hero-sub {
+      font-size: 1.18rem;
+      color: var(--text-muted);
+      max-width: 540px;
+      line-height: 1.6;
+      margin-bottom: 2.2rem;
+    }
+    .v2-hero-cta-row { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 2.5rem; }
+    .v2-btn-ghost {
+      background: #fff;
+      color: var(--text-main);
+      padding: 0.95rem 1.6rem;
+      border: 1px solid var(--v2-border);
+      border-radius: 999px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      font-size: 0.95rem;
+    }
+    .v2-btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+    .v2-btn-large { padding: 1rem 2rem; font-size: 1rem; }
+
+    .v2-hero-trust {
+      display: flex; align-items: center; gap: 1.2rem;
+      padding-top: 1.5rem; border-top: 1px dashed var(--v2-border);
+    }
+    .v2-avatars { display: flex; }
+    .v2-avatars div {
+      width: 36px; height: 36px; border-radius: 50%; border: 2px solid #fff;
+      margin-left: -10px; box-shadow: 0 2px 6px rgba(0,0,0,.12);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; color: #fff; font-size: 0.85rem;
+    }
+    .v2-avatars div:first-child { margin-left: 0; }
+    .v2-avatars .a1 { background: linear-gradient(135deg,#FF6B6B,#FFB347); }
+    .v2-avatars .a2 { background: linear-gradient(135deg,#2563EB,#7C3AED); }
+    .v2-avatars .a3 { background: linear-gradient(135deg,#00D1B2,#10B981); }
+    .v2-avatars .a4 { background: linear-gradient(135deg,#F59E0B,#EF4444); }
+    .v2-trust-text { font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; }
+    .v2-trust-text strong { color: var(--text-main); }
+    .v2-stars { color: #F59E0B; letter-spacing: 1px; font-size: 0.9rem; }
+
+    /* HERO RIGHT — Mock chat preview */
+    .v2-hero-right { position: relative; }
+    .v2-mock-frame {
+      background: #fff;
+      border-radius: 22px;
+      box-shadow: var(--v2-shadow-soft), 0 30px 60px -20px rgba(15,23,42,.18);
+      border: 1px solid var(--v2-border);
+      overflow: hidden;
+      transform: perspective(1500px) rotateY(-4deg) rotateX(2deg);
+      transition: transform .5s ease;
+    }
+    .v2-mock-frame:hover { transform: perspective(1500px) rotateY(-2deg) rotateX(1deg) translateY(-6px); }
+    .v2-mock-bar {
+      display: flex; align-items: center; gap: 0.4rem;
+      padding: 0.9rem 1.1rem;
+      background: #F8FAFC;
+      border-bottom: 1px solid var(--v2-border);
+    }
+    .v2-mock-bar span { width: 11px; height: 11px; border-radius: 50%; }
+    .v2-mock-bar .d1 { background: #FF6B6B; }
+    .v2-mock-bar .d2 { background: #FBBF24; }
+    .v2-mock-bar .d3 { background: #10B981; }
+    .v2-mock-url {
+      flex:1; text-align: center; font-size: 0.78rem; color: var(--text-muted);
+      background: #fff; border: 1px solid var(--v2-border); border-radius: 6px;
+      padding: 0.25rem 0.8rem; max-width: 220px; margin: 0 auto;
+    }
+    .v2-mock-body { padding: 1.4rem; background: #FAFBFC; }
+    .v2-mock-msg {
+      display: flex; gap: 0.7rem; margin-bottom: 1rem; align-items: flex-start;
+    }
+    .v2-mock-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--v2-grad); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.75rem; flex-shrink: 0;
+    }
+    .v2-mock-avatar.user { background: #1A1B41; }
+    .v2-mock-bubble {
+      background: #fff; border: 1px solid var(--v2-border);
+      padding: 0.75rem 1rem; border-radius: 10px;
+      font-size: 0.88rem; line-height: 1.5; color: var(--text-main);
+      box-shadow: 0 1px 2px rgba(0,0,0,.03);
+      max-width: 85%;
+    }
+    .v2-mock-bubble.user { background: #2563EB; color: #fff; border-color: #2563EB; }
+    .v2-mock-bubble cite {
+      display: block; font-style: normal; margin-top: 0.5rem;
+      font-size: 0.74rem; color: var(--primary); font-weight: 600;
+    }
+    .v2-mock-input {
+      margin-top: 1rem;
+      display: flex; gap: 0.5rem;
+      background: #fff; border: 1px solid var(--v2-border); border-radius: 10px;
+      padding: 0.5rem;
+    }
+    .v2-mock-input-field { flex:1; font-size: 0.85rem; color: #94A3B8; padding: 0.4rem 0.6rem; }
+    .v2-mock-send {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--primary); color: #fff;
+      display: flex; align-items: center; justify-content: center; font-size: 0.85rem;
+    }
+
+    /* Floating badges around mock */
+    .v2-float-badge {
+      position: absolute;
+      background: #fff; border: 1px solid var(--v2-border);
+      box-shadow: var(--v2-shadow-card);
+      padding: 0.7rem 1rem; border-radius: 12px;
+      font-size: 0.8rem; font-weight: 600; color: var(--text-main);
+      display: flex; align-items: center; gap: 0.5rem;
+      animation: float 4s ease-in-out infinite;
+    }
+    .v2-float-badge.b1 { top: -18px; left: -25px; }
+    .v2-float-badge.b2 { bottom: 30px; right: -30px; animation-delay: 1.5s; }
+    .v2-float-badge .ico {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: rgba(0,209,178,0.12); color: var(--secondary);
+      display: flex; align-items: center; justify-content: center; font-size: 0.95rem;
+    }
+    .v2-float-badge.b2 .ico { background: rgba(37,99,235,0.12); color: var(--primary); }
+    @keyframes float { 50% { transform: translateY(-8px); } }
+
+    /* ═════════════════════════════════
+       LOGOS / TRUST STRIP
+    ═════════════════════════════════ */
+    .v2-logos {
+      padding: 2.5rem 5%;
+      background: #fff;
+      border-bottom: 1px solid var(--v2-border);
+    }
+    .v2-logos-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2rem;
+    }
+    .v2-logos-label {
+      font-size: 0.78rem; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 1.5px;
+    }
+    .v2-logo-list { display: flex; gap: 2.5rem; flex-wrap: wrap; align-items: center; opacity: 0.7; }
+    .v2-logo-item {
+      font-family: var(--font-display); font-weight: 800; font-size: 1.1rem;
+      color: #475569; letter-spacing: -0.5px;
+    }
+
+    /* ═════════════════════════════════
+       STATS BAR
+    ═════════════════════════════════ */
+    .v2-stats {
+      padding: 5rem 5%;
+      background: var(--bg-deep);
+      color: #fff;
+      max-width: none;
+    }
+    .v2-stats-grid {
+      max-width: 1200px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem;
+      text-align: center;
+    }
+    .v2-stat-num {
+      font-family: var(--font-display); font-weight: 900;
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      background: var(--v2-grad);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1;
+      margin-bottom: 0.6rem;
+    }
+    .v2-stat-label { color: #CBD5E1; font-size: 0.95rem; font-weight: 500; }
+
+    /* ═════════════════════════════════
+       BENEFICIOS — 3 columnas
+    ═════════════════════════════════ */
+    .v2-benefits {
+      padding: 6rem 5%; max-width: none;
+      background: #fff;
+    }
+    .v2-benefits-inner { max-width: 1200px; margin: 0 auto; }
+    .v2-section-eyebrow {
+      display: inline-block;
+      color: var(--primary); font-weight: 700; text-transform: uppercase;
+      font-size: 0.78rem; letter-spacing: 2px; margin-bottom: 1rem;
+    }
+    .v2-section-title {
+      font-size: clamp(2rem, 3.5vw, 2.8rem);
+      letter-spacing: -1px;
+      margin-bottom: 1rem; color: var(--text-main);
+      line-height: 1.15;
+    }
+    .v2-section-sub {
+      color: var(--text-muted); font-size: 1.1rem; max-width: 640px;
+      line-height: 1.6;
+    }
+    .v2-benefits-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem; margin-top: 3.5rem;
+    }
+    .v2-benefit {
+      padding: 2rem;
+      background: var(--v2-grad-soft);
+      border: 1px solid var(--v2-border);
+      border-radius: var(--v2-radius);
+      transition: all .3s;
+    }
+    .v2-benefit:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--v2-shadow-soft);
+      border-color: rgba(37,99,235,0.3);
+    }
+    .v2-benefit-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: #fff; border: 1px solid var(--v2-border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.7rem; margin-bottom: 1.2rem;
+      box-shadow: var(--v2-shadow-card);
+    }
+    .v2-benefit h3 { font-size: 1.2rem; margin-bottom: 0.6rem; color: var(--text-main); }
+    .v2-benefit p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.55; }
+
+    /* ═════════════════════════════════
+       CÓMO FUNCIONA — Pasos numerados
+    ═════════════════════════════════ */
+    .v2-steps {
+      padding: 6rem 5%; max-width: none;
+      background: var(--v2-grad-soft);
+    }
+    .v2-steps-inner { max-width: 1200px; margin: 0 auto; }
+    .v2-step-row {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 4rem; align-items: center;
+      margin-bottom: 5rem;
+    }
+    .v2-step-row:last-child { margin-bottom: 0; }
+    .v2-step-row.reverse { direction: rtl; }
+    .v2-step-row.reverse > * { direction: ltr; }
+    .v2-step-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 50px; height: 50px; border-radius: 14px;
+      background: var(--v2-grad); color: #fff;
+      font-family: var(--font-display); font-weight: 900; font-size: 1.4rem;
+      box-shadow: 0 8px 20px -6px rgba(37,99,235,0.4);
+      margin-bottom: 1.2rem;
+    }
+    .v2-step h3 { font-size: 1.8rem; margin-bottom: 0.8rem; letter-spacing: -0.5px; }
+    .v2-step p { color: var(--text-muted); font-size: 1.05rem; line-height: 1.6; margin-bottom: 1.2rem; }
+    .v2-step-list { list-style: none; padding: 0; }
+    .v2-step-list li {
+      padding: 0.55rem 0; color: var(--text-main);
+      display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.95rem;
+    }
+    .v2-step-list li::before {
+      content: "✓"; color: var(--secondary); font-weight: 800;
+      flex-shrink: 0;
+    }
+    .v2-step-visual {
+      background: #fff; border-radius: var(--v2-radius);
+      border: 1px solid var(--v2-border); padding: 2rem;
+      box-shadow: var(--v2-shadow-soft); min-height: 280px;
+      display: flex; flex-direction: column; gap: 0.8rem;
+    }
+    .v2-visual-q {
+      background: #F0F4FF; padding: 0.8rem 1rem; border-radius: 10px;
+      font-size: 0.9rem; color: var(--text-main); font-weight: 500;
+      border-left: 3px solid var(--primary);
+    }
+    .v2-visual-a {
+      background: #ECFDF5; padding: 0.8rem 1rem; border-radius: 10px;
+      font-size: 0.85rem; color: var(--text-main);
+      border-left: 3px solid var(--secondary); line-height: 1.55;
+    }
+    .v2-visual-a code {
+      background: rgba(0,0,0,0.05); padding: 1px 6px; border-radius: 4px;
+      font-size: 0.78rem; color: var(--primary); font-weight: 600;
+    }
+    .v2-visual-citation {
+      font-size: 0.78rem; color: var(--primary); font-weight: 600;
+      display: flex; align-items: center; gap: 0.4rem; margin-top: 0.3rem;
+    }
+    .v2-visual-calc {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-top: 0.5rem;
+    }
+    .v2-mini-stat {
+      background: #F8FAFC; border: 1px solid var(--v2-border); border-radius: 10px;
+      padding: 0.8rem; text-align: center;
+    }
+    .v2-mini-stat .lbl { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+    .v2-mini-stat .val { font-family: var(--font-display); font-weight: 800; font-size: 1.4rem; color: var(--text-main); margin-top: 0.2rem; }
+    .v2-mini-stat .val.green { color: var(--success); }
+
+    /* ═════════════════════════════════
+       COMPARATIVA: SIN vs CON TaxIA
+    ═════════════════════════════════ */
+    .v2-compare {
+      padding: 6rem 5%; max-width: none;
+      background: #fff;
+    }
+    .v2-compare-inner { max-width: 1100px; margin: 0 auto; }
+    .v2-compare-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 3rem;
+    }
+    .v2-compare-col {
+      padding: 2.5rem; border-radius: var(--v2-radius);
+      border: 1px solid var(--v2-border);
+    }
+    .v2-compare-col.bad { background: #FFFBFA; }
+    .v2-compare-col.good {
+      background: linear-gradient(180deg, #F0FDFA 0%, #FFFFFF 100%);
+      border: 2px solid var(--secondary);
+      box-shadow: 0 20px 50px -20px rgba(0,209,178,0.25);
+      position: relative;
+    }
+    .v2-compare-col h4 {
+      font-size: 1.3rem; margin-bottom: 1.5rem;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .v2-compare-col.bad h4 { color: #B91C1C; }
+    .v2-compare-col.good h4 { color: #047857; }
+    .v2-compare-col ul { list-style: none; padding: 0; }
+    .v2-compare-col li {
+      padding: 0.7rem 0;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      display: flex; align-items: flex-start; gap: 0.6rem;
+      font-size: 0.95rem; color: var(--text-main);
+    }
+    .v2-compare-col li:last-child { border-bottom: none; }
+    .v2-compare-col.bad li::before { content: "✕"; color: #DC2626; font-weight: 800; }
+    .v2-compare-col.good li::before { content: "✓"; color: var(--success); font-weight: 800; }
+
+    /* ═════════════════════════════════
+       TEMÁTICAS
+    ═════════════════════════════════ */
+    .v2-temas {
+      padding: 6rem 5%; max-width: none;
+      background: var(--v2-grad-soft);
+    }
+    .v2-temas-inner { max-width: 1200px; margin: 0 auto; }
+    .v2-temas-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 1.2rem; margin-top: 3rem;
+    }
+    .v2-tema-card {
+      background: #fff; padding: 1.6rem;
+      border-radius: var(--v2-radius-sm); border: 1px solid var(--v2-border);
+      transition: all .25s; cursor: pointer;
+    }
+    .v2-tema-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--primary);
+      box-shadow: var(--v2-shadow-soft);
+    }
+    .v2-tema-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; margin-bottom: 1rem;
+    }
+    .v2-tema-card h3 { font-size: 1rem; margin-bottom: 0.3rem; }
+    .v2-tema-card p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; }
+
+    /* ═════════════════════════════════
+       TESTIMONIOS
+    ═════════════════════════════════ */
+    .v2-testimonios {
+      padding: 6rem 5%; max-width: none;
+      background: #fff;
+    }
+    .v2-testimonios-inner { max-width: 1200px; margin: 0 auto; }
+    .v2-test-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem; margin-top: 3rem;
+    }
+    .v2-test-card {
+      padding: 2rem; background: var(--v2-grad-soft);
+      border: 1px solid var(--v2-border);
+      border-radius: var(--v2-radius);
+      display: flex; flex-direction: column;
+    }
+    .v2-test-stars { color: #F59E0B; letter-spacing: 2px; margin-bottom: 1rem; }
+    .v2-test-quote {
+      font-size: 1rem; color: var(--text-main); line-height: 1.6;
+      flex: 1; margin-bottom: 1.5rem;
+    }
+    .v2-test-author {
+      display: flex; align-items: center; gap: 0.8rem;
+      padding-top: 1rem; border-top: 1px dashed var(--v2-border);
+    }
+    .v2-test-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; color: #fff; font-size: 1rem;
+    }
+    .v2-test-author-info strong { display: block; color: var(--text-main); font-size: 0.95rem; }
+    .v2-test-author-info span { color: var(--text-muted); font-size: 0.8rem; }
+
+    /* ═════════════════════════════════
+       PRICING v2
+    ═════════════════════════════════ */
+    .v2-pricing {
+      padding: 6rem 5%; max-width: none;
+      background: var(--v2-grad-soft);
+    }
+    .v2-pricing-inner { max-width: 1100px; margin: 0 auto; }
+    .v2-pricing-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
+      margin-top: 3rem;
+    }
+    .v2-plan {
+      background: #fff;
+      border-radius: var(--v2-radius);
+      padding: 2.4rem 2rem;
+      border: 1px solid var(--v2-border);
+      display: flex; flex-direction: column;
+      position: relative;
+      transition: all .3s;
+    }
+    .v2-plan:hover { transform: translateY(-4px); box-shadow: var(--v2-shadow-soft); }
+    .v2-plan.featured {
+      border: 2px solid var(--primary);
+      box-shadow: 0 25px 60px -20px rgba(37,99,235,0.35);
+      transform: scale(1.03);
+    }
+    .v2-plan.featured:hover { transform: scale(1.03) translateY(-4px); }
+    .v2-plan-badge {
+      position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+      background: var(--v2-grad); color: #fff;
+      padding: 0.35rem 1.1rem; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+      box-shadow: 0 6px 14px -4px rgba(37,99,235,0.4);
+    }
+    .v2-plan-name { font-size: 0.85rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 1.5px; }
+    .v2-plan-price {
+      font-family: var(--font-display); font-weight: 900;
+      font-size: 3.2rem; color: var(--text-main);
+      margin-top: 0.6rem; line-height: 1;
+    }
+    .v2-plan-price small { font-size: 0.95rem; color: var(--text-muted); font-weight: 500; }
+    .v2-plan-desc { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.4rem; min-height: 40px; }
+    .v2-plan-feats { list-style: none; padding: 0; margin: 1.8rem 0; flex: 1; }
+    .v2-plan-feats li {
+      padding: 0.5rem 0; font-size: 0.93rem; color: var(--text-main);
+      display: flex; align-items: flex-start; gap: 0.6rem;
+    }
+    .v2-plan-feats li::before {
+      content: "✓"; color: var(--success); font-weight: 800; flex-shrink: 0;
+    }
+    .v2-plan-cta {
+      width: 100%; padding: 0.95rem; border-radius: 999px;
+      font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all .2s;
+      border: none;
+    }
+    .v2-plan-cta.primary { background: var(--v2-grad); color: #fff; box-shadow: 0 8px 20px -6px rgba(37,99,235,0.5); }
+    .v2-plan-cta.primary:hover { transform: translateY(-2px); }
+    .v2-plan-cta.outline {
+      background: transparent; color: var(--text-main);
+      border: 1px solid var(--v2-border);
+    }
+    .v2-plan-cta.outline:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* ═════════════════════════════════
+       FAQ
+    ═════════════════════════════════ */
+    .v2-faq {
+      padding: 6rem 5%; max-width: none;
+      background: #fff;
+    }
+    .v2-faq-inner { max-width: 800px; margin: 0 auto; }
+    .v2-faq-list { margin-top: 3rem; }
+    .v2-faq-item {
+      border-bottom: 1px solid var(--v2-border);
+      padding: 1.4rem 0;
+    }
+    .v2-faq-q {
+      width: 100%; background: transparent; border: none; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+      font-family: var(--font-display); font-weight: 700; font-size: 1.05rem;
+      color: var(--text-main); text-align: left; padding: 0;
+    }
+    .v2-faq-q::after {
+      content: "+"; font-size: 1.6rem; color: var(--primary); font-weight: 400;
+      transition: transform .3s;
+    }
+    .v2-faq-item.open .v2-faq-q::after { transform: rotate(45deg); }
+    .v2-faq-a {
+      max-height: 0; overflow: hidden; transition: max-height .35s ease;
+      color: var(--text-muted); font-size: 0.95rem; line-height: 1.65;
+    }
+    .v2-faq-item.open .v2-faq-a { max-height: 400px; padding-top: 1rem; }
+
+    /* ═════════════════════════════════
+       FINAL CTA
+    ═════════════════════════════════ */
+    .v2-final-cta {
+      padding: 6rem 5%; max-width: none;
+      background: var(--bg-deep);
+      color: #fff;
+      position: relative; overflow: hidden;
+    }
+    .v2-final-cta::before {
+      content: ""; position: absolute; inset: 0;
+      background:
+        radial-gradient(50% 60% at 30% 50%, rgba(0,209,178,0.18), transparent 70%),
+        radial-gradient(40% 60% at 80% 50%, rgba(37,99,235,0.20), transparent 70%);
+      pointer-events: none;
+    }
+    .v2-final-inner {
+      max-width: 880px; margin: 0 auto; text-align: center;
+      position: relative; z-index: 1;
+    }
+    .v2-final-cta h2 {
+      font-size: clamp(2rem, 4vw, 3.4rem); color: #fff;
+      letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 1.2rem;
+    }
+    .v2-final-cta h2 em {
+      font-style: normal;
+      background: linear-gradient(135deg, #00D1B2, #38BDF8);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .v2-final-cta p { color: #CBD5E1; font-size: 1.15rem; max-width: 560px; margin: 0 auto 2.5rem; line-height: 1.6; }
+
+    /* ═════════════════════════════════
+       FOOTER v2
+    ═════════════════════════════════ */
+    footer.v2-footer {
+      background: #0F1126; color: #fff;
+      padding: 4rem 5% 2rem;
+    }
+    .v2-footer-inner { max-width: 1200px; margin: 0 auto; }
+    .v2-footer-grid {
+      display: grid; grid-template-columns: 2.5fr 1fr 1fr 1fr;
+      gap: 3rem; margin-bottom: 3rem;
+    }
+    .v2-footer-col p { color: #94A3B8; font-size: 0.92rem; line-height: 1.6; max-width: 320px; margin-top: 1rem; }
+    .v2-footer-col h4 {
+      color: #fff; font-size: 0.95rem; margin-bottom: 1rem;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .v2-footer-col ul { list-style: none; padding: 0; }
+    .v2-footer-col ul li { margin-bottom: 0.7rem; }
+    .v2-footer-col ul li a {
+      color: #94A3B8; font-size: 0.9rem; transition: color .2s;
+    }
+    .v2-footer-col ul li a:hover { color: #00D1B2; }
+    .v2-footer-bottom {
+      padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 1rem;
+    }
+    .v2-footer-bottom p { color: #64748B; font-size: 0.85rem; }
+    .v2-flag {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      color: #94A3B8; font-size: 0.85rem;
+    }
+    .v2-flag span { font-size: 1.1rem; }
+
+    /* ═════════════════════════════════
+       RESPONSIVE
+    ═════════════════════════════════ */
+    @media (max-width: 980px) {
+      .v2-hero-grid { grid-template-columns: 1fr; gap: 3rem; }
+      .v2-hero-right { order: -1; }
+      .v2-mock-frame { transform: none; }
+      .v2-mock-frame:hover { transform: translateY(-4px); }
+      .v2-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 2.5rem; }
+      .v2-benefits-grid { grid-template-columns: 1fr; }
+      .v2-step-row, .v2-step-row.reverse { grid-template-columns: 1fr; gap: 2rem; direction: ltr; }
+      .v2-compare-grid { grid-template-columns: 1fr; }
+      .v2-temas-grid { grid-template-columns: repeat(2, 1fr); }
+      .v2-test-grid { grid-template-columns: 1fr; }
+      .v2-pricing-grid { grid-template-columns: 1fr; }
+      .v2-plan.featured { transform: none; }
+      .v2-footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
+      .v2-float-badge.b1, .v2-float-badge.b2 { display: none; }
+    }
+    @media (max-width: 600px) {
+      section#inicio.v2-hero { padding-top: 110px; }
+      .v2-temas-grid { grid-template-columns: 1fr; }
+      .v2-footer-grid { grid-template-columns: 1fr; }
+      .v2-hero h1 { font-size: 2.4rem; }
+      .v2-stats-grid { grid-template-columns: 1fr 1fr; }
+      .v2-logos-inner { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ════════════════════════════════════════════════════════
+       LANDING PAGE v2
+  ════════════════════════════════════════════════════════ -->
+  <div id="landing-page">
+
+    <!-- NAVBAR -->
+    <nav class="v2-nav">
+      <a href="#inicio" class="nav-logo">Tax<span>IA</span></a>
+      <ul class="nav-links">
+        <li><a href="#beneficios">Beneficios</a></li>
+        <li><a href="#como-funciona">Cómo funciona</a></li>
+        <li><a href="#temas">Temáticas</a></li>
+        <li><a href="#planes">Precios</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+      <div class="nav-auth" id="nav-auth-out">
+        <button onclick="window.app.showModal('login')" class="btn-outline">Iniciar sesión</button>
+        <button onclick="document.getElementById('planes').scrollIntoView({behavior:'smooth'})" class="v2-cta-btn">Probar gratis</button>
+      </div>
+    </nav>
+
+    <!-- HERO ASIMÉTRICO -->
+    <section id="inicio" class="v2-hero">
+      <div class="v2-hero-grid">
+        <!-- LEFT: Copy + CTAs + Trust -->
+        <div class="v2-hero-left">
+          <div class="v2-pill"><span class="v2-pill-dot"></span> Entrenado con +82 documentos oficiales DGII</div>
+          <h1>
+            La forma más rápida de <em>resolver dudas tributarias</em> en RD.
+          </h1>
+          <p class="v2-hero-sub">
+            Pregunta sobre ITBIS, ISR, RNC, retenciones o e-CF y obtén respuestas con base legal exacta en segundos. Diseñado para contadores, asesores y empresas dominicanas.
+          </p>
+          <div class="v2-hero-cta-row">
+            <button class="v2-cta-btn v2-btn-large" onclick="window.app.showModal('register')">
+              Comenzar gratis →
+            </button>
+            <button class="v2-btn-ghost v2-btn-large" onclick="document.getElementById('como-funciona').scrollIntoView({behavior:'smooth'})">
+              ▶  Ver cómo funciona
+            </button>
+          </div>
+          <div class="v2-hero-trust">
+            <div class="v2-avatars">
+              <div class="a1">JM</div>
+              <div class="a2">CR</div>
+              <div class="a3">AP</div>
+              <div class="a4">+</div>
+            </div>
+            <div class="v2-trust-text">
+              <div class="v2-stars">★★★★★ <strong style="color:#1A1B41;">4.9/5</strong></div>
+              <div><strong>+500 contadores</strong> dominicanos ya lo usan</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Mock chat preview -->
+        <div class="v2-hero-right">
+          <div class="v2-float-badge b1"><div class="ico">⚡</div>Respuesta en 3 seg.</div>
+          <div class="v2-float-badge b2"><div class="ico">⚖️</div>Cita la norma exacta</div>
+          <div class="v2-mock-frame">
+            <div class="v2-mock-bar">
+              <span class="d1"></span><span class="d2"></span><span class="d3"></span>
+              <div class="v2-mock-url">🔒 taxia.do</div>
+            </div>
+            <div class="v2-mock-body">
+              <div class="v2-mock-msg" style="flex-direction:row-reverse;">
+                <div class="v2-mock-avatar user">U</div>
+                <div class="v2-mock-bubble user">¿Cuándo vence el IT-1 de marzo y qué pasa si cae fin de semana?</div>
+              </div>
+              <div class="v2-mock-msg">
+                <div class="v2-mock-avatar">IA</div>
+                <div class="v2-mock-bubble">
+                  El IT-1 de ITBIS de marzo vence el <strong>20 de abril</strong>. Si el día 20 cae sábado, domingo o feriado, el plazo se extiende automáticamente al siguiente día hábil.
+                  <cite>📚 Guía 7 ITBIS DGII · Art. 353 Ley 11-92</cite>
+                </div>
+              </div>
+              <div class="v2-mock-input">
+                <div class="v2-mock-input-field">Escribe tu pregunta tributaria…</div>
+                <div class="v2-mock-send">➤</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRUST LOGOS -->
+    <div class="v2-logos">
+      <div class="v2-logos-inner">
+        <div class="v2-logos-label">Cobertura completa de</div>
+        <div class="v2-logo-list">
+          <div class="v2-logo-item">DGII</div>
+          <div class="v2-logo-item">Ley 11-92</div>
+          <div class="v2-logo-item">Norma 06-18 e-CF</div>
+          <div class="v2-logo-item">Oficina Virtual</div>
+          <div class="v2-logo-item">TCR · SCJ</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <section class="v2-stats">
+      <div class="v2-stats-grid">
+        <div>
+          <div class="v2-stat-num">82+</div>
+          <div class="v2-stat-label">Documentos DGII indexados</div>
+        </div>
+        <div>
+          <div class="v2-stat-num">3 seg</div>
+          <div class="v2-stat-label">Respuesta promedio</div>
+        </div>
+        <div>
+          <div class="v2-stat-num">24/7</div>
+          <div class="v2-stat-label">Disponibilidad</div>
+        </div>
+        <div>
+          <div class="v2-stat-num">+500</div>
+          <div class="v2-stat-label">Profesionales activos</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BENEFICIOS -->
+    <section id="beneficios" class="v2-benefits">
+      <div class="v2-benefits-inner">
+        <div class="v2-section-eyebrow">Por qué elegir TaxIA</div>
+        <h2 class="v2-section-title">Tu asistente tributario, siempre disponible.</h2>
+        <p class="v2-section-sub">Deja de perder tiempo navegando PDFs y leyes. TaxIA combina inteligencia artificial con la documentación oficial de la DGII para darte respuestas precisas, citadas y al instante.</p>
+
+        <div class="v2-benefits-grid">
+          <div class="v2-benefit">
+            <div class="v2-benefit-icon">⚡</div>
+            <h3>Respuestas en segundos</h3>
+            <p>Olvida buscar entre 20 PDFs. Pregunta en lenguaje natural y obtén la respuesta correcta al instante, con la cita exacta de la fuente.</p>
+          </div>
+          <div class="v2-benefit">
+            <div class="v2-benefit-icon">⚖️</div>
+            <h3>Base legal verificable</h3>
+            <p>Cada respuesta cita el artículo del Código Tributario, la Norma General o la guía DGII que la sustenta. Cero adivinación.</p>
+          </div>
+          <div class="v2-benefit">
+            <div class="v2-benefit-icon">🧮</div>
+            <h3>Calculadoras integradas</h3>
+            <p>Simula ITBIS, IR-1, IR-2, IR-17 y RST sin salir de la plataforma. Resultados instantáneos con desglose paso a paso.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CÓMO FUNCIONA -->
+    <section id="como-funciona" class="v2-steps">
+      <div class="v2-steps-inner">
+        <div style="text-align:center; margin-bottom:1rem;">
+          <div class="v2-section-eyebrow">Cómo funciona</div>
+          <h2 class="v2-section-title">3 pasos. Sin curvas de aprendizaje.</h2>
+          <p class="v2-section-sub" style="margin: 0 auto;">Diseñado para que cualquier contador, asesor o contribuyente lo domine en su primera consulta.</p>
+        </div>
+
+        <div style="margin-top: 4rem;">
+          <!-- Paso 1 -->
+          <div class="v2-step-row">
+            <div class="v2-step">
+              <div class="v2-step-num">1</div>
+              <h3>Pregunta en lenguaje natural</h3>
+              <p>Escribe como hablas. Sin formularios, sin filtros complejos, sin tener que adivinar la palabra clave correcta.</p>
+              <ul class="v2-step-list">
+                <li>Entiende el contexto fiscal dominicano</li>
+                <li>Soporta consultas de seguimiento (chat continuo)</li>
+                <li>Comprende términos técnicos y coloquiales</li>
+              </ul>
+            </div>
+            <div class="v2-step-visual">
+              <div class="v2-visual-q">"¿Qué documentos necesito para inscribir una SRL en el RNC?"</div>
+              <div class="v2-visual-q">"¿Cómo aplico la proporcionalidad del ITBIS crédito?"</div>
+              <div class="v2-visual-q">"¿Cuáles son los gastos deducibles para ISR de personas físicas?"</div>
+            </div>
+          </div>
+
+          <!-- Paso 2 -->
+          <div class="v2-step-row reverse">
+            <div class="v2-step">
+              <div class="v2-step-num">2</div>
+              <h3>Recibe respuestas con base legal</h3>
+              <p>Cada respuesta de TaxIA llega con la cita exacta del Código Tributario, Reglamento o Norma General. Defiende tu posición con confianza.</p>
+              <ul class="v2-step-list">
+                <li>Cita artículos específicos (Ej. Art. 343 Ley 11-92)</li>
+                <li>Referencias a Normas Generales actualizadas</li>
+                <li>Fragmento literal de la fuente cuando aplica</li>
+              </ul>
+            </div>
+            <div class="v2-step-visual">
+              <div class="v2-visual-a">
+                Las facturas con NCF de Crédito Fiscal generan derecho a deducción si se cumplen los requisitos del <code>Art. 346</code> del Código Tributario.
+                <div class="v2-visual-citation">📚 Ley 11-92 · Art. 346 · Norma 06-18</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Paso 3 -->
+          <div class="v2-step-row">
+            <div class="v2-step">
+              <div class="v2-step-num">3</div>
+              <h3>Calcula y proyecta al instante</h3>
+              <p>Más allá de las respuestas: simula tus declaraciones de ITBIS, ISR e IR-17 directamente desde el chat con calculadoras integradas.</p>
+              <ul class="v2-step-list">
+                <li>Calculadora ITBIS (IT-1) con desglose</li>
+                <li>Simulador IR-1 / IR-2 con escalas vigentes</li>
+                <li>Validador de retenciones en la fuente</li>
+              </ul>
+            </div>
+            <div class="v2-step-visual">
+              <div style="font-weight:700; font-size:0.95rem; margin-bottom:0.4rem;">Simulación ITBIS · IT-1</div>
+              <div class="v2-visual-calc">
+                <div class="v2-mini-stat"><div class="lbl">Cobrado</div><div class="val">RD$ 86,400</div></div>
+                <div class="v2-mini-stat"><div class="lbl">Pagado</div><div class="val">RD$ 41,200</div></div>
+              </div>
+              <div class="v2-mini-stat" style="margin-top:0.6rem;">
+                <div class="lbl">A pagar este mes</div>
+                <div class="val green">RD$ 45,200</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPARATIVA -->
+    <section class="v2-compare">
+      <div class="v2-compare-inner" style="text-align:center;">
+        <div class="v2-section-eyebrow">El cambio</div>
+        <h2 class="v2-section-title">Antes vs. con TaxIA.</h2>
+        <p class="v2-section-sub" style="margin: 0 auto;">Cómo cambia el día a día de un asesor fiscal en República Dominicana.</p>
+
+        <div class="v2-compare-grid">
+          <div class="v2-compare-col bad">
+            <h4>😩 Sin TaxIA</h4>
+            <ul>
+              <li>30 minutos buscando una norma específica entre PDFs</li>
+              <li>Citas inseguras o desactualizadas frente al cliente</li>
+              <li>Recalcular ITBIS o ISR manualmente cada cierre</li>
+              <li>Llamadas al Centro de Contacto en hora pico</li>
+              <li>Riesgo de errores por interpretación incorrecta</li>
+              <li>Horas extra al final del mes</li>
+            </ul>
+          </div>
+          <div class="v2-compare-col good">
+            <h4>🚀 Con TaxIA</h4>
+            <ul>
+              <li>Respuesta en 3 segundos con cita exacta</li>
+              <li>Bibliografía DGII oficial siempre actualizada</li>
+              <li>Calculadoras tributarias integradas, listas para usar</li>
+              <li>Disponible 24/7, también fines de semana</li>
+              <li>Defensa de criterio con base legal verificable</li>
+              <li>Tiempo recuperado para vender más servicios</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TEMÁTICAS -->
+    <section id="temas" class="v2-temas">
+      <div class="v2-temas-inner">
+        <div style="text-align:center; margin-bottom: 1rem;">
+          <div class="v2-section-eyebrow">Cobertura</div>
+          <h2 class="v2-section-title">Domina toda la normativa DGII.</h2>
+          <p class="v2-section-sub" style="margin: 0 auto;">TaxIA está entrenado con la biblioteca virtual completa de la Dirección General de Impuestos Internos.</p>
+        </div>
+
+        <div class="v2-temas-grid">
+          <div class="v2-tema-card">
+            <div class="v2-tema-icon" style="background:rgba(37,99,235,.1); color:var(--primary);">📊</div>
+            <h3>ITBIS</h3>
+            <p>Transferencia de bienes y servicios, retenciones, exenciones y proporcionalidad.</p>
+          </div>
+          <div class="v2-tema-card">
+            <div class="v2-tema-icon" style="background:rgba(0,209,178,.1); color:var(--secondary);">💰</div>
+            <h3>ISR</h3>
+            <p>Renta personas físicas (IR-1) y jurídicas (IR-2), gastos deducibles y escalas.</p>
+          </div>
+          <div class="v2-tema-card">
+            <div class="v2-tema-icon" style="background:rgba(255,107,107,.1); color:var(--accent-warm);">🏢</div>
+            <h3>RNC</h3>
+            <p>Inscripción, actualización, modificación y cese para personas físicas y sociedades.</p>
+          </div>
+          <div class="v2-tema-card">
+            <div class="v2-tema-icon" style="background:rgba(245,158,11,.12); color:#D97706;">🧾</div>
+            <h3>e-CF</h3>
+            <p>Facturación electrónica, NCF, autorización de emisores y formatos vigentes.</p>
+          </div>
+          <div class="v2-tema-card">
+            <div class="v2-tema-icon" style="background:rgba(124,58,237,.12); color:#7C3AED;">📋</div>
+            <h3>IR-17</h3>
+            <p>Retenciones en la fuente: porcentajes, sujetos obligados y declaraciones mensuales.</p>
+          </div>
+          <div class="v2-tema-card">
+            <div class="v2-tema-icon" style="background:rgba(16,185,129,.12); color:#059669;">📨</div>
+            <h3>Formatos 606/607</h3>
+            <p>Reportes de compras, ventas y retenciones. Plazos y validación previa.</p>
+          </div>
+          <div class="v2-tema-card">
+            <div class="v2-tema-icon" style="background:rgba(56,189,248,.15); color:#0284C7;">💼</div>
+            <h3>RST · RC-02</h3>
+            <p>Régimen Simplificado de Tributación: requisitos, cuotas y migración al régimen ordinario.</p>
+          </div>
+          <div class="v2-tema-card">
+            <div class="v2-tema-icon" style="background:rgba(232,47,109,.10); color:#DB2777;">🌐</div>
+            <h3>Oficina Virtual</h3>
+            <p>Token, claves, modificación de declaraciones y solicitudes administrativas.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TESTIMONIOS -->
+    <section class="v2-testimonios">
+      <div class="v2-testimonios-inner">
+        <div style="text-align:center; margin-bottom:1rem;">
+          <div class="v2-section-eyebrow">Testimonios</div>
+          <h2 class="v2-section-title">Lo que dicen contadores reales.</h2>
+        </div>
+
+        <div class="v2-test-grid">
+          <div class="v2-test-card">
+            <div class="v2-test-stars">★★★★★</div>
+            <div class="v2-test-quote">"Antes me tomaba media hora encontrar una norma específica. Con TaxIA tengo la respuesta y la cita en menos de un minuto. Es como tener un asistente legal 24/7."</div>
+            <div class="v2-test-author">
+              <div class="v2-test-avatar" style="background:linear-gradient(135deg,#FF6B6B,#FFB347);">JM</div>
+              <div class="v2-test-author-info">
+                <strong>Jorge Méndez</strong>
+                <span>Contador · Santo Domingo</span>
+              </div>
+            </div>
+          </div>
+          <div class="v2-test-card">
+            <div class="v2-test-stars">★★★★★</div>
+            <div class="v2-test-quote">"Manejo 22 clientes y necesito información rápida y precisa. La calculadora de ITBIS y las citas exactas del Código Tributario me ahorran horas cada mes."</div>
+            <div class="v2-test-author">
+              <div class="v2-test-avatar" style="background:linear-gradient(135deg,#2563EB,#7C3AED);">CR</div>
+              <div class="v2-test-author-info">
+                <strong>Carolina Reyes</strong>
+                <span>Asesora Tributaria · Santiago</span>
+              </div>
+            </div>
+          </div>
+          <div class="v2-test-card">
+            <div class="v2-test-stars">★★★★★</div>
+            <div class="v2-test-quote">"Lo recomendé a toda mi firma. Las respuestas con base legal nos permiten defender posiciones fiscales con mucha más seguridad ante la DGII."</div>
+            <div class="v2-test-author">
+              <div class="v2-test-avatar" style="background:linear-gradient(135deg,#00D1B2,#10B981);">AP</div>
+              <div class="v2-test-author-info">
+                <strong>Andrés Polanco</strong>
+                <span>Socio Director · Firma Contable</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRICING -->
+    <section id="planes" class="v2-pricing">
+      <div class="v2-pricing-inner">
+        <div style="text-align:center; margin-bottom: 1rem;">
+          <div class="v2-section-eyebrow">Precios transparentes</div>
+          <h2 class="v2-section-title">Planes que escalan contigo.</h2>
+          <p class="v2-section-sub" style="margin: 0 auto;">Empieza gratis. Pasa a Pro cuando tu cartera de clientes crezca. Cancela cuando quieras.</p>
+        </div>
+
+        <div class="v2-pricing-grid">
+          <!-- LIBRE -->
+          <div class="v2-plan">
+            <div class="v2-plan-name">Libre</div>
+            <div class="v2-plan-price">RD$0<small> / mes</small></div>
+            <div class="v2-plan-desc">Perfecto para explorar la plataforma sin compromiso.</div>
+            <ul class="v2-plan-feats">
+              <li>10 consultas mensuales</li>
+              <li>Acceso a todas las temáticas DGII</li>
+              <li>Citas básicas de normativa</li>
+              <li>Sin tarjeta de crédito</li>
+            </ul>
+            <button class="v2-plan-cta outline" onclick="window.app.showModal('register')">Empezar gratis</button>
+          </div>
+
+          <!-- PRO (FEATURED) -->
+          <div class="v2-plan featured">
+            <div class="v2-plan-badge">★ Más popular</div>
+            <div class="v2-plan-name">Pro</div>
+            <div class="v2-plan-price">RD$1,500<small> / mes</small></div>
+            <div class="v2-plan-desc">Para asesores y firmas contables que consultan a diario.</div>
+            <ul class="v2-plan-feats">
+              <li>100 consultas mensuales</li>
+              <li>Simuladores ITBIS, ISR e IR-17</li>
+              <li>Alertas de vencimientos fiscales</li>
+              <li>Citas avanzadas con texto literal</li>
+              <li>Soporte prioritario</li>
+            </ul>
+            <div id="paypal-pro" style="background:#F7F9FC; border:1px solid var(--v2-border); border-radius:12px; padding:1rem; font-size:0.85rem; color:var(--text-muted); text-align:center;">
+              💳 Botón PayPal (Configurar en Producción)
+            </div>
+          </div>
+
+          <!-- PRO MAX -->
+          <div class="v2-plan">
+            <div class="v2-plan-name">Pro Max</div>
+            <div class="v2-plan-price">RD$5,500<small> / mes</small></div>
+            <div class="v2-plan-desc">Para grandes despachos y empresas con múltiples clientes.</div>
+            <ul class="v2-plan-feats">
+              <li>Consultas ilimitadas</li>
+              <li>Auditoría automática de comprobantes</li>
+              <li>Llenado asistido de formularios DGII</li>
+              <li>API de integración</li>
+              <li>Soporte dedicado por WhatsApp</li>
+            </ul>
+            <div id="paypal-promax" style="background:#F7F9FC; border:1px solid var(--v2-border); border-radius:12px; padding:1rem; font-size:0.85rem; color:var(--text-muted); text-align:center;">
+              💳 Botón PayPal (Configurar en Producción)
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center; margin-top:2.5rem; color:var(--text-muted); font-size:0.9rem;">
+          🔒 Pagos seguros vía PayPal · 💳 Acepta tarjetas y PayPal · ↺ Cancela cuando quieras
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="v2-faq">
+      <div class="v2-faq-inner">
+        <div style="text-align:center;">
+          <div class="v2-section-eyebrow">Preguntas frecuentes</div>
+          <h2 class="v2-section-title">Resolvemos tus dudas.</h2>
+        </div>
+
+        <div class="v2-faq-list">
+          <div class="v2-faq-item">
+            <button class="v2-faq-q" onclick="this.parentElement.classList.toggle('open')">¿Las respuestas de TaxIA tienen validez legal?</button>
+            <div class="v2-faq-a">TaxIA es una herramienta de consulta entrenada con documentación oficial DGII. Sus respuestas citan la fuente normativa exacta para que tú o tu cliente puedan verificarla. Sin embargo, no sustituye la asesoría formal de un CPA certificado para casos complejos.</div>
+          </div>
+          <div class="v2-faq-item">
+            <button class="v2-faq-q" onclick="this.parentElement.classList.toggle('open')">¿Qué tan actualizada está su base de conocimiento?</button>
+            <div class="v2-faq-a">La base se actualiza con cada nueva norma, guía o instructivo que publica la DGII. Actualmente cubre el Código Tributario (Ley 11-92), Normas Generales vigentes, formatos 606/607/608/609, e-CF y la totalidad de la biblioteca virtual oficial.</div>
+          </div>
+          <div class="v2-faq-item">
+            <button class="v2-faq-q" onclick="this.parentElement.classList.toggle('open')">¿Puedo usarlo desde mi celular?</button>
+            <div class="v2-faq-a">Sí. TaxIA funciona en cualquier navegador moderno: computadora, tablet o teléfono. La interfaz se adapta automáticamente al tamaño de tu pantalla.</div>
+          </div>
+          <div class="v2-faq-item">
+            <button class="v2-faq-q" onclick="this.parentElement.classList.toggle('open')">¿Mis consultas son privadas?</button>
+            <div class="v2-faq-a">Tus conversaciones se almacenan de forma cifrada y solo tú puedes verlas. No compartimos datos con la DGII ni con terceros. Eliminamos a solicitud cualquier conversación que desees borrar.</div>
+          </div>
+          <div class="v2-faq-item">
+            <button class="v2-faq-q" onclick="this.parentElement.classList.toggle('open')">¿Puedo cancelar mi plan en cualquier momento?</button>
+            <div class="v2-faq-a">Sí. Los planes Pro y Pro Max se gestionan vía PayPal y puedes cancelar la suscripción con un clic desde tu cuenta. No hay períodos mínimos ni cargos por cancelación.</div>
+          </div>
+          <div class="v2-faq-item">
+            <button class="v2-faq-q" onclick="this.parentElement.classList.toggle('open')">¿Ofrecen descuentos para firmas grandes?</button>
+            <div class="v2-faq-a">Sí. Si manejas más de 20 contadores en tu firma, contáctanos para un plan corporativo (white label) con multi-cuenta y facturación consolidada.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="v2-final-cta">
+      <div class="v2-final-inner">
+        <h2>Empieza a <em>ahorrar horas</em> hoy mismo.</h2>
+        <p>Únete a más de 500 contadores y asesores dominicanos que confían en TaxIA todos los días. Tus primeras 10 consultas son gratis.</p>
+        <div style="display:flex; gap:0.8rem; justify-content:center; flex-wrap:wrap;">
+          <button class="v2-cta-btn v2-btn-large" onclick="window.app.showModal('register')">Crear cuenta gratis →</button>
+          <button class="v2-btn-ghost v2-btn-large" style="background:transparent; color:#fff; border-color:rgba(255,255,255,0.3);" onclick="document.getElementById('como-funciona').scrollIntoView({behavior:'smooth'})">Ver demo</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="v2-footer">
+      <div class="v2-footer-inner">
+        <div class="v2-footer-grid">
+          <div class="v2-footer-col">
+            <div style="font-family:var(--font-display); font-weight:900; font-size:1.6rem;">Tax<span style="color:var(--secondary);">IA</span></div>
+            <p>El primer consultor tributario con Inteligencia Artificial diseñado exclusivamente para la normativa fiscal de República Dominicana.</p>
+            <div class="v2-flag" style="margin-top:1rem;"><span>🇩🇴</span> Hecho en República Dominicana</div>
+          </div>
+          <div class="v2-footer-col">
+            <h4>Producto</h4>
+            <ul>
+              <li><a href="#beneficios">Beneficios</a></li>
+              <li><a href="#como-funciona">Cómo funciona</a></li>
+              <li><a href="#temas">Temáticas</a></li>
+              <li><a href="#planes">Precios</a></li>
+            </ul>
+          </div>
+          <div class="v2-footer-col">
+            <h4>Recursos</h4>
+            <ul>
+              <li><a href="#faq">FAQ</a></li>
+              <li><a href="#">Blog tributario</a></li>
+              <li><a href="#">Calendario fiscal</a></li>
+              <li><a href="#">Contacto</a></li>
+            </ul>
+          </div>
+          <div class="v2-footer-col">
+            <h4>Legal</h4>
+            <ul>
+              <li><a href="#">Términos de Servicio</a></li>
+              <li><a href="#">Privacidad</a></li>
+              <li><a href="#">Aviso Legal</a></li>
+              <li><a href="#">Cookies</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="v2-footer-bottom">
+          <p>© 2026 TaxIA RD. Todos los derechos reservados.</p>
+          <p style="font-size:0.78rem; max-width:480px; text-align:right;">Esta plataforma provee información basada en IA y no sustituye la asesoría formal de un CPA certificado.</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       APP CONSOLE (Post-Login) — IDÉNTICO al original
+  ════════════════════════════════════════════════════════ -->
+  <div id="app-console">
+    <!-- SIDEBAR -->
+    <div class="app-sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">Tax<span>IA</span> Pro</div>
+        <button class="sidebar-close-btn" onclick="document.querySelector('.app-sidebar').classList.remove('open')" style="margin-left:auto; background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
+      </div>
+
+      <div class="sidebar-scrollable">
+        <div class="nav-section-title">Asistente</div>
+        <div class="nav-item active" data-tab="chat">💬 Consultar IA</div>
+
+        <div class="nav-section-title">Smart Tools</div>
+        <div class="nav-item" onclick="window.app.openSmartCard('itbis')">📊 Simular ITBIS</div>
+        <div class="nav-item" onclick="window.app.openSmartCard('ir1')">👤 Simular IR-1</div>
+        <div class="nav-item" onclick="window.app.openSmartCard('ir2')">🏢 Simular IR-2</div>
+        <div class="nav-item" onclick="window.app.openSmartCard('rst')">📋 Simular RST</div>
+        <div class="nav-item" onclick="window.app.openSmartCard('ir17')">💼 Simular IR-17</div>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="usage-container">
+          <div class="usage-text">
+            <span>Uso mensual</span>
+            <span id="ia-usage-text">0 / 10</span>
+          </div>
+          <div class="usage-bar-bg">
+            <div class="usage-bar-fill" id="ia-usage-bar" style="width: 0%;"></div>
+          </div>
+          <button class="btn-upgrade-sidebar" onclick="document.getElementById('app-console').style.display='none'; document.getElementById('landing-page').style.display='block'; window.location.hash='#planes';">⚡ Mejorar Plan</button>
+        </div>
+
+        <div class="user-profile-strip" onclick="window.auth.signOut()" title="Cerrar sesión">
+          <div class="avatar-mini" id="user-initial">U</div>
+          <div style="flex:1; overflow:hidden;">
+            <div id="user-name-display" style="font-size:0.85rem; font-weight:bold; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">Usuario</div>
+            <div id="user-plan-display" style="font-size:0.75rem; color:var(--secondary)">Plan Libre</div>
+          </div>
+          <div style="color: var(--danger); font-size: 1.2rem;" title="Cerrar sesión">⍈</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN CHAT WORKSPACE -->
+    <div class="app-main">
+      <div class="mobile-header">
+        <div style="font-weight:bold;">TaxIA Pro</div>
+        <button class="mobile-menu-btn" onclick="document.querySelector('.app-sidebar').classList.toggle('open')">☰</button>
+      </div>
+
+      <div class="chat-container" id="ia-messages">
+        <div class="chat-message msg-bot">
+          <div class="msg-avatar" style="background: linear-gradient(135deg, #1e3a8a, #0f172a); border: 1px solid var(--secondary);">🤖</div>
+          <div class="msg-content">
+            <strong>¡Hola! Soy TaxIA</strong>, tu asistente tributario avanzado. 🇩🇴<br><br>
+            Estoy listo para analizar normativas de la DGII, ayudarte con tus declaraciones (ITBIS, IR-1, IR-2) o explicarte cómo funciona la Facturación Electrónica (e-CF).<br><br>
+            ¿En qué puedo ayudarte hoy?
+          </div>
+        </div>
+      </div>
+
+      <div class="input-area-wrapper">
+        <div class="chat-input-box">
+          <textarea id="chat-input" rows="1" placeholder="Hazme una pregunta tributaria... (Presiona Enter para enviar)"></textarea>
+          <div class="btn-send" onclick="window.chat.sendChatMessage()">➤</div>
+        </div>
+      </div>
+
+      <div id="smart-card-panel" class="smart-card-panel">
+        <div id="sc-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       MODALS (Login / Register) — IDs y hooks preservados
+  ════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-login">
+    <div class="modal">
+      <button class="modal-close" onclick="window.app.closeModal('login')">✕</button>
+      <h2 style="margin-bottom:0.5rem;">Iniciar sesión</h2>
+      <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">Accede a tu cuenta TaxIA</p>
+      <div class="form-group input-group">
+        <label>Correo Electrónico</label>
+        <input type="email" id="login-email" placeholder="tucorreo@empresa.com">
+      </div>
+      <div class="form-group input-group">
+        <label>Contraseña</label>
+        <input type="password" id="login-pass" placeholder="••••••••">
+      </div>
+      <button class="btn-auth v2-cta-btn" style="width:100%; margin-top:0.5rem;" onclick="window.auth.doLogin(document.getElementById('login-email').value, document.getElementById('login-pass').value)">Entrar</button>
+
+      <div style="text-align:center; margin:1.5rem 0; color:var(--text-muted); font-size:0.8rem; position:relative;">
+        <span style="background:#fff; padding:0 10px; position:relative; z-index:1;">o</span>
+        <hr style="position:absolute; top:50%; left:0; right:0; border:none; border-top:1px solid #E2E8F0; margin:0; z-index:0;">
+      </div>
+
+      <button class="btn-google" onclick="window.auth.doGoogleAuth()">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Continuar con Google
+      </button>
+
+      <div style="text-align:center; margin-top:1.5rem; font-size:0.9rem; color:var(--text-muted);">
+        ¿No tienes cuenta? <a href="#" onclick="window.app.closeModal('login'); window.app.showModal('register'); return false;" style="color:var(--primary); font-weight:600;">Regístrate gratis</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-register">
+    <div class="modal">
+      <button class="modal-close" onclick="window.app.closeModal('register')">✕</button>
+      <h2 style="margin-bottom:0.5rem;">Crear cuenta</h2>
+      <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">Empieza con 10 consultas gratuitas al mes</p>
+      <div class="form-group input-group">
+        <label>Nombre Completo</label>
+        <input type="text" id="register-name" placeholder="Juan Pérez">
+      </div>
+      <div class="form-group input-group">
+        <label>Correo Electrónico</label>
+        <input type="email" id="register-email" placeholder="tucorreo@empresa.com">
+      </div>
+      <div class="form-group input-group">
+        <label>Contraseña</label>
+        <input type="password" id="register-pass" placeholder="••••••••">
+      </div>
+      <button class="btn-auth v2-cta-btn" style="width:100%; margin-top:0.5rem;" onclick="window.auth.doRegister(document.getElementById('register-name').value, document.getElementById('register-email').value, document.getElementById('register-pass').value)">Crear cuenta gratis</button>
+
+      <div style="text-align:center; margin:1.5rem 0; color:var(--text-muted); font-size:0.8rem; position:relative;">
+        <span style="background:#fff; padding:0 10px; position:relative; z-index:1;">o</span>
+        <hr style="position:absolute; top:50%; left:0; right:0; border:none; border-top:1px solid #E2E8F0; margin:0; z-index:0;">
+      </div>
+
+      <button class="btn-google" onclick="window.auth.doGoogleAuth()">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Continuar con Google
+      </button>
+
+      <div style="text-align:center; margin-top:1.5rem; font-size:0.9rem; color:var(--text-muted);">
+        ¿Ya tienes cuenta? <a href="#" onclick="window.app.closeModal('register'); window.app.showModal('login'); return false;" style="color:var(--primary); font-weight:600;">Inicia sesión</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS Modular existente (preservado) -->
+  <script src="./js/config.js"></script>
+  <script src="./js/auth.js"></script>
+  <script src="./js/chat.js"></script>
+  <script src="./js/calculadoras.js"></script>
+  <script src="./js/app.js"></script>
+
+</body>
+</html>
