@@ -35,6 +35,11 @@ const app = {
           window.chat.sendChatMessage();
         }
       });
+      // Auto-resize del textarea (crece hasta 150px)
+      chatInput.addEventListener('input', () => {
+        chatInput.style.height = 'auto';
+        chatInput.style.height = Math.min(chatInput.scrollHeight, 150) + 'px';
+      });
     }
 
     document.querySelectorAll('.modal-overlay').forEach(overlay => {

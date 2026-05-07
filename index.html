@@ -1725,35 +1725,14 @@
         <button class="mobile-menu-btn" onclick="document.querySelector('.app-sidebar').classList.toggle('open')">☰</button>
       </div>
 
-      <div class="chat-container" id="ia-messages">
-        <div class="chat-message msg-bot">
-          <div class="msg-avatar" style="background: linear-gradient(135deg, #1e3a8a, #0f172a); border: 1px solid var(--secondary);">🤖</div>
-          <div class="msg-content">
-            <strong>¡Hola! Soy TaxIA</strong>, tu asistente tributario avanzado. 🇩🇴<br><br>
-            Estoy listo para analizar normativas de la DGII, ayudarte con tus declaraciones (ITBIS, IR-1, IR-2) o explicarte cómo funciona la Facturación Electrónica (e-CF).<br><br>
-            ¿En qué puedo ayudarte hoy?
-          </div>
-        </div>
-      </div>
-
-      <div class="input-area-wrapper">
-        <!-- Preview de imagen adjunta -->
-        <div id="chat-attachment-preview" class="chat-attachment-preview" style="display:none;">
-          <img id="chat-preview-img" src="" alt="Adjunto">
-          <div class="att-info">
-            <div class="att-name" id="chat-preview-name">imagen.jpg</div>
-            <div class="att-status" id="chat-preview-status">Lista para enviar</div>
-          </div>
-          <button class="att-remove" onclick="window.chat.removeAttachment()" title="Quitar adjunto">✕</button>
-        </div>
-        <div class="chat-input-box">
-          <button class="btn-attach" onclick="document.getElementById('chat-file-input').click()" title="Adjuntar imagen" aria-label="Adjuntar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-          </button>
-          <input type="file" id="chat-file-input" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif" style="display:none;" onchange="window.chat.handleFileSelect(event)">
-          <textarea id="chat-input" rows="1" placeholder="Hazme una pregunta tributaria... (Presiona Enter para enviar)"></textarea>
-          <div class="btn-send" onclick="window.chat.sendChatMessage()">➤</div>
-        </div>
+      <!-- Chatbot Dify (iframe oficial) -->
+      <div class="dify-chat-frame">
+        <iframe
+          src="https://udify.app/chatbot/BDvOq3yHNlSSon5R"
+          title="TaxIA Chatbot"
+          frameborder="0"
+          allow="microphone">
+        </iframe>
       </div>
 
       <div id="smart-card-panel" class="smart-card-panel">

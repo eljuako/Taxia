@@ -81,10 +81,9 @@ function hidePreview() {
 
 function handleFileSelect(event) {
   const file = event.target.files?.[0];
-  event.target.value = ''; // permitir reseleccionar el mismo archivo
+  event.target.value = '';
   if (!file) return;
 
-  // Validaciones cliente
   if (!file.type.startsWith('image/')) {
     window.app.showToast('Solo se permiten imágenes (JPG, PNG, WEBP, GIF).', 'error');
     return;
@@ -95,14 +94,12 @@ function handleFileSelect(event) {
     return;
   }
 
-  // Leer dataURL para preview
   const reader = new FileReader();
   reader.onload = async (e) => {
     const dataUrl = e.target.result;
     pendingAttachment = { file, uploadFileId: null, dataUrl };
     showPreview(file, dataUrl, 'Subiendo imagen...', 'uploading');
 
-    // Subir al backend que la pasa a Dify
     try {
       const fd = new FormData();
       fd.append('file', file);
@@ -129,114 +126,156 @@ function removeAttachment() {
   hidePreview();
 }
 
+// ─────────── HELPERS DE ESTADO UI ───────────
+function setSendingState(sending) {
+  iaSending = sending;
+  const inp = document.getElementById('chat-input');
+  const sendBtn = document.querySelector('.btn-send');
+  if (inp) inp.disabled = sending;
+  if (sendBtn) {
+    sendBtn.classList.toggle('sending', sending);
+    sendBtn.style.opacity = sending ? '0.6' : '1';
+    sendBtn.style.pointerEvents = sending ? 'none' : 'auto';
+  }
+}
+
+// Lee del stream con timeout de inactividad (anti-bloqueo)
+function readWithIdleTimeout(reader, idleMs) {
+  return Promise.race([
+    reader.read(),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Stream sin actividad por mucho tiempo')), idleMs)
+    ),
+  ]);
+}
+
 // ─────────── ENVIAR MENSAJE ───────────
 async function sendChatMessage() {
+  // GUARD #1: si ya hay un envío en curso, ignorar
   if (iaSending) return;
+
   const inp = document.getElementById('chat-input');
   const msg = inp?.value.trim();
-
-  // Permitir enviar si hay imagen aunque no haya texto
   const hasAttachment = pendingAttachment && pendingAttachment.uploadFileId;
+
+  // GUARD #2: nada que enviar
   if (!msg && !hasAttachment) return;
 
-  // Si hay adjunto pero todavía está subiendo
+  // GUARD #3: imagen aún subiendo
   if (pendingAttachment && !pendingAttachment.uploadFileId) {
     window.app.showToast('Espera que termine de subir la imagen.', 'info');
     return;
   }
 
-  const canQuery = await window.auth.incrementQueryCount();
-  if (!canQuery) {
-    window.app.showModal('upgrade');
-    return;
-  }
+  // 🔒 LOCK INMEDIATO — antes de cualquier await
+  setSendingState(true);
 
-  iaSending = true;
+  let typingId = null;
+  const botMsgId = 'bot-' + Date.now();
   const userImgUrl = pendingAttachment?.dataUrl || null;
   const fileIdToSend = pendingAttachment?.uploadFileId || null;
 
+  // Mostrar el mensaje del usuario inmediatamente (UX)
   iaAppendMsg('user', escapeHtml(msg || '(imagen adjunta)'), null, userImgUrl);
   inp.value = '';
   inp.style.height = 'auto';
-  inp.disabled = true;
   removeAttachment();
 
-  const typingId = iaShowTyping();
-  const botMsgId = 'bot-' + Date.now();
-
-  const abortCtrl = new AbortController();
-  const abortTimer = setTimeout(() => abortCtrl.abort(), 180000);
-
   try {
-    const payload = {
-      inputs: {},
-      query: msg || 'Analiza esta imagen',
-      conversation_id: difyConvId || '',
-      user: 'taxia-user-' + (window.auth.getCurrentUser()?.id?.slice(0, 8) || 'anon'),
-    };
-    if (fileIdToSend) {
-      payload.files = [{
-        type: 'image',
-        transfer_method: 'local_file',
-        upload_file_id: fileIdToSend,
-      }];
+    // Validar cuota — con timeout para no quedarse colgado si Supabase tarda
+    const quotaCheck = Promise.race([
+      window.auth.incrementQueryCount(),
+      new Promise((resolve) => setTimeout(() => resolve(true), 8000)), // 8s timeout, asume OK
+    ]);
+    const canQuery = await quotaCheck;
+    if (canQuery === false) {
+      window.app.showModal('upgrade');
+      return; // finally desbloquea
     }
 
-    const res = await fetch(CONFIG.CHAT_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      signal: abortCtrl.signal,
-    });
+    typingId = iaShowTyping();
 
-    if (!res.ok) {
-      let detail = '';
-      try { detail = (await res.json())?.error || ''; } catch (e) {}
-      throw new Error(detail || `API Error (${res.status})`);
-    }
+    const abortCtrl = new AbortController();
+    const abortTimer = setTimeout(() => abortCtrl.abort(), 180000); // 3 min total
 
-    document.getElementById(typingId)?.remove();
-    iaAppendMsg('bot', '', botMsgId);
-
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let fullText = '';
-    let buffer = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop();
-
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        try {
-          const data = JSON.parse(line.slice(6));
-          if ((data.event === 'message' || data.event === 'agent_message') && data.answer) {
-            fullText += data.answer;
-            iaUpdateBubble(botMsgId, formatBotText(fullText) + '<span class="cursor-blink">▍</span>');
-          }
-          if (data.event === 'message_end' && data.conversation_id) {
-            difyConvId = data.conversation_id;
-            sessionStorage.setItem('taxia_conv_id', difyConvId);
-          }
-        } catch (e) {}
+    try {
+      const payload = {
+        inputs: {},
+        query: msg || 'Analiza esta imagen',
+        conversation_id: difyConvId || '',
+        user: 'taxia-user-' + (window.auth.getCurrentUser()?.id?.slice(0, 8) || 'anon'),
+      };
+      if (fileIdToSend) {
+        payload.files = [{
+          type: 'image',
+          transfer_method: 'local_file',
+          upload_file_id: fileIdToSend,
+        }];
       }
+
+      const res = await fetch(CONFIG.CHAT_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: abortCtrl.signal,
+      });
+
+      if (!res.ok) {
+        let detail = '';
+        try { detail = (await res.json())?.error || ''; } catch (e) {}
+        throw new Error(detail || `Error del servidor (${res.status})`);
+      }
+      if (!res.body) throw new Error('Respuesta sin contenido');
+
+      document.getElementById(typingId)?.remove();
+      typingId = null;
+      iaAppendMsg('bot', '', botMsgId);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+      let buffer = '';
+
+      // Stream con timeout de inactividad — si Dify no envía nada en 60s, se aborta
+      while (true) {
+        const { done, value } = await readWithIdleTimeout(reader, 60000);
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const data = JSON.parse(line.slice(6));
+            if ((data.event === 'message' || data.event === 'agent_message') && data.answer) {
+              fullText += data.answer;
+              iaUpdateBubble(botMsgId, formatBotText(fullText) + '<span class="cursor-blink">▍</span>');
+            }
+            if (data.event === 'message_end' && data.conversation_id) {
+              difyConvId = data.conversation_id;
+              sessionStorage.setItem('taxia_conv_id', difyConvId);
+            }
+          } catch (e) { /* línea SSE inválida — ignorar */ }
+        }
+      }
+
+      iaUpdateBubble(botMsgId, formatBotText(fullText) || '<em style="color:var(--text-muted);">(Sin respuesta)</em>');
+
+    } catch (err) {
+      if (typingId) document.getElementById(typingId)?.remove();
+      const errMsg = err.name === 'AbortError'
+        ? 'Tiempo agotado. Intenta de nuevo.'
+        : (err.message || 'Error desconocido');
+      iaAppendMsg('bot', `❌ Error: ${errMsg}`);
+    } finally {
+      clearTimeout(abortTimer);
     }
-
-    iaUpdateBubble(botMsgId, formatBotText(fullText));
-
-  } catch (err) {
-    document.getElementById(typingId)?.remove();
-    iaAppendMsg('bot', `❌ Error: ${err.message}`);
   } finally {
-    clearTimeout(abortTimer);
-    iaSending = false;
-    inp.disabled = false;
-    inp.focus();
+    // 🔓 SIEMPRE desbloquear, sin importar qué pase
+    setSendingState(false);
+    if (inp) inp.focus();
   }
 }
 
