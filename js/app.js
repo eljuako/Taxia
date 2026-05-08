@@ -13,8 +13,25 @@ const app = {
     this.setupListeners();
     this.applyPlanLocks('libre');
     // Si llegamos desde /registro.html con ?login=1, abrir el modal de login
-    if (new URLSearchParams(window.location.search).get('login') === '1') {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('login') === '1') {
       setTimeout(() => this.showModal('login'), 300);
+    }
+    // Si el email fue recién confirmado desde el enlace del correo
+    if (params.get('confirmed') === '1') {
+      setTimeout(() => {
+        // Si Supabase auto-logueó (caso normal), el listener mostrará la app sola.
+        // Si NO hay sesión activa, abrimos el modal de login con un toast.
+        const isLogged = document.getElementById('app-console').style.display === 'flex';
+        if (!isLogged) {
+          this.showModal('login');
+          this.setFormFeedback('login', '✓ Tu correo fue confirmado exitosamente. Ahora inicia sesión.', 'success');
+        } else {
+          this.showToast('✓ Correo confirmado. ¡Bienvenido a TaxIA!', 'success');
+        }
+        // Limpiar URL para que el mensaje no se repita al recargar
+        window.history.replaceState({}, '', window.location.pathname);
+      }, 800);
     }
   },
 
@@ -185,7 +202,10 @@ const app = {
     this.applyPlanLocks(plan);
   },
 
-  // ─────────── SMART CARDS ───────────
+  // ─────────── FORMULARIOS COMPLETOS (delegado a forms.js) ───────────
+  // Mapeo entre las claves de Smart Tools y las claves de los formularios
+  _formMap: { itbis: 'it1', ir1: 'ir1', ir2: 'ir2', ir17: 'ir17', rst: 'rst' },
+
   openSmartCard(type) {
     const profile = window.auth.getUserProfile();
     const plan = profile?.plan || 'libre';
@@ -196,70 +216,12 @@ const app = {
       return;
     }
 
-    const panel = document.getElementById('smart-card-panel');
-    const content = document.getElementById('sc-content');
-
-    let html = '';
-    if (type === 'itbis') {
-      html = `
-        <div class="sc-header"><h3>Calculadora ITBIS</h3>
-          <button class="sc-close" onclick="window.app.closeSmartCard()">✕</button></div>
-        <div class="sc-body">
-          <div class="sc-form-group"><label>ITBIS Cobrado (RD$)</label>
-            <input type="number" id="itbis-cobrado" placeholder="0.00"></div>
-          <div class="sc-form-group"><label>ITBIS Pagado (RD$)</label>
-            <input type="number" id="itbis-pagado" placeholder="0.00"></div>
-          <button class="btn-calc v2-cta-btn" style="width:100%;" onclick="window.calc.runCalc('itbis')">Calcular ITBIS</button>
-          <div id="calc-result"></div>
-        </div>`;
-    } else if (type === 'rst') {
-      html = `
-        <div class="sc-header"><h3>Simulador RST</h3>
-          <button class="sc-close" onclick="window.app.closeSmartCard()">✕</button></div>
-        <div class="sc-body">
-          <p style="color:var(--text-muted); font-size:0.88rem; margin-bottom:1rem;">
-            Régimen Simplificado de Tributación (RC-02). Estima tu cuota mensual según ingresos brutos.
-          </p>
-          <div class="sc-form-group"><label>Ingresos Brutos Anuales (RD$)</label>
-            <input type="number" id="rst-ingresos" placeholder="0.00"></div>
-          <div class="sc-form-group"><label>Tipo de actividad</label>
-            <select id="rst-tipo" style="width:100%; padding:0.8rem; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; font-family:var(--font-body);">
-              <option value="comercial">Comercial / Industrial</option>
-              <option value="servicios">Servicios</option>
-            </select></div>
-          <button class="btn-calc v2-cta-btn" style="width:100%;" onclick="window.calc.runCalc('rst')">Calcular RST</button>
-          <div id="calc-result"></div>
-        </div>`;
-    } else if (type === 'ir1') {
-      html = `
-        <div class="sc-header"><h3>Simulador IR-1</h3>
-          <button class="sc-close" onclick="window.app.closeSmartCard()">✕</button></div>
-        <div class="sc-body">
-          <div class="sc-form-group"><label>Ingresos Brutos Anuales (RD$)</label>
-            <input type="number" id="ir1-ingresos" placeholder="0.00"></div>
-          <div class="sc-form-group"><label>Gastos Deducibles (RD$)</label>
-            <input type="number" id="ir1-gastos" placeholder="0.00"></div>
-          <button class="btn-calc v2-cta-btn" style="width:100%;" onclick="window.calc.runCalc('ir1')">Calcular IR-1</button>
-          <div id="calc-result"></div>
-        </div>`;
-    } else if (type === 'ir2') {
-      html = `
-        <div class="sc-header"><h3>Simulador IR-2</h3>
-          <button class="sc-close" onclick="window.app.closeSmartCard()">✕</button></div>
-        <div class="sc-body">
-          <p style="color:var(--text-muted); font-size:0.9rem;">Próximamente: cálculo de ISR para personas jurídicas (27% sobre renta neta imponible).</p>
-        </div>`;
-    } else if (type === 'ir17') {
-      html = `
-        <div class="sc-header"><h3>Simulador IR-17</h3>
-          <button class="sc-close" onclick="window.app.closeSmartCard()">✕</button></div>
-        <div class="sc-body">
-          <p style="color:var(--text-muted); font-size:0.9rem;">Próximamente: cálculo de retenciones en la fuente.</p>
-        </div>`;
+    const formKey = this._formMap[type];
+    if (!formKey || !window.forms) {
+      console.warn('Formulario no disponible:', type);
+      return;
     }
-
-    content.innerHTML = html;
-    panel.classList.add('open');
+    window.forms.open(formKey);
   },
 
   closeSmartCard() {

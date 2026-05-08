@@ -527,7 +527,8 @@
               full_name: nombre,
               provincia: provincia,
             },
-            emailRedirectTo: window.location.origin,
+            // Cuando confirme el email, el enlace lo lleva a iniciar sesión (no al home)
+            emailRedirectTo: window.location.origin + '/?confirmed=1',
           },
         });
 
