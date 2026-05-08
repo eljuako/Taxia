@@ -261,43 +261,124 @@
     },
 
     // ─────────────────────────────────────────────────────────
-    // RST — RÉGIMEN SIMPLIFICADO DE TRIBUTACIÓN (RC-02)
+    // RST — RÉGIMEN SIMPLIFICADO DE TRIBUTACIÓN (Decreto 265-19)
+    // Soporta: PJ vs PF, modalidad Servicios/Compras/Agropecuario, sector general/farmacias
     // ─────────────────────────────────────────────────────────
     rst: {
-      title: 'Formulario RC-02',
-      subtitle: 'Régimen Simplificado de Tributación (RST)',
-      deadline: 'Plazo: cuotas según calendario DGII',
+      title: 'Formulario RST',
+      subtitle: 'Régimen Simplificado de Tributación (Decreto 265-19)',
+      deadline: 'Plazo: 4 cuotas trimestrales (Mar/Abr · Jun · Sep · Dic)',
       icon: '📋',
       sections: [
         {
-          name: 'I. Información General',
+          name: 'I. Tipo de Contribuyente',
           fields: [
-            { id: 'rst-modalidad', label: 'Modalidad RST', type: 'select', options: [
-              { value: 'comercial', label: 'Comercial / Industrial (2%)' },
-              { value: 'servicios', label: 'Servicios (5%)' },
-              { value: 'agropecuario', label: 'Agropecuario (3%)' },
+            { id: 'rst-tipo', label: 'Tipo de contribuyente', type: 'select', options: [
+              { value: 'pj', label: 'Persona Jurídica (SRL, SAS, SA)' },
+              { value: 'pf', label: 'Persona Física (profesional independiente)' },
             ]},
-            { id: 'rst-ingresos-anuales', label: 'Ingresos Brutos Anuales Estimados', type: 'money', sub: 'Tope: RD$8,771,184.30 (servicios) o RD$40,369,844.48 (compras)' },
+            { id: 'rst-modalidad', label: 'Modalidad del RST', type: 'select', options: [
+              { value: 'servicios', label: 'Ingresos / Servicios (Profesionales y producción)' },
+              { value: 'compras', label: 'Compras (Comercio de bienes)' },
+              { value: 'agropecuario', label: 'Agropecuario (Producción primaria)' },
+            ]},
+            { id: 'rst-sector', label: 'Sector (solo aplica a Compras)', type: 'select', options: [
+              { value: 'general', label: 'Comercial general (colmados, ferreterías, tiendas)' },
+              { value: 'farmacias', label: 'Farmacias (medicamentos exentos)' },
+            ]},
           ],
         },
         {
-          name: 'II. Cálculo de la Cuota',
+          name: 'II. Datos del Período',
           fields: [
-            { id: 'rst-tasa', label: 'Tasa Aplicable', type: 'money', readonly: true, formula: () => {
-              const m = document.getElementById('rst-modalidad')?.value;
-              if (m === 'servicios') return 0.05;
-              if (m === 'agropecuario') return 0.03;
-              return 0.02;
+            { id: 'rst-ingresos-anuales', label: 'Ingresos Brutos Anuales (modalidad Servicios)', type: 'money', sub: 'Tope: RD$ 12,068,181.09 anuales (referencial 2025)' },
+            { id: 'rst-compras-anuales', label: 'Compras Anuales (modalidad Compras)', type: 'money', sub: 'Tope: RD$ 55,485,890.09 anuales (referencial 2025)' },
+            { id: 'rst-margen-bruto', label: 'Margen Bruto Presunto (% sobre compras)', type: 'money', sub: 'Margen estimado por DGII según sector. Ejemplo: 25%' },
+          ],
+        },
+        {
+          name: 'III. Cálculo del Impuesto',
+          fields: [
+            { id: 'rst-base-imponible', label: 'Base Imponible', type: 'money', readonly: true, formula: () => {
+              const tipo = document.getElementById('rst-tipo')?.value;
+              const modalidad = document.getElementById('rst-modalidad')?.value;
+              if (modalidad === 'compras') {
+                // Modalidad Compras: base = compras × margen bruto presunto
+                return num('rst-compras-anuales') * (num('rst-margen-bruto') / 100);
+              }
+              // Servicios o Agropecuario
+              if (tipo === 'pf') {
+                // PF: base = 60% de los ingresos (deducción presunta del 40%)
+                return num('rst-ingresos-anuales') * 0.60;
+              }
+              // PJ: base = 100% de los ingresos
+              return num('rst-ingresos-anuales');
             }},
-            { id: 'rst-cuota-anual', label: 'Cuota Anual a Pagar', type: 'money', readonly: true, highlight: true, formula: () => num('rst-ingresos-anuales') * num('rst-tasa') },
-            { id: 'rst-resultado', label: 'Cuota Mensual Equivalente', type: 'result', formula: () => num('rst-cuota-anual') / 12 },
+            { id: 'rst-isr', label: 'ISR a Pagar', type: 'money', readonly: true, highlight: true, formula: () => {
+              const tipo = document.getElementById('rst-tipo')?.value;
+              const modalidad = document.getElementById('rst-modalidad')?.value;
+              const base = num('rst-base-imponible');
+
+              if (modalidad === 'compras') {
+                // Modalidad Compras
+                if (tipo === 'pj') return base * 0.27;
+                // PF Compras: escala progresiva
+                return calcIR1(base);
+              }
+              // Servicios/Agropecuario
+              if (tipo === 'pj') {
+                // PJ Servicios: 7% sobre ingresos brutos (cubre ISR + ITBIS)
+                return num('rst-ingresos-anuales') * 0.07;
+              }
+              // PF Servicios: 60% de ingresos - exención + escala progresiva
+              return calcIR1(base);
+            }},
+            { id: 'rst-itbis', label: 'ITBIS a Pagar (solo modalidad Compras)', type: 'money', readonly: true, formula: () => {
+              const modalidad = document.getElementById('rst-modalidad')?.value;
+              if (modalidad !== 'compras') return 0;
+              const sector = document.getElementById('rst-sector')?.value;
+              const base = num('rst-base-imponible');
+              // Sector general: 18% × 60% del margen
+              // Farmacias: 18% × 25% del margen (medicamentos exentos)
+              const factor = sector === 'farmacias' ? 0.25 : 0.60;
+              return base * factor * 0.18;
+            }},
+            { id: 'rst-total-anual', label: 'TOTAL ANUAL A PAGAR (ISR + ITBIS)', type: 'money', readonly: true, highlight: true, formula: () => num('rst-isr') + num('rst-itbis') },
+          ],
+        },
+        {
+          name: 'IV. Distribución en 4 Cuotas Trimestrales',
+          fields: [
+            { id: 'rst-cuota1', label: 'Cuota 1 — Marzo (PF) / Abril (PJ)', type: 'money', readonly: true, formula: () => num('rst-total-anual') / 4 },
+            { id: 'rst-cuota2', label: 'Cuota 2 — Junio', type: 'money', readonly: true, formula: () => num('rst-total-anual') / 4 },
+            { id: 'rst-cuota3', label: 'Cuota 3 — Septiembre', type: 'money', readonly: true, formula: () => num('rst-total-anual') / 4 },
+            { id: 'rst-cuota4', label: 'Cuota 4 — Diciembre', type: 'money', readonly: true, formula: () => num('rst-total-anual') / 4 },
+            { id: 'rst-resultado', label: 'CUOTA TRIMESTRAL', type: 'result', formula: () => num('rst-total-anual') / 4 },
           ],
         },
       ],
       summary: () => {
-        const a = num('rst-cuota-anual');
-        const m = a / 12;
-        return { label: `Cuota Anual ${fmtRD(a)} · Mensual ${fmtRD(m)}`, value: fmtRD(a), type: 'pay' };
+        const tipo = document.getElementById('rst-tipo')?.value || 'pj';
+        const modalidad = document.getElementById('rst-modalidad')?.value || 'servicios';
+        const total = num('rst-total-anual');
+        const cuota = total / 4;
+
+        // Validación de topes
+        let warning = '';
+        if (modalidad === 'servicios' && num('rst-ingresos-anuales') > 12068181.09) {
+          warning = ' ⚠ Excedes el tope de RD$ 12,068,181.09';
+        } else if (modalidad === 'compras' && num('rst-compras-anuales') > 55485890.09) {
+          warning = ' ⚠ Excedes el tope de RD$ 55,485,890.09';
+        }
+
+        const tipoLabel = tipo === 'pj' ? 'Persona Jurídica' : 'Persona Física';
+        const modLabel = modalidad === 'compras' ? 'Compras' : (modalidad === 'agropecuario' ? 'Agropecuario' : 'Servicios');
+
+        return {
+          label: `${tipoLabel} · ${modLabel} · Cuota trimestral${warning}`,
+          value: fmtRD(cuota),
+          type: warning ? 'pay' : 'pay'
+        };
       },
     },
   };
