@@ -126,6 +126,7 @@ window.auth = {
   signOut,
   getCurrentUser: () => currentUser,
   getUserProfile: () => userProfile,
+  reloadProfile: loadProfile, // recargar perfil (útil después de cambio de plan)
   incrementQueryCount: async () => {
     if (!currentUser || !sb || !userProfile) return true;
     const limit = userProfile.queries_limit || CONFIG.PLAN_LIMITS[userProfile.plan || 'libre'];

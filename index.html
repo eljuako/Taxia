@@ -16,7 +16,19 @@
 
   <!-- CDNs -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD&intent=subscription" id="paypal-sdk"></script>
+  <!-- PayPal SDK se carga dinámicamente con el Client ID desde config.js (más abajo en el body) -->
+  <script src="./js/config.js"></script>
+  <script>
+    // Cargar PayPal SDK con el Client ID configurado
+    (function() {
+      if (!window.CONFIG?.PAYPAL_CLIENT_ID) return;
+      var s = document.createElement('script');
+      s.id = 'paypal-sdk';
+      s.src = 'https://www.paypal.com/sdk/js?client-id=' + window.CONFIG.PAYPAL_CLIENT_ID + '&currency=USD&intent=subscription&vault=true&components=buttons';
+      s.async = false;
+      document.head.appendChild(s);
+    })();
+  </script>
 
   <!-- ════════════════════════════════════════
        Estilos del nuevo landing (v2)
@@ -1753,7 +1765,8 @@
             <div class="v2-plan-badge">★ Más popular</div>
             <div class="v2-plan-name">Pro</div>
             <div class="v2-plan-price">RD$1,500<small> / mes</small></div>
-            <div class="v2-plan-desc">Para asesores y firmas contables que consultan a diario.</div>
+            <div style="font-size:0.72rem; color:var(--text-muted); margin-top:-0.4rem;">Cobro internacional en USD vía PayPal</div>
+            <div class="v2-plan-desc" style="margin-top:0.8rem;">Para asesores y firmas contables que consultan a diario.</div>
             <ul class="v2-plan-feats">
               <li>100 consultas mensuales</li>
               <li>Simuladores ITBIS, ISR e IR-17</li>
@@ -1761,16 +1774,15 @@
               <li>Citas avanzadas con texto literal</li>
               <li>Soporte prioritario</li>
             </ul>
-            <div id="paypal-pro" style="background:#F7F9FC; border:1px solid var(--v2-border); border-radius:12px; padding:1rem; font-size:0.85rem; color:var(--text-muted); text-align:center;">
-              💳 Botón PayPal (Configurar en Producción)
-            </div>
+            <button class="v2-plan-cta primary" onclick="window.payments.landingPricingClick('pro')">Comenzar Pro</button>
           </div>
 
           <!-- PRO MAX -->
           <div class="v2-plan">
             <div class="v2-plan-name">Pro Max</div>
-            <div class="v2-plan-price">RD$5,500<small> / mes</small></div>
-            <div class="v2-plan-desc">Para grandes despachos y empresas con múltiples clientes.</div>
+            <div class="v2-plan-price">RD$5,000<small> / mes</small></div>
+            <div style="font-size:0.72rem; color:var(--text-muted); margin-top:-0.4rem;">Cobro internacional en USD vía PayPal</div>
+            <div class="v2-plan-desc" style="margin-top:0.8rem;">Para grandes despachos y empresas con múltiples clientes.</div>
             <ul class="v2-plan-feats">
               <li>Consultas ilimitadas</li>
               <li>Auditoría automática de comprobantes</li>
@@ -1778,9 +1790,7 @@
               <li>API de integración</li>
               <li>Soporte dedicado por WhatsApp</li>
             </ul>
-            <div id="paypal-promax" style="background:#F7F9FC; border:1px solid var(--v2-border); border-radius:12px; padding:1rem; font-size:0.85rem; color:var(--text-muted); text-align:center;">
-              💳 Botón PayPal (Configurar en Producción)
-            </div>
+            <button class="v2-plan-cta outline" onclick="window.payments.landingPricingClick('pro_max')">Comenzar Pro Max</button>
           </div>
         </div>
         <div style="text-align:center; margin-top:2.5rem; color:var(--text-muted); font-size:0.9rem;">
@@ -2045,6 +2055,7 @@
           <span class="badge-top">★ Más popular</span>
           <h4>Pro</h4>
           <div class="price">RD$1,500<small> /mes</small></div>
+          <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.5rem;">Cobro en USD vía PayPal</div>
           <ul>
             <li>100 consultas mensuales</li>
             <li>Simuladores IR-1, IR-2 e IR-17</li>
@@ -2053,15 +2064,14 @@
             <li>Soporte prioritario</li>
           </ul>
           <span class="current-tag" id="tag-current-pro" style="display:none;">Tu plan actual</span>
-          <div id="upgrade-paypal-pro" style="background:#F7F9FC; border:1px solid #E5EAF2; border-radius:10px; padding:0.7rem; font-size:0.78rem; color:var(--text-muted); text-align:center;">
-            💳 PayPal (Configurar)
-          </div>
+          <div id="upgrade-paypal-pro"></div>
         </div>
 
         <!-- PRO MAX -->
         <div class="upgrade-plan" id="upgrade-promax">
           <h4>Pro Max</h4>
-          <div class="price">RD$5,500<small> /mes</small></div>
+          <div class="price">RD$5,000<small> /mes</small></div>
+          <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.5rem;">Cobro en USD vía PayPal</div>
           <ul>
             <li>Consultas ilimitadas</li>
             <li>Todos los simuladores</li>
@@ -2070,9 +2080,7 @@
             <li>Soporte WhatsApp dedicado</li>
           </ul>
           <span class="current-tag" id="tag-current-promax" style="display:none;">Tu plan actual</span>
-          <div id="upgrade-paypal-promax" style="background:#F7F9FC; border:1px solid #E5EAF2; border-radius:10px; padding:0.7rem; font-size:0.78rem; color:var(--text-muted); text-align:center;">
-            💳 PayPal (Configurar)
-          </div>
+          <div id="upgrade-paypal-promax"></div>
         </div>
       </div>
 
@@ -2082,12 +2090,12 @@
     </div>
   </div>
 
-  <!-- JS Modular -->
-  <script src="./js/config.js"></script>
+  <!-- JS Modular (config.js ya está cargado en el head para inicializar PayPal SDK) -->
   <script src="./js/auth.js"></script>
   <script src="./js/chat.js"></script>
   <script src="./js/calculadoras.js"></script>
   <script src="./js/forms.js"></script>
+  <script src="./js/paypal.js"></script>
   <script src="./js/app.js"></script>
 
 </body>

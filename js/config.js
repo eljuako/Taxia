@@ -1,6 +1,6 @@
 // js/config.js
-// La API key de Dify se movió al servidor (api/chat.js)
-// para que no quede expuesta en el frontend.
+// Configuración pública (visible en el navegador). Las claves secretas viven
+// como variables de entorno en Vercel y NUNCA aquí.
 
 const CONFIG = {
   // Supabase (anon key es segura en el frontend con RLS activado)
@@ -10,13 +10,28 @@ const CONFIG = {
   // Endpoint serverless propio que proxea a Dify
   CHAT_API_URL: '/api/chat',
 
-  // PayPal (placeholders — reemplazar al pasar a producción)
-  PAYPAL_PLAN_PRO: 'P-XXXXXXXXXXXXXXXXXXXXXXXX',
-  PAYPAL_PLAN_PROMAX: 'P-YYYYYYYYYYYYYYYYYYYYYYYY',
+  // ─────────── PAYPAL (Sandbox / Live según PAYPAL_MODE en Vercel) ───────────
+  // Client ID: público, va en el frontend (PayPal SDK lo pide)
+  PAYPAL_CLIENT_ID: 'ATV8oudRbZ1kNznEq-EPtPSFGfMRKbOc9vUwKW1JtrhI4lLG803vqLIuLpLWk54dlSF3rzkXRcP1oHhr',
 
-  // Límites por plan
+  // Plan IDs creados en PayPal Developer Dashboard
+  PAYPAL_PLAN_PRO: 'P-8N785453RL330054DNH7HXAQ',
+  PAYPAL_PLAN_PROMAX: 'P-55E08430JG064473XNH7H27Y',
+
+  // Precios visibles en RD$ (cobro real en USD según configuración del Plan en PayPal)
+  PRICE_PRO_RD: 1500,
+  PRICE_PROMAX_RD: 5000,
+
+  // Modo: 'sandbox' o 'live'. Cambiar a 'live' en producción.
+  // El backend usa PAYPAL_MODE de Vercel (env var) para validar contra el endpoint correcto.
+  PAYPAL_MODE: 'sandbox',
+
+  // ─────────── Planes y límites ───────────
   PLAN_LIMITS: { libre: 10, pro: 100, pro_max: 1000 },
   PLAN_LABELS: { libre: 'Plan Libre', pro: 'Plan Pro', pro_max: 'Plan Pro Max' },
 };
+
+// Helper: detectar si los Plan IDs están configurados (no son placeholders)
+CONFIG.PAYPAL_CONFIGURED = !CONFIG.PAYPAL_PLAN_PRO.startsWith('P-XXXX') && !CONFIG.PAYPAL_PLAN_PROMAX.startsWith('P-YYYY');
 
 window.CONFIG = CONFIG;
