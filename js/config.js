@@ -29,6 +29,10 @@ const CONFIG = {
   // ─────────── Planes y límites ───────────
   PLAN_LIMITS: { libre: 10, pro: 100, pro_max: 1000 },
   PLAN_LABELS: { libre: 'Plan Libre', pro: 'Plan Pro', pro_max: 'Plan Pro Max' },
+
+  // ─────────── Features Toggle ───────────
+  // Cambiar a true cuando tengas Chatflow en Dify con nodo de extracción de archivos
+  FILE_UPLOAD_ENABLED: false,
 };
 
 // Helper: detectar si los Plan IDs están configurados (no son placeholders)

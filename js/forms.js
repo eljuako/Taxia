@@ -438,7 +438,7 @@
 
       <div class="ff-tabs">
         <button class="ff-tab active" data-tab="manual" onclick="window.forms.switchTab(this, 'manual', '${formKey}')">✍ Manual</button>
-        <button class="ff-tab" data-tab="documento" onclick="window.forms.switchTab(this, 'documento', '${formKey}')">📎 Adjuntar</button>
+        ${window.CONFIG?.FILE_UPLOAD_ENABLED ? `<button class="ff-tab" data-tab="documento" onclick="window.forms.switchTab(this, 'documento', '${formKey}')">📎 Adjuntar</button>` : ''}
         <button class="ff-tab" data-tab="chat" onclick="window.forms.switchTab(this, 'chat', '${formKey}')">💬 Desde el chat</button>
       </div>
 
@@ -591,8 +591,13 @@
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
+    if (!window.CONFIG?.FILE_UPLOAD_ENABLED) {
+      window.app?.showToast?.('La carga de documentos no esta disponible en este MVP.', 'info');
+      return;
+    }
 
     const status = document.getElementById('ff-extract-status');
+    if (!status) return;
     status.style.display = 'block';
     status.className = 'ff-extract-status loading';
     status.innerHTML = `<div class="ff-spinner"></div> Subiendo y analizando "${file.name}"...`;

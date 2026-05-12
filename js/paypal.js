@@ -36,10 +36,11 @@
       window.paypal.Buttons({
         style: {
           shape: 'pill',
-          color: 'gold',
+          color: 'blue',
           layout: 'vertical',
           label: 'subscribe',
-          height: 42,
+          height: 45,
+          tagline: false,
         },
         createSubscription: function (data, actions) {
           return actions.subscription.create({

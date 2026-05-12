@@ -12,6 +12,11 @@ const app = {
     window.auth.initSupabase();
     this.setupListeners();
     this.applyPlanLocks('libre');
+    // Mostrar paperclip solo si FILE_UPLOAD_ENABLED está activado
+    const attachBtn = document.getElementById('btn-attach');
+    if (attachBtn && window.CONFIG?.FILE_UPLOAD_ENABLED) {
+      attachBtn.style.display = '';
+    }
     // Si llegamos desde /registro.html con ?login=1, abrir el modal de login
     const params = new URLSearchParams(window.location.search);
     if (params.get('login') === '1') {
@@ -91,6 +96,10 @@ const app = {
   showLoggedIn() {
     document.getElementById('landing-page').style.display = 'none';
     document.getElementById('app-console').style.display = 'flex';
+    // Cargar el historial de conversaciones del usuario (best-effort, no bloqueante)
+    if (window.history_ui?.init) {
+      window.history_ui.init().catch(() => {});
+    }
   },
 
   showLoggedOut() {

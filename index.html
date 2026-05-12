@@ -1908,6 +1908,21 @@
         <div class="nav-section-title">Asistente</div>
         <div class="nav-item active" data-tab="chat">💬 Consultar IA</div>
 
+        <!-- Historial de conversaciones -->
+        <div class="nav-section-title history-title-row">
+          <span>Historial</span>
+          <button id="btn-refresh-history" class="history-refresh-btn" title="Recargar historial" aria-label="Recargar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </button>
+        </div>
+        <button id="btn-new-conversation" class="btn-new-conv" title="Nueva conversación">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>Nueva conversación</span>
+        </button>
+        <ul id="history-list" class="history-list">
+          <li class="history-empty">Cargando…</li>
+        </ul>
+
         <div class="nav-section-title">Smart Tools</div>
         <div class="nav-item" data-tool="itbis" onclick="window.app.openSmartCard('itbis')"><span class="nav-item-label">📊 Simular ITBIS</span></div>
         <div class="nav-item" data-tool="rst" onclick="window.app.openSmartCard('rst')"><span class="nav-item-label">📋 Simular RST</span></div>
@@ -1967,7 +1982,7 @@
       </div>
 
       <div class="input-area-wrapper">
-        <!-- Preview de imagen adjunta -->
+        <!-- Preview de imagen adjunta (oculto si FILE_UPLOAD_ENABLED=false) -->
         <div id="chat-attachment-preview" class="chat-attachment-preview" style="display:none;">
           <img id="chat-preview-img" src="" alt="Adjunto">
           <div class="att-info">
@@ -1977,7 +1992,8 @@
           <button class="att-remove" onclick="window.chat.removeAttachment()" title="Quitar adjunto">✕</button>
         </div>
         <div class="chat-input-box">
-          <button class="btn-attach" onclick="document.getElementById('chat-file-input').click()" title="Adjuntar imagen" aria-label="Adjuntar">
+          <!-- Paperclip oculto por defecto, JS lo muestra solo si FILE_UPLOAD_ENABLED=true -->
+          <button class="btn-attach" id="btn-attach" style="display:none;" onclick="document.getElementById('chat-file-input').click()" title="Adjuntar imagen" aria-label="Adjuntar">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
           </button>
           <input type="file" id="chat-file-input" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif" style="display:none;" onchange="window.chat.handleFileSelect(event)">
@@ -2096,6 +2112,7 @@
   <script src="./js/calculadoras.js"></script>
   <script src="./js/forms.js"></script>
   <script src="./js/paypal.js"></script>
+  <script src="./js/history.js"></script>
   <script src="./js/app.js"></script>
 
 </body>

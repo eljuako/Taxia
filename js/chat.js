@@ -84,6 +84,13 @@ function handleFileSelect(event) {
   event.target.value = '';
   if (!file) return;
 
+  // Defense-in-depth: si el feature flag está apagado, ignorar adjuntos aunque
+  // alguien fuerce el input (ej: devtools). El botón ya está oculto en HTML.
+  if (!window.CONFIG?.FILE_UPLOAD_ENABLED) {
+    window.app.showToast('La carga de archivos no está disponible en esta versión.', 'info');
+    return;
+  }
+
   if (!file.type.startsWith('image/')) {
     window.app.showToast('Solo se permiten imágenes (JPG, PNG, WEBP, GIF).', 'error');
     return;
@@ -254,8 +261,13 @@ async function sendChatMessage() {
               iaUpdateBubble(botMsgId, formatBotText(fullText) + '<span class="cursor-blink">▍</span>');
             }
             if (data.event === 'message_end' && data.conversation_id) {
+              const wasNew = !difyConvId;
               difyConvId = data.conversation_id;
               sessionStorage.setItem('taxia_conv_id', difyConvId);
+              // Si era una conversación nueva, refrescar el historial del sidebar
+              if (wasNew && window.history_ui?.refresh) {
+                window.history_ui.refresh().catch(() => {});
+              }
             }
           } catch (e) { /* línea SSE inválida — ignorar */ }
         }
@@ -279,4 +291,78 @@ async function sendChatMessage() {
   }
 }
 
-window.chat = { sendChatMessage, handleFileSelect, removeAttachment };
+// ─────────── HELPERS PARA HISTORIAL DE CONVERSACIONES ───────────
+
+// Devuelve el ID de conversación activo (vacío si es una nueva)
+function getConversationId() {
+  return difyConvId || '';
+}
+
+// Setea el ID de conversación (lo usa history.js al seleccionar una conversación pasada)
+function setConversationId(id) {
+  difyConvId = id || '';
+  if (difyConvId) {
+    sessionStorage.setItem('taxia_conv_id', difyConvId);
+  } else {
+    sessionStorage.removeItem('taxia_conv_id');
+  }
+}
+
+// Limpia el chat actual y resetea el conversation_id (nueva conversación)
+function newConversation() {
+  setConversationId('');
+  const container = document.getElementById('ia-messages');
+  if (!container) return;
+  // Conservar solo el mensaje de bienvenida del bot (el primero)
+  container.innerHTML = `
+    <div class="chat-message msg-bot">
+      <div class="msg-avatar" style="background: linear-gradient(135deg, #1e3a8a, #0f172a); border: 1px solid var(--secondary);">🤖</div>
+      <div class="msg-content">
+        <strong>¡Hola! Soy TaxIA</strong>, tu asistente tributario avanzado. 🇩🇴<br><br>
+        Estoy listo para analizar normativas de la DGII, ayudarte con tus declaraciones (ITBIS, IR-1, IR-2) o explicarte cómo funciona la Facturación Electrónica (e-CF).<br><br>
+        ¿En qué puedo ayudarte hoy?
+      </div>
+    </div>
+  `;
+  removeAttachment();
+}
+
+// Renderiza los mensajes de una conversación cargada desde Dify.
+// `messages` viene en orden cronológico ascendente (vienen así desde /api/messages).
+function renderHistoryMessages(messages) {
+  const container = document.getElementById('ia-messages');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (!messages || messages.length === 0) {
+    container.innerHTML = `
+      <div class="chat-message msg-bot">
+        <div class="msg-avatar" style="background: linear-gradient(135deg, #1e3a8a, #0f172a); border: 1px solid var(--secondary);">🤖</div>
+        <div class="msg-content"><em>Esta conversación está vacía.</em></div>
+      </div>
+    `;
+    return;
+  }
+
+  for (const m of messages) {
+    // En Dify cada item de /messages tiene `query` (usuario) y `answer` (bot)
+    if (m.query) {
+      iaAppendMsg('user', escapeHtml(m.query));
+    }
+    if (m.answer) {
+      iaAppendMsg('bot', formatBotText(m.answer));
+    }
+  }
+  container.scrollTop = container.scrollHeight;
+}
+
+window.chat = {
+  sendChatMessage,
+  handleFileSelect,
+  removeAttachment,
+  // Helpers para historial
+  getConversationId,
+  setConversationId,
+  newConversation,
+  renderHistoryMessages,
+};
