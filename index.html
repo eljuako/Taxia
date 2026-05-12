@@ -851,9 +851,10 @@
       .modal { padding: 1.6rem 1.3rem; max-height: 92vh; }
       .modal h2 { font-size: 1.4rem; }
 
-      /* Sidebar app-console: logout siempre visible */
-      .sidebar-bottom { padding: 1rem; }
-      .btn-logout { padding: 0.85rem; font-size: 0.9rem; }
+      /* Sidebar app-console: footer compacto para no competir con el historial */
+      .sidebar-bottom { padding: 0.75rem 1rem 0.9rem; }
+      .user-info-strip { padding: 0.35rem 0; margin-bottom: 0; }
+      .btn-logout { width: auto; padding: 0.58rem 0.72rem; font-size: 0.82rem; }
 
       /* Chat container más compacto */
       .chat-container { padding: 1rem 0.8rem; gap: 1rem; }
@@ -1215,8 +1216,9 @@
 
     .user-info-strip {
       display: flex; align-items: center; gap: 0.7rem;
-      padding: 0.7rem 0.5rem;
-      margin-bottom: 0.6rem;
+      min-width: 0;
+      padding: 0.35rem 0;
+      margin-bottom: 0;
     }
     .user-info-text { flex: 1; overflow: hidden; }
     .user-info-text > div:first-child {
@@ -1228,7 +1230,7 @@
     }
 
     .btn-logout {
-      width: 100%; padding: 0.7rem 0.9rem;
+      width: auto; padding: 0.58rem 0.72rem;
       background: rgba(239, 68, 68, 0.12);
       color: #FCA5A5;
       border: 1px solid rgba(239, 68, 68, 0.25);
@@ -1237,6 +1239,7 @@
       cursor: pointer; transition: all .2s;
       display: flex; align-items: center; justify-content: center; gap: 0.6rem;
       font-family: var(--font-body);
+      white-space: nowrap;
     }
     .btn-logout:hover {
       background: rgba(239, 68, 68, 0.22);
