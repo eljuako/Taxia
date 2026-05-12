@@ -92,9 +92,8 @@
   background: rgba(10, 18, 48, 0.96);
   box-shadow: 0 -14px 28px rgba(0,0,0,0.16);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.55rem 0.7rem;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.55rem;
 }
 
 .usage-container {
@@ -310,14 +309,30 @@
 }
 
 .user-info-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
   min-width: 0;
-  padding: 0.35rem 0;
+  width: 100%;
+  padding: 0.4rem 0;
   margin-bottom: 0;
 }
 
+.user-info-text {
+  flex: 1;
+  min-width: 0;
+  overflow: visible;
+}
+
+.user-info-text > div:first-child {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.2;
+}
+
 .btn-logout {
-  width: auto;
-  align-self: center;
+  width: 100%;
   white-space: nowrap;
 }
 

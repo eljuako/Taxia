@@ -853,8 +853,8 @@
 
       /* Sidebar app-console: footer compacto para no competir con el historial */
       .sidebar-bottom { padding: 0.75rem 1rem 0.9rem; }
-      .user-info-strip { padding: 0.35rem 0; margin-bottom: 0; }
-      .btn-logout { width: auto; padding: 0.58rem 0.72rem; font-size: 0.82rem; }
+      .user-info-strip { padding: 0.4rem 0; margin-bottom: 0; }
+      .btn-logout { width: 100%; padding: 0.58rem 0.72rem; font-size: 0.82rem; }
 
       /* Chat container más compacto */
       .chat-container { padding: 1rem 0.8rem; gap: 1rem; }
@@ -1217,20 +1217,21 @@
     .user-info-strip {
       display: flex; align-items: center; gap: 0.7rem;
       min-width: 0;
-      padding: 0.35rem 0;
+      width: 100%;
+      padding: 0.4rem 0;
       margin-bottom: 0;
     }
-    .user-info-text { flex: 1; overflow: hidden; }
+    .user-info-text { flex: 1; min-width: 0; overflow: visible; }
     .user-info-text > div:first-child {
       font-size: 0.85rem; font-weight: bold; color: #fff;
-      white-space: nowrap; text-overflow: ellipsis; overflow: hidden;
+      white-space: normal; text-overflow: clip; overflow: visible; line-height: 1.2;
     }
     .user-info-text > div:last-child {
       font-size: 0.72rem; color: var(--secondary); font-weight: 600;
     }
 
     .btn-logout {
-      width: auto; padding: 0.58rem 0.72rem;
+      width: 100%; padding: 0.58rem 0.72rem;
       background: rgba(239, 68, 68, 0.12);
       color: #FCA5A5;
       border: 1px solid rgba(239, 68, 68, 0.25);
@@ -1903,13 +1904,20 @@
     <!-- SIDEBAR -->
     <div class="app-sidebar">
       <div class="sidebar-header">
-        <div class="sidebar-logo">Tax<span>IA</span> Pro</div>
+        <div class="sidebar-logo">Tax<span>IA</span></div>
         <button class="sidebar-close-btn" onclick="document.querySelector('.app-sidebar').classList.remove('open')" style="margin-left:auto; background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
       </div>
 
       <div class="sidebar-scrollable">
         <div class="nav-section-title">Asistente</div>
         <div class="nav-item active" data-tab="chat">💬 Consultar IA</div>
+
+        <div class="nav-section-title">Declaraciones</div>
+        <div class="nav-item" data-tool="itbis" onclick="window.app.openSmartCard('itbis')"><span class="nav-item-label">📊 Simular ITBIS</span></div>
+        <div class="nav-item" data-tool="rst" onclick="window.app.openSmartCard('rst')"><span class="nav-item-label">📋 Simular RST</span></div>
+        <div class="nav-item" data-tool="ir1" onclick="window.app.openSmartCard('ir1')"><span class="nav-item-label">👤 Simular IR-1</span><span class="lock-badge">🔒 Pro</span></div>
+        <div class="nav-item" data-tool="ir2" onclick="window.app.openSmartCard('ir2')"><span class="nav-item-label">🏢 Simular IR-2</span><span class="lock-badge">🔒 Pro</span></div>
+        <div class="nav-item" data-tool="ir17" onclick="window.app.openSmartCard('ir17')"><span class="nav-item-label">💼 Simular IR-17</span><span class="lock-badge">🔒 Pro</span></div>
 
         <!-- Historial de conversaciones -->
         <div class="nav-section-title history-title-row">
@@ -1926,12 +1934,6 @@
           <li class="history-empty">Cargando…</li>
         </ul>
 
-        <div class="nav-section-title">Smart Tools</div>
-        <div class="nav-item" data-tool="itbis" onclick="window.app.openSmartCard('itbis')"><span class="nav-item-label">📊 Simular ITBIS</span></div>
-        <div class="nav-item" data-tool="rst" onclick="window.app.openSmartCard('rst')"><span class="nav-item-label">📋 Simular RST</span></div>
-        <div class="nav-item" data-tool="ir1" onclick="window.app.openSmartCard('ir1')"><span class="nav-item-label">👤 Simular IR-1</span><span class="lock-badge">🔒 Pro</span></div>
-        <div class="nav-item" data-tool="ir2" onclick="window.app.openSmartCard('ir2')"><span class="nav-item-label">🏢 Simular IR-2</span><span class="lock-badge">🔒 Pro</span></div>
-        <div class="nav-item" data-tool="ir17" onclick="window.app.openSmartCard('ir17')"><span class="nav-item-label">💼 Simular IR-17</span><span class="lock-badge">🔒 Pro</span></div>
       </div>
 
       <div class="sidebar-bottom">
@@ -1968,7 +1970,7 @@
     <!-- MAIN CHAT WORKSPACE -->
     <div class="app-main">
       <div class="mobile-header">
-        <div style="font-weight:bold;">TaxIA Pro</div>
+        <div style="font-weight:bold;">TaxIA</div>
         <button class="mobile-menu-btn" onclick="document.querySelector('.app-sidebar').classList.toggle('open')">☰</button>
       </div>
 
