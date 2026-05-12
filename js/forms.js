@@ -518,11 +518,150 @@
 
   function attachListeners(formKey) {
     document.querySelectorAll(`[data-formkey="${formKey}"]`).forEach(el => {
-      el.addEventListener('input', () => recalc(formKey));
-      el.addEventListener('change', () => recalc(formKey));
+      el.addEventListener('input', () => {
+        if (formKey === 'rst') applyRstDefaults();
+        recalc(formKey);
+      });
+      el.addEventListener('change', () => {
+        if (formKey === 'rst') applyRstDefaults();
+        recalc(formKey);
+      });
     });
     // Cálculo inicial
-    setTimeout(() => recalc(formKey), 50);
+    setTimeout(() => {
+      if (formKey === 'rst') applyRstDefaults();
+      recalc(formKey);
+    }, 50);
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //         RST — DEFAULTS DINÁMICOS POR CATEGORÍA
+  // Pre-carga porcentajes, muestra/oculta campos no aplicables,
+  // y renderiza un panel informativo con las tasas vigentes.
+  // ═══════════════════════════════════════════════════════════
+
+  // Márgenes brutos presuntos referenciales por sector (Decreto 265-19)
+  const RST_MARGEN_DEFAULT = {
+    general:   30,   // comercio general (colmados, ferreterías, tiendas)
+    farmacias: 25,   // farmacias (medicamentos exentos)
+  };
+
+  function setFieldVisible(fieldId, visible) {
+    const el = document.getElementById(fieldId);
+    if (!el) return;
+    const wrap = el.closest('.ff-field');
+    if (wrap) wrap.style.display = visible ? '' : 'none';
+  }
+
+  function ensureRstInfoPanel() {
+    let panel = document.getElementById('rst-info-panel');
+    if (panel) return panel;
+    const sectorEl = document.getElementById('rst-sector');
+    if (!sectorEl) return null;
+    const section = sectorEl.closest('.ff-section');
+    if (!section) return null;
+    panel = document.createElement('div');
+    panel.id = 'rst-info-panel';
+    panel.className = 'rst-info-panel';
+    section.appendChild(panel);
+    return panel;
+  }
+
+  function applyRstDefaults() {
+    const tipoEl = document.getElementById('rst-tipo');
+    const modalidadEl = document.getElementById('rst-modalidad');
+    const sectorEl = document.getElementById('rst-sector');
+    if (!tipoEl || !modalidadEl || !sectorEl) return;
+
+    const tipo = tipoEl.value;
+    const modalidad = modalidadEl.value;
+    const sector = sectorEl.value;
+
+    const isCompras = modalidad === 'compras';
+    const isServiciosOAgro = !isCompras;
+
+    // 1) Mostrar/ocultar campos según modalidad
+    setFieldVisible('rst-sector', isCompras);
+    setFieldVisible('rst-ingresos-anuales', isServiciosOAgro);
+    setFieldVisible('rst-compras-anuales', isCompras);
+    setFieldVisible('rst-margen-bruto', isCompras);
+    setFieldVisible('rst-itbis', isCompras);
+
+    // 2) Pre-llenar el margen bruto según el sector (sólo si el usuario aún no escribió)
+    const margenEl = document.getElementById('rst-margen-bruto');
+    if (margenEl && isCompras) {
+      const def = RST_MARGEN_DEFAULT[sector] ?? 30;
+      // No sobrescribimos si el usuario ya tocó manualmente (margenEl.dataset.touched === '1')
+      if (margenEl.dataset.touched !== '1' || !margenEl.value) {
+        margenEl.value = def;
+      }
+      // Detectar primera modificación manual del usuario para no pisarla
+      if (!margenEl._touchBound) {
+        margenEl._touchBound = true;
+        margenEl.addEventListener('input', () => { margenEl.dataset.touched = '1'; });
+      }
+    }
+
+    // 3) Renderizar el panel informativo con las tasas aplicables
+    const panel = ensureRstInfoPanel();
+    if (!panel) return;
+
+    let lines = [];
+    if (modalidad === 'servicios') {
+      if (tipo === 'pj') {
+        lines = [
+          ['ISR', '7% sobre ingresos brutos', 'cubre ISR + ITBIS'],
+          ['Deducción presunta', '—', 'no aplica en PJ'],
+        ];
+      } else {
+        lines = [
+          ['Deducción presunta', '40% sobre ingresos', 'base imponible = 60% × ingresos'],
+          ['ISR', 'Escala progresiva (0/15/20/25%)', 'tabla Art. 296'],
+        ];
+      }
+    } else if (modalidad === 'compras') {
+      const factorItbis = sector === 'farmacias' ? '25%' : '60%';
+      const margenDef = RST_MARGEN_DEFAULT[sector] ?? 30;
+      if (tipo === 'pj') {
+        lines = [
+          ['Margen bruto presunto', `${margenDef}% (referencial · editable)`, 'base = compras × margen'],
+          ['ISR', '27% sobre margen presunto', 'tasa PJ'],
+          ['ITBIS', `${factorItbis} × 18% del margen`, sector === 'farmacias' ? 'medicamentos exentos' : 'sector general'],
+        ];
+      } else {
+        lines = [
+          ['Margen bruto presunto', `${margenDef}% (referencial · editable)`, 'base = compras × margen'],
+          ['ISR', 'Escala progresiva (0/15/20/25%)', 'tabla Art. 296'],
+          ['ITBIS', `${factorItbis} × 18% del margen`, sector === 'farmacias' ? 'medicamentos exentos' : 'sector general'],
+        ];
+      }
+    } else if (modalidad === 'agropecuario') {
+      lines = [
+        ['Régimen', 'Producción primaria agropecuaria', 'Decreto 265-19'],
+        ['ISR', tipo === 'pj' ? '7% sobre ingresos brutos' : 'Escala progresiva sobre 60% de ingresos', ''],
+      ];
+    }
+
+    const rows = lines.map(([k, v, hint]) => `
+      <div class="rst-info-row">
+        <span class="rst-info-key">${k}</span>
+        <span class="rst-info-val">${v}</span>
+        ${hint ? `<span class="rst-info-hint">${hint}</span>` : ''}
+      </div>
+    `).join('');
+
+    const tipoLbl = tipo === 'pj' ? 'Persona Jurídica' : 'Persona Física';
+    const modLbl = modalidad === 'compras' ? 'Compras' : (modalidad === 'agropecuario' ? 'Agropecuario' : 'Servicios');
+
+    panel.innerHTML = `
+      <div class="rst-info-head">
+        <span class="rst-info-badge">${tipoLbl}</span>
+        <span class="rst-info-badge alt">${modLbl}</span>
+        ${isCompras ? `<span class="rst-info-badge ghost">${sector === 'farmacias' ? 'Farmacias' : 'General'}</span>` : ''}
+        <span class="rst-info-title">Tasas aplicables</span>
+      </div>
+      <div class="rst-info-body">${rows}</div>
+    `;
   }
 
   function switchTab(btn, tab, formKey) {

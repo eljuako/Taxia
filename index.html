@@ -1132,6 +1132,69 @@
     .ff-summary-credit { background: linear-gradient(135deg, #047857, #10B981); }
     .ff-summary-pay .ff-summary-value, .ff-summary-credit .ff-summary-value { color: #fff; }
 
+    /* Panel informativo RST — tasas aplicables dinámicas según selección */
+    .rst-info-panel {
+      margin-top: 0.9rem;
+      padding: 0.9rem 1rem;
+      background: linear-gradient(135deg, rgba(0,209,178,0.08), rgba(37,99,235,0.06));
+      border: 1px solid rgba(0,209,178,0.25);
+      border-radius: 12px;
+      animation: rst-panel-in 0.25s ease-out;
+    }
+    @keyframes rst-panel-in {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .rst-info-head {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem;
+      margin-bottom: 0.7rem;
+    }
+    .rst-info-title {
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--text-muted, #64748B);
+      margin-left: auto;
+    }
+    .rst-info-badge {
+      display: inline-block;
+      padding: 0.22rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.72rem; font-weight: 600;
+      background: var(--primary, #2563EB); color: #fff;
+    }
+    .rst-info-badge.alt { background: var(--secondary, #00D1B2); }
+    .rst-info-badge.ghost {
+      background: transparent;
+      color: var(--text-main, #0F172A);
+      border: 1px solid rgba(15,23,42,0.15);
+    }
+    .rst-info-body {
+      display: flex; flex-direction: column; gap: 0.35rem;
+    }
+    .rst-info-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: baseline;
+      gap: 0.5rem;
+      padding: 0.35rem 0;
+      border-bottom: 1px dashed rgba(15,23,42,0.08);
+    }
+    .rst-info-row:last-child { border-bottom: none; }
+    .rst-info-key {
+      font-size: 0.82rem; font-weight: 600; color: var(--text-main, #0F172A);
+    }
+    .rst-info-val {
+      font-size: 0.82rem; font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--primary, #2563EB);
+      text-align: right;
+    }
+    .rst-info-hint {
+      grid-column: 1 / -1;
+      font-size: 0.72rem;
+      color: var(--text-muted, #64748B);
+      font-style: italic;
+    }
+
     /* Acciones */
     .ff-actions {
       display: flex; gap: 0.6rem; padding-top: 0.5rem;
@@ -1905,30 +1968,35 @@
       </div>
 
       <div class="sidebar-scrollable">
-        <div class="nav-section-title">Asistente</div>
-        <div class="nav-item active" data-tab="chat">💬 Consultar IA</div>
+        <!-- Bloque fijo: Asistente + Smart Tools (siempre visibles) -->
+        <div class="sidebar-fixed-block">
+          <div class="nav-section-title">Asistente</div>
+          <div class="nav-item active" data-tab="chat">💬 Consultar IA</div>
 
-        <!-- Historial de conversaciones -->
-        <div class="nav-section-title history-title-row">
-          <span>Historial</span>
-          <button id="btn-refresh-history" class="history-refresh-btn" title="Recargar historial" aria-label="Recargar">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-          </button>
+          <div class="nav-section-title">Smart Tools</div>
+          <div class="nav-item" data-tool="itbis" onclick="window.app.openSmartCard('itbis')"><span class="nav-item-label">📊 Simular ITBIS</span></div>
+          <div class="nav-item" data-tool="rst" onclick="window.app.openSmartCard('rst')"><span class="nav-item-label">📋 Simular RST</span></div>
+          <div class="nav-item" data-tool="ir1" onclick="window.app.openSmartCard('ir1')"><span class="nav-item-label">👤 Simular IR-1</span><span class="lock-badge">🔒 Pro</span></div>
+          <div class="nav-item" data-tool="ir2" onclick="window.app.openSmartCard('ir2')"><span class="nav-item-label">🏢 Simular IR-2</span><span class="lock-badge">🔒 Pro</span></div>
+          <div class="nav-item" data-tool="ir17" onclick="window.app.openSmartCard('ir17')"><span class="nav-item-label">💼 Simular IR-17</span><span class="lock-badge">🔒 Pro</span></div>
         </div>
-        <button id="btn-new-conversation" class="btn-new-conv" title="Nueva conversación">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          <span>Nueva conversación</span>
-        </button>
-        <ul id="history-list" class="history-list">
-          <li class="history-empty">Cargando…</li>
-        </ul>
 
-        <div class="nav-section-title">Smart Tools</div>
-        <div class="nav-item" data-tool="itbis" onclick="window.app.openSmartCard('itbis')"><span class="nav-item-label">📊 Simular ITBIS</span></div>
-        <div class="nav-item" data-tool="rst" onclick="window.app.openSmartCard('rst')"><span class="nav-item-label">📋 Simular RST</span></div>
-        <div class="nav-item" data-tool="ir1" onclick="window.app.openSmartCard('ir1')"><span class="nav-item-label">👤 Simular IR-1</span><span class="lock-badge">🔒 Pro</span></div>
-        <div class="nav-item" data-tool="ir2" onclick="window.app.openSmartCard('ir2')"><span class="nav-item-label">🏢 Simular IR-2</span><span class="lock-badge">🔒 Pro</span></div>
-        <div class="nav-item" data-tool="ir17" onclick="window.app.openSmartCard('ir17')"><span class="nav-item-label">💼 Simular IR-17</span><span class="lock-badge">🔒 Pro</span></div>
+        <!-- Historial — toma el resto del alto disponible y scrollea internamente -->
+        <div class="history-section">
+          <div class="nav-section-title history-title-row">
+            <span>Historial</span>
+            <button id="btn-refresh-history" class="history-refresh-btn" title="Recargar historial" aria-label="Recargar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            </button>
+          </div>
+          <button id="btn-new-conversation" class="btn-new-conv" title="Nueva conversación">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Nueva conversación</span>
+          </button>
+          <ul id="history-list" class="history-list">
+            <li class="history-empty">Cargando…</li>
+          </ul>
+        </div>
       </div>
 
       <div class="sidebar-bottom">

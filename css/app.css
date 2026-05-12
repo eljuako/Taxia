@@ -43,8 +43,33 @@
 
 .sidebar-scrollable {
   flex: 1;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   padding: 0 1.5rem;
+  min-height: 0;             /* permite que el hijo flex:1 scrollee */
+  overflow: hidden;
+}
+
+/* Bloque superior fijo (Asistente + Smart Tools) — siempre visible */
+.sidebar-fixed-block {
+  flex-shrink: 0;
+  overflow-y: auto;          /* scroll propio sólo si la lista es muy larga */
+  max-height: 55%;
+  padding-bottom: 0.5rem;
+}
+.sidebar-fixed-block::-webkit-scrollbar { width: 4px; }
+.sidebar-fixed-block::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+/* Sección de historial — toma el resto del espacio con scroll propio */
+.history-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 180px;
+  padding-top: 0.25rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  margin-top: 0.5rem;
+  overflow: hidden;
 }
 
 .nav-section-title {
@@ -184,8 +209,9 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  max-height: 280px;
+  flex: 1;                  /* ocupa el espacio restante del .history-section */
   overflow-y: auto;
+  min-height: 0;
 }
 .history-list::-webkit-scrollbar { width: 6px; }
 .history-list::-webkit-scrollbar-thumb {
