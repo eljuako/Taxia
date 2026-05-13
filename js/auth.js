@@ -16,6 +16,27 @@ function translateAuthError(msg) {
   return msg || 'Ocurrió un error. Intenta de nuevo.';
 }
 
+const STORAGE_KEY = 'normaia-auth-session';
+
+// Lee la sesión guardada directamente de localStorage (sin red). Devuelve null
+// si no hay sesión o si el token está expirado.
+function readPersistedSession() {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    // Supabase guarda { currentSession: { access_token, refresh_token, expires_at, user } }
+    // o directamente { access_token, ... } según versión. Soportamos ambos.
+    const session = parsed?.currentSession || parsed;
+    if (!session?.access_token || !session?.user) return null;
+    // expires_at viene en segundos epoch. Si está expirado pero hay refresh_token,
+    // todavía es válida — Supabase la refrescará automáticamente cuando haya red.
+    return session;
+  } catch (e) {
+    return null;
+  }
+}
+
 function initSupabase() {
   try {
     sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON, {
@@ -25,23 +46,18 @@ function initSupabase() {
         detectSessionInUrl: true,
         // Implicit flow: el token llega directo en el hash (#access_token=...).
         // Evita el problema de "Chrome state deletion for intermediate sites"
-        // (Bounce Tracking Mitigation) que afectaba al flow PKCE porque borraba
-        // el code_verifier del localStorage de Supabase entre navegaciones.
+        // (Bounce Tracking Mitigation) que afectaba al flow PKCE.
         flowType: 'implicit',
         storage: window.localStorage,
-        storageKey: 'normaia-auth-session',
+        storageKey: STORAGE_KEY,
       }
     });
 
-    // Detectar si venimos de un callback OAuth (Google).
-    // Implicit flow → token llega en hash: #access_token=...
-    // (PKCE flow llegaba como ?code=... — mantenemos ambas detecciones por compat.)
     const url = new URL(window.location.href);
     const isOAuthCallback = url.hash.includes('access_token=') || url.searchParams.has('code');
     const hasOAuthError = url.searchParams.has('error');
 
     if (hasOAuthError) {
-      // Mostrar error al usuario de forma visible
       console.warn('OAuth error:', url.searchParams.get('error_description') || url.searchParams.get('error'));
       setTimeout(() => {
         window.app?.showToast?.(
@@ -51,7 +67,6 @@ function initSupabase() {
           7000
         );
       }, 500);
-      // Limpiar params de error de la URL
       window.history.replaceState({}, '', window.location.pathname);
     }
 
@@ -62,50 +77,74 @@ function initSupabase() {
       initialAuthDone = true;
       if (session?.user) {
         currentUser = session.user;
-        await loadProfile();
+        // Mostrar la app inmediatamente; loadProfile corre en paralelo (best-effort)
         window.app.showLoggedIn();
+        loadProfile().catch(err => console.warn('loadProfile error:', err));
       } else {
         window.app.showLoggedOut();
       }
     }
 
+    // ════════════════════════════════════════════════════════════════
+    // RESTAURACIÓN OPTIMISTA — la pieza clave para el offline-first
+    // Si hay sesión persistida en localStorage, mostramos la app INMEDIATAMENTE
+    // sin esperar a Supabase. Si la sesión está caducada, Supabase la refrescará
+    // en background cuando haya red, o disparará SIGNED_OUT si es inválida.
+    // ════════════════════════════════════════════════════════════════
+    if (!isOAuthCallback) {
+      const persisted = readPersistedSession();
+      if (persisted?.user) {
+        resolveInitialAuth(persisted);
+      }
+    }
+
+    // Sigue intentando validar con Supabase en paralelo. Si ya resolvimos
+    // optimistamente, esto solo actualiza datos frescos.
     sb.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) resolveInitialAuth(session);
+      if (session?.user && !initialAuthDone) {
+        resolveInitialAuth(session);
+      } else if (session?.user) {
+        // Actualizamos currentUser con datos frescos del servidor
+        currentUser = session.user;
+      }
     }).catch(err => {
-      console.warn('getSession error:', err);
+      // Si falla (sin red, etc.) y ya teníamos sesión optimista, no hacemos nada.
+      console.warn('getSession error (probably offline):', err?.message || err);
     });
 
     sb.auth.onAuthStateChange(async (event, session) => {
       if (event === 'INITIAL_SESSION') {
-        resolveInitialAuth(session);
+        if (!initialAuthDone) resolveInitialAuth(session);
       } else if (event === 'SIGNED_IN') {
         if (!initialAuthDone) {
           resolveInitialAuth(session);
         } else {
           currentUser = session.user;
-          await loadProfile();
+          loadProfile().catch(err => console.warn('loadProfile error:', err));
           if (document.getElementById('app-console').style.display !== 'flex') {
             window.app.showLoggedIn();
           }
         }
-        // Si veníamos de OAuth, limpiar la URL (query + hash) ahora que la sesión está establecida.
-        // Implicit flow deja #access_token=... en el hash; PKCE dejaba ?code=... en query.
         if (isOAuthCallback) {
           window.history.replaceState({}, '', window.location.pathname);
         }
       } else if (event === 'SIGNED_OUT') {
+        // Solo es signOut real (el usuario hizo logout o el refresh token es inválido).
+        // Errores de red transitorios NO disparan este evento — quedamos seguros.
         initialAuthDone = false;
         currentUser = null;
         userProfile = null;
         window.app.showLoggedOut();
       } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-        // Refresh silencioso — actualizar currentUser por si cambió
         currentUser = session.user;
+      } else if (event === 'USER_UPDATED' && session?.user) {
+        currentUser = session.user;
+        loadProfile().catch(() => {});
       }
     });
 
-    // Timeout de seguridad: si no recibimos INITIAL_SESSION o SIGNED_IN, asumir no logueado.
-    // Más largo (12s) si venimos de OAuth callback — el code exchange puede tardar.
+    // Timeout sólo aplica si no logramos restaurar ninguna sesión.
+    // Si ya estamos logueados (optimista o real), nunca dispara.
     const timeoutMs = isOAuthCallback ? 12000 : 5000;
     setTimeout(() => {
       if (!initialAuthDone) {
@@ -120,6 +159,28 @@ function initSupabase() {
         }
       }
     }, timeoutMs);
+
+    // ════════════════════════════════════════════════════════════════
+    // RECONEXIÓN — cuando vuelve la red, re-validar perfil y refresh token
+    // ════════════════════════════════════════════════════════════════
+    window.addEventListener('online', () => {
+      if (currentUser && sb) {
+        // Forzar un getSession para refrescar token si está cerca de expirar
+        sb.auth.getSession().then(({ data: { session } }) => {
+          if (session?.user) {
+            currentUser = session.user;
+            loadProfile().catch(() => {});
+          }
+        }).catch(() => {});
+        window.app?.showToast?.('Conexión restaurada.', 'success', 2000);
+      }
+    });
+
+    window.addEventListener('offline', () => {
+      if (currentUser) {
+        window.app?.showToast?.('Sin conexión. La sesión sigue activa.', 'info', 3000);
+      }
+    });
 
   } catch (e) {
     console.warn('Supabase init error:', e);

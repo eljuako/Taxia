@@ -7,7 +7,8 @@
 
 #app-console {
   display: none;
-  height: 100vh;
+  height: 100vh;             /* fallback */
+  height: 100dvh;            /* viewport dinámico — se ajusta a la URL bar móvil */
   width: 100vw;
   background: var(--paper);
   color: var(--ink);
@@ -798,21 +799,81 @@
 }
 
 /* ════════════════════════════════════════════════════════════════
-   RESPONSIVE
+   RESPONSIVE — Mobile
    ══════════════════════════════════════════════════════════════ */
 @media (max-width: 880px) {
-  #app-console { flex-direction: column; }
+  /* En móvil: sidebar overlay (oculto por default), main toma todo el ancho */
+  #app-console { flex-direction: row; }
+
   .app-sidebar {
     position: fixed;
     top: 0; left: -100%;
     width: 86%; max-width: 320px;
     height: 100vh;
+    height: 100dvh;
     transition: left 0.3s ease;
     box-shadow: 0 0 40px oklch(20% 0.018 255 / .25);
+    z-index: 30;
   }
   .app-sidebar.open { left: 0; }
+
   .mobile-header { display: flex; }
-  .chat-container, .input-area-wrapper { padding-left: 20px; padding-right: 20px; }
+
+  /* Main ocupa 100% del viewport en móvil y se organiza vertical:
+     mobile-header (auto) + chat-container (flex:1) + input-area (auto). */
+  .app-main {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* El chat scrollea por dentro, no la página. */
+  .chat-container {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 16px 16px 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Composer fijo abajo, siempre visible. Padding-bottom: safe-area-inset
+     para no quedar debajo del notch en iPhone. */
+  .input-area-wrapper {
+    flex-shrink: 0;
+    padding: 10px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+    background: var(--paper);
+    border-top: 1px solid var(--line-soft);
+  }
+
+  /* El mensaje del bubble en móvil se ajusta mejor */
+  .chat-message { max-width: 100%; gap: 10px; grid-template-columns: 36px 1fr; }
+  .chat-message.msg-user { grid-template-columns: 1fr 36px; }
+  .msg-avatar { width: 32px; height: 32px; font-size: 16px; }
+  .msg-content { padding: 12px 14px; font-size: 14px; }
+
+  /* Overlay del sidebar al abrirse en móvil — backdrop oscuro */
+  .app-sidebar.open ~ .app-main::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: oklch(from var(--ink) l c h / .35);
+    z-index: 25;
+    backdrop-filter: blur(2px);
+  }
+
+  /* Smart Card panel a pantalla casi completa en móvil */
+  .smart-card-panel { width: 96vw; }
+}
+
+/* Móviles muy pequeños */
+@media (max-width: 480px) {
+  .input-area-wrapper { padding: 8px 12px calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .chat-container { padding: 12px 12px 6px; }
+  .chat-input-box { padding: 10px 12px; }
+  .mobile-header { padding: 10px 14px; font-size: 18px; }
 }
 
 /* Toast container & toasts */
