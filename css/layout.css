@@ -430,15 +430,21 @@ footer {
   display: none;
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(26, 27, 65, 0.6);
-  backdrop-filter: blur(5px);
+  background: oklch(from var(--ink) l c h / .55);
+  backdrop-filter: blur(8px);
   z-index: 1000;
   align-items: center;
   justify-content: center;
+  padding: 20px;
 }
 
 .modal-overlay.open {
-  display: flex;
+  display: flex !important;
+  animation: modalFadeIn 0.2s ease-out;
+}
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .modal-content {
@@ -861,18 +867,16 @@ nav, nav.v2-nav {
   padding: 6px 12px;
 }
 
-/* ── Modales editoriales ── */
-.modal-overlay {
-  background: oklch(from var(--ink) l c h / .55);
-  backdrop-filter: blur(8px);
-}
-.modal-content {
+/* ── Modales editoriales (afecta .modal y .modal-content) ── */
+.modal-content,
+.modal-overlay .modal {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-float);
 }
-.modal-content h2 {
+.modal-content h2,
+.modal-overlay .modal h2 {
   font-family: var(--serif);
   font-weight: 400;
   font-size: 32px;

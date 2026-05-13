@@ -167,18 +167,17 @@
     .v2-trust-text strong { color: var(--text-main); }
     .v2-stars { color: #F59E0B; letter-spacing: 1px; font-size: 0.9rem; }
 
-    /* HERO RIGHT — Mock chat preview */
+    /* HERO RIGHT — Mock chat preview (editorial, sin perspectiva 3D) */
     .v2-hero-right { position: relative; }
     .v2-mock-frame {
-      background: #fff;
-      border-radius: 22px;
-      box-shadow: var(--v2-shadow-soft), 0 30px 60px -20px rgba(15,23,42,.18);
-      border: 1px solid var(--v2-border);
+      background: var(--card);
+      border-radius: 18px;
+      box-shadow: var(--shadow-float);
+      border: 1px solid var(--line);
       overflow: hidden;
-      transform: perspective(1500px) rotateY(-4deg) rotateX(2deg);
-      transition: transform .5s ease;
+      transition: transform .3s ease;
     }
-    .v2-mock-frame:hover { transform: perspective(1500px) rotateY(-2deg) rotateX(1deg) translateY(-6px); }
+    .v2-mock-frame:hover { transform: translateY(-4px); }
     .v2-mock-bar {
       display: flex; align-items: center; gap: 0.4rem;
       padding: 0.9rem 1.1rem;
@@ -238,24 +237,8 @@
       display: flex; align-items: center; justify-content: center; font-size: 0.85rem;
     }
 
-    /* Floating badges around mock */
-    .v2-float-badge {
-      position: absolute;
-      background: #fff; border: 1px solid var(--v2-border);
-      box-shadow: var(--v2-shadow-card);
-      padding: 0.7rem 1rem; border-radius: 12px;
-      font-size: 0.8rem; font-weight: 600; color: var(--text-main);
-      display: flex; align-items: center; gap: 0.5rem;
-      animation: float 4s ease-in-out infinite;
-    }
-    .v2-float-badge.b1 { top: -18px; left: -25px; }
-    .v2-float-badge.b2 { bottom: 30px; right: -30px; animation-delay: 1.5s; }
-    .v2-float-badge .ico {
-      width: 28px; height: 28px; border-radius: 8px;
-      background: rgba(0,209,178,0.12); color: var(--secondary);
-      display: flex; align-items: center; justify-content: center; font-size: 0.95rem;
-    }
-    .v2-float-badge.b2 .ico { background: rgba(37,99,235,0.12); color: var(--primary); }
+    /* Floating badges — DESACTIVADOS (no encajan con identidad editorial) */
+    .v2-float-badge { display: none !important; }
     @keyframes float { 50% { transform: translateY(-8px); } }
 
     /* ═════════════════════════════════
@@ -1436,11 +1419,11 @@
         <li><a href="#faq">FAQ</a></li>
       </ul>
       <div class="nav-auth" id="nav-auth-out">
-        <button onclick="window.app.showModal('login')" class="btn-outline">Iniciar sesión</button>
-        <button onclick="document.getElementById('planes').scrollIntoView({behavior:'smooth'})" class="v2-cta-btn">Probar gratis</button>
+        <button type="button" onclick="window.app.showModal('login'); return false;" class="btn-outline">Iniciar sesión</button>
+        <button type="button" onclick="document.getElementById('planes').scrollIntoView({behavior:'smooth'}); return false;" class="v2-cta-btn">Probar gratis</button>
       </div>
       <!-- Hamburguesa mobile -->
-      <button class="v2-hamburger" aria-label="Menú" onclick="document.body.classList.toggle('v2-menu-open')">
+      <button type="button" class="v2-hamburger" aria-label="Menú" onclick="document.body.classList.toggle('v2-menu-open'); return false;">
         <span></span><span></span><span></span>
       </button>
     </nav>
@@ -1448,15 +1431,15 @@
     <!-- Drawer móvil -->
     <div class="v2-mobile-drawer" onclick="if(event.target===this) document.body.classList.remove('v2-menu-open')">
       <div class="v2-drawer-content">
-        <button class="v2-drawer-close" onclick="document.body.classList.remove('v2-menu-open')" aria-label="Cerrar">✕</button>
+        <button type="button" class="v2-drawer-close" onclick="document.body.classList.remove('v2-menu-open')" aria-label="Cerrar">✕</button>
         <a href="#beneficios" onclick="document.body.classList.remove('v2-menu-open')">Beneficios</a>
         <a href="#como-funciona" onclick="document.body.classList.remove('v2-menu-open')">Cómo funciona</a>
         <a href="#temas" onclick="document.body.classList.remove('v2-menu-open')">Temáticas</a>
         <a href="#planes" onclick="document.body.classList.remove('v2-menu-open')">Precios</a>
         <a href="#faq" onclick="document.body.classList.remove('v2-menu-open')">FAQ</a>
         <hr style="border:none; border-top:1px solid var(--v2-border); margin:1rem 0;">
-        <button class="btn-outline" style="width:100%; margin-bottom:0.7rem;" onclick="document.body.classList.remove('v2-menu-open'); window.app.showModal('login')">Iniciar sesión</button>
-        <button class="v2-cta-btn" style="width:100%;" onclick="document.body.classList.remove('v2-menu-open'); window.app.showModal('register')">Probar gratis →</button>
+        <button type="button" class="btn-outline" style="width:100%; margin-bottom:0.7rem;" onclick="document.body.classList.remove('v2-menu-open'); window.app.showModal('login')">Iniciar sesión</button>
+        <button type="button" class="v2-cta-btn" style="width:100%;" onclick="document.body.classList.remove('v2-menu-open'); window.app.showModal('register')">Probar gratis →</button>
       </div>
     </div>
 
@@ -1473,10 +1456,10 @@
             Pregunta sobre ITBIS, ISR, RNC, retenciones o e-CF y obtén respuestas con base legal exacta en segundos. Diseñado para contadores, asesores y empresas dominicanas.
           </p>
           <div class="v2-hero-cta-row">
-            <button class="v2-cta-btn v2-btn-large" onclick="window.app.showModal('register')">
+            <button type="button" class="v2-cta-btn v2-btn-large" onclick="window.app.showModal('register')">
               Comenzar gratis →
             </button>
-            <button class="v2-btn-ghost v2-btn-large" onclick="document.getElementById('como-funciona').scrollIntoView({behavior:'smooth'})">
+            <button type="button" class="v2-btn-ghost v2-btn-large" onclick="document.getElementById('como-funciona').scrollIntoView({behavior:'smooth'})">
               ▶  Ver cómo funciona
             </button>
           </div>
@@ -1501,7 +1484,7 @@
           <div class="v2-mock-frame">
             <div class="v2-mock-bar">
               <span class="d1"></span><span class="d2"></span><span class="d3"></span>
-              <div class="v2-mock-url">🔒 taxia.do</div>
+              <div class="v2-mock-url">🔒 normaia.do</div>
             </div>
             <div class="v2-mock-body">
               <div class="v2-mock-msg" style="flex-direction:row-reverse;">
@@ -1509,7 +1492,7 @@
                 <div class="v2-mock-bubble user">¿Cuándo vence el IT-1 de marzo y qué pasa si cae fin de semana?</div>
               </div>
               <div class="v2-mock-msg">
-                <div class="v2-mock-avatar">IA</div>
+                <div class="v2-mock-avatar">N</div>
                 <div class="v2-mock-bubble">
                   El IT-1 de ITBIS de marzo vence el <strong>20 de abril</strong>. Si el día 20 cae sábado, domingo o feriado, el plazo se extiende automáticamente al siguiente día hábil.
                   <cite>📚 Guía 7 ITBIS DGII · Art. 353 Ley 11-92</cite>
@@ -1820,7 +1803,7 @@
               <li>Citas básicas de normativa</li>
               <li>Sin tarjeta de crédito</li>
             </ul>
-            <button class="v2-plan-cta outline" onclick="window.app.showModal('register')">Empezar gratis</button>
+            <button type="button" class="v2-plan-cta outline" onclick="window.app.showModal('register')">Empezar gratis</button>
           </div>
 
           <!-- PRO (FEATURED) -->
@@ -1837,7 +1820,7 @@
               <li>Citas avanzadas con texto literal</li>
               <li>Soporte prioritario</li>
             </ul>
-            <button class="v2-plan-cta primary" onclick="window.payments.landingPricingClick('pro')">Comenzar Pro</button>
+            <button type="button" class="v2-plan-cta primary" onclick="window.payments.landingPricingClick('pro')">Comenzar Pro</button>
           </div>
 
           <!-- PRO MAX -->
@@ -1853,7 +1836,7 @@
               <li>API de integración</li>
               <li>Soporte dedicado por WhatsApp</li>
             </ul>
-            <button class="v2-plan-cta outline" onclick="window.payments.landingPricingClick('pro_max')">Comenzar Pro Max</button>
+            <button type="button" class="v2-plan-cta outline" onclick="window.payments.landingPricingClick('pro_max')">Comenzar Pro Max</button>
           </div>
         </div>
         <div style="text-align:center; margin-top:2.5rem; color:var(--text-muted); font-size:0.9rem;">
@@ -1872,27 +1855,27 @@
 
         <div class="v2-faq-list">
           <div class="v2-faq-item">
-            <button class="v2-faq-q" onclick="this.parentElement.classList.toggle('open')">¿Las respuestas de NormaIA tienen validez legal?</button>
+            <button type="button" class="v2-faq-q" onclick="this.parentElement.classList.toggle('open')">¿Las respuestas de NormaIA tienen validez legal?</button>
             <div class="v2-faq-a">NormaIA es una herramienta de consulta entrenada con documentación oficial DGII. Sus respuestas citan la fuente normativa exacta para que tú o tu cliente puedan verificarla. Sin embargo, no sustituye la asesoría formal de un CPA certificado para casos complejos.</div>
           </div>
           <div class="v2-faq-item">
-            <button class="v2-faq-q" onclick="this.parentElement.classList.toggle('open')">¿Qué tan actualizada está su base de conocimiento?</button>
+            <button type="button" class="v2-faq-q" onclick="this.parentElement.classList.toggle('open')">¿Qué tan actualizada está su base de conocimiento?</button>
             <div class="v2-faq-a">La base se actualiza con cada nueva norma, guía o instructivo que publica la DGII. Actualmente cubre el Código Tributario (Ley 11-92), Normas Generales vigentes, formatos 606/607/608/609, e-CF y la totalidad de la biblioteca virtual oficial.</div>
           </div>
           <div class="v2-faq-item">
-            <button class="v2-faq-q" onclick="this.parentElement.classList.toggle('open')">¿Puedo usarlo desde mi celular?</button>
+            <button type="button" class="v2-faq-q" onclick="this.parentElement.classList.toggle('open')">¿Puedo usarlo desde mi celular?</button>
             <div class="v2-faq-a">Sí. NormaIA funciona en cualquier navegador moderno: computadora, tablet o teléfono. La interfaz se adapta automáticamente al tamaño de tu pantalla.</div>
           </div>
           <div class="v2-faq-item">
-            <button class="v2-faq-q" onclick="this.parentElement.classList.toggle('open')">¿Mis consultas son privadas?</button>
+            <button type="button" class="v2-faq-q" onclick="this.parentElement.classList.toggle('open')">¿Mis consultas son privadas?</button>
             <div class="v2-faq-a">Tus conversaciones se almacenan de forma cifrada y solo tú puedes verlas. No compartimos datos con la DGII ni con terceros. Eliminamos a solicitud cualquier conversación que desees borrar.</div>
           </div>
           <div class="v2-faq-item">
-            <button class="v2-faq-q" onclick="this.parentElement.classList.toggle('open')">¿Puedo cancelar mi plan en cualquier momento?</button>
+            <button type="button" class="v2-faq-q" onclick="this.parentElement.classList.toggle('open')">¿Puedo cancelar mi plan en cualquier momento?</button>
             <div class="v2-faq-a">Sí. Los planes Pro y Pro Max se gestionan vía PayPal y puedes cancelar la suscripción con un clic desde tu cuenta. No hay períodos mínimos ni cargos por cancelación.</div>
           </div>
           <div class="v2-faq-item">
-            <button class="v2-faq-q" onclick="this.parentElement.classList.toggle('open')">¿Ofrecen descuentos para firmas grandes?</button>
+            <button type="button" class="v2-faq-q" onclick="this.parentElement.classList.toggle('open')">¿Ofrecen descuentos para firmas grandes?</button>
             <div class="v2-faq-a">Sí. Si manejas más de 20 contadores en tu firma, contáctanos para un plan corporativo (white label) con multi-cuenta y facturación consolidada.</div>
           </div>
         </div>
@@ -1905,8 +1888,8 @@
         <h2>Empieza a <em>ahorrar horas</em> hoy mismo.</h2>
         <p>Únete a más de 500 contadores y asesores dominicanos que confían en NormaIA todos los días. Tus primeras 10 consultas son gratis.</p>
         <div style="display:flex; gap:0.8rem; justify-content:center; flex-wrap:wrap;">
-          <button class="v2-cta-btn v2-btn-large" onclick="window.app.showModal('register')">Crear cuenta gratis →</button>
-          <button class="v2-btn-ghost v2-btn-large" style="background:transparent; color:#fff; border-color:rgba(255,255,255,0.3);" onclick="document.getElementById('como-funciona').scrollIntoView({behavior:'smooth'})">Ver demo</button>
+          <button type="button" class="v2-cta-btn v2-btn-large" onclick="window.app.showModal('register')">Crear cuenta gratis →</button>
+          <button type="button" class="v2-btn-ghost v2-btn-large" style="background:transparent; color:#fff; border-color:rgba(255,255,255,0.3);" onclick="document.getElementById('como-funciona').scrollIntoView({behavior:'smooth'})">Ver demo</button>
         </div>
       </div>
     </section>
@@ -1964,7 +1947,7 @@
     <div class="app-sidebar">
       <div class="sidebar-header">
         <div class="sidebar-logo">NormaIA<span>Pro</span></div>
-        <button class="sidebar-close-btn" onclick="document.querySelector('.app-sidebar').classList.remove('open')" style="margin-left:auto; background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
+        <button type="button" class="sidebar-close-btn" onclick="document.querySelector('.app-sidebar').classList.remove('open')" style="margin-left:auto; background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
       </div>
 
       <div class="sidebar-scrollable">
@@ -2008,7 +1991,7 @@
           <div class="usage-bar-bg">
             <div class="usage-bar-fill" id="ia-usage-bar" style="width: 0%;"></div>
           </div>
-          <button class="btn-upgrade-sidebar" onclick="window.app.showModal('upgrade')">⚡ Mejorar Plan</button>
+          <button type="button" class="btn-upgrade-sidebar" onclick="window.app.showModal('upgrade')">⚡ Mejorar Plan</button>
         </div>
 
         <!-- User info (no clickeable) + botón logout separado y claro -->
@@ -2019,7 +2002,7 @@
             <div id="user-plan-display">Plan Libre</div>
           </div>
         </div>
-        <button class="btn-logout" onclick="window.auth.signOut()" title="Cerrar sesión">
+        <button type="button" class="btn-logout" onclick="window.auth.signOut()" title="Cerrar sesión">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
             <polyline points="16 17 21 12 16 7"/>
@@ -2034,7 +2017,7 @@
     <div class="app-main">
       <div class="mobile-header">
         <div style="font-weight:bold;">NormaIA Pro</div>
-        <button class="mobile-menu-btn" onclick="document.querySelector('.app-sidebar').classList.toggle('open')">☰</button>
+        <button type="button" class="mobile-menu-btn" onclick="document.querySelector('.app-sidebar').classList.toggle('open')">☰</button>
       </div>
 
       <!-- Chat custom por API (NO iframe). Usa /api/chat que esconde la key de Dify -->
@@ -2057,11 +2040,11 @@
             <div class="att-name" id="chat-preview-name">imagen.jpg</div>
             <div class="att-status" id="chat-preview-status">Lista para enviar</div>
           </div>
-          <button class="att-remove" onclick="window.chat.removeAttachment()" title="Quitar adjunto">✕</button>
+          <button type="button" class="att-remove" onclick="window.chat.removeAttachment()" title="Quitar adjunto">✕</button>
         </div>
         <div class="chat-input-box">
           <!-- Paperclip oculto por defecto, JS lo muestra solo si FILE_UPLOAD_ENABLED=true -->
-          <button class="btn-attach" id="btn-attach" style="display:none;" onclick="document.getElementById('chat-file-input').click()" title="Adjuntar imagen" aria-label="Adjuntar">
+          <button type="button" class="btn-attach" id="btn-attach" style="display:none;" onclick="document.getElementById('chat-file-input').click()" title="Adjuntar imagen" aria-label="Adjuntar">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
           </button>
           <input type="file" id="chat-file-input" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif" style="display:none;" onchange="window.chat.handleFileSelect(event)">
@@ -2081,7 +2064,7 @@
   ════════════════════════════════════════════════════════ -->
   <div class="modal-overlay" id="modal-login">
     <div class="modal">
-      <button class="modal-close" onclick="window.app.closeModal('login')">✕</button>
+      <button type="button" class="modal-close" onclick="window.app.closeModal('login')">✕</button>
       <h2 style="margin-bottom:0.5rem;">Iniciar sesión</h2>
       <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">Accede a tu cuenta NormaIA</p>
       <div class="form-group input-group">
@@ -2093,14 +2076,14 @@
         <input type="password" id="login-pass" placeholder="••••••••">
       </div>
       <div id="login-feedback" class="form-feedback" style="display:none;"></div>
-      <button id="btn-login-submit" class="btn-auth v2-cta-btn" style="width:100%; margin-top:0.5rem;" onclick="window.app.handleLogin()">Entrar</button>
+      <button type="button" id="btn-login-submit" class="btn-auth v2-cta-btn" style="width:100%; margin-top:0.5rem;" onclick="window.app.handleLogin()">Entrar</button>
 
       <div style="text-align:center; margin:1.5rem 0; color:var(--text-muted); font-size:0.8rem; position:relative;">
         <span style="background:#fff; padding:0 10px; position:relative; z-index:1;">o</span>
         <hr style="position:absolute; top:50%; left:0; right:0; border:none; border-top:1px solid #E2E8F0; margin:0; z-index:0;">
       </div>
 
-      <button class="btn-google" onclick="window.auth.doGoogleAuth()">
+      <button type="button" class="btn-google" onclick="window.auth.doGoogleAuth()">
         <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
         Continuar con Google
       </button>
@@ -2114,7 +2097,7 @@
   <!-- Modal de Upgrade — sin sacar al usuario de la app -->
   <div class="modal-overlay" id="modal-upgrade">
     <div class="modal">
-      <button class="modal-close" onclick="window.app.closeModal('upgrade')">✕</button>
+      <button type="button" class="modal-close" onclick="window.app.closeModal('upgrade')">✕</button>
       <h2 style="text-align:center; margin-bottom:0.5rem;">Mejora tu plan</h2>
       <p style="color:var(--text-muted); font-size:0.95rem; text-align:center; margin-bottom:0.5rem;">
         Desbloquea más consultas y los simuladores avanzados de IR-1, IR-2 e IR-17.
@@ -2131,7 +2114,7 @@
             <li>Citas básicas DGII</li>
           </ul>
           <span class="current-tag" id="tag-current-libre" style="display:none;">Tu plan actual</span>
-          <button class="btn-pick outline" id="btn-pick-libre" onclick="window.app.closeModal('upgrade')">Continuar gratis</button>
+          <button type="button" class="btn-pick outline" id="btn-pick-libre" onclick="window.app.closeModal('upgrade')">Continuar gratis</button>
         </div>
 
         <!-- PRO (FEATURED) -->
@@ -2185,3 +2168,4 @@
 
 </body>
 </html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      

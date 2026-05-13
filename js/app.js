@@ -69,6 +69,32 @@ const app = {
         if (e.target === overlay) overlay.classList.remove('open');
       });
     });
+
+    // Enter en inputs del modal de login → dispara handleLogin
+    ['login-email', 'login-pass'].forEach(id => {
+      const inp = document.getElementById(id);
+      if (inp) {
+        inp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            this.handleLogin();
+          }
+        });
+      }
+    });
+
+    // ESC cierra cualquier modal abierto
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+      }
+    });
+  },
+
+  switchTab(tab) {
+    document.querySelectorAll('.nav-item[data-tab]').forEach(el => {
+      el.classList.toggle('active', el.dataset.tab === tab);
+    });
   },
 
   showModal(id) {
@@ -211,7 +237,7 @@ const app = {
     if (usageBar) {
       const pct = Math.min(100, (used / limit) * 100);
       usageBar.style.width = `${pct}%`;
-      usageBar.style.background = pct >= 90 ? 'var(--danger)' : 'var(--secondary)';
+      usageBar.style.background = pct >= 90 ? 'var(--danger)' : 'var(--accent)';
     }
 
     this.applyPlanLocks(plan);
@@ -246,3 +272,4 @@ const app = {
 
 window.app = app;
 document.addEventListener('DOMContentLoaded', () => app.init());
+
