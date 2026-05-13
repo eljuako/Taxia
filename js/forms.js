@@ -1,5 +1,5 @@
 // js/forms.js
-// Sistema de formularios fiscales completos para TaxIA.
+// Sistema de formularios fiscales completos para NormaIA.
 // Cada formulario soporta 3 modos de llenado: Manual, Documento (extracción IA), Chat (extracción de conversación).
 
 (function () {
@@ -692,7 +692,7 @@
     const lines = [];
     lines.push(`==============================================`);
     lines.push(`  ${form.title} — ${form.subtitle}`);
-    lines.push(`  Generado por TaxIA — ${new Date().toLocaleDateString('es-DO')}`);
+    lines.push(`  Generado por NormaIA — ${new Date().toLocaleDateString('es-DO')}`);
     lines.push(`==============================================`);
     lines.push('');
     for (const section of form.sections) {
@@ -710,7 +710,7 @@
     lines.push(`RESULTADO: ${sum.label} = ${sum.value}`);
     lines.push(`==============================================`);
     lines.push('');
-    lines.push('Esta es una estimación generada por TaxIA basada en los datos ingresados.');
+    lines.push('Esta es una estimación generada por NormaIA basada en los datos ingresados.');
     lines.push('No sustituye la declaración oficial en la Oficina Virtual de la DGII.');
 
     const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
@@ -803,7 +803,7 @@
     }
 
     const conversation = msgs.map(m => {
-      const role = m.classList.contains('msg-user') ? 'Usuario' : 'TaxIA';
+      const role = m.classList.contains('msg-user') ? 'Usuario' : 'NormaIA';
       const txt = m.querySelector('.msg-content')?.innerText?.trim() || '';
       return `${role}: ${txt}`;
     }).join('\n');

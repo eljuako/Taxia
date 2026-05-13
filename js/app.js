@@ -32,7 +32,7 @@ const app = {
           this.showModal('login');
           this.setFormFeedback('login', '✓ Tu correo fue confirmado exitosamente. Ahora inicia sesión.', 'success');
         } else {
-          this.showToast('✓ Correo confirmado. ¡Bienvenido a TaxIA!', 'success');
+          this.showToast('✓ Correo confirmado. ¡Bienvenido a NormaIA!', 'success');
         }
         // Limpiar URL para que el mensaje no se repita al recargar
         window.history.replaceState({}, '', window.location.pathname);
@@ -153,7 +153,7 @@ const app = {
 
     try {
       await window.auth.doLogin(email, pass);
-      this.showToast('¡Bienvenido a TaxIA!', 'success');
+      this.showToast('¡Bienvenido a NormaIA!', 'success');
       this.closeModal('login');
     } catch (err) {
       this.setFormFeedback('login', err.message || 'Error al iniciar sesión.', 'error');

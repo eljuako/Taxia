@@ -1,4 +1,4 @@
-# TaxIA — Landing + Chat tributario RD
+# NormaIA — Landing + Chat tributario RD
 
 Plataforma SaaS de consulta tributaria con IA para República Dominicana.
 Frontend estático (HTML/CSS/JS) + endpoint serverless en Vercel que proxea Dify.

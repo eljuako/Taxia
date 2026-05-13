@@ -32,7 +32,7 @@ function iaAppendMsg(role, html, id, imgDataUrl) {
   const container = document.getElementById('ia-messages');
   const isUser = role === 'user';
   const profile = window.auth.getUserProfile();
-  const initial = isUser ? (profile?.full_name?.[0] || 'U').toUpperCase() : 'IA';
+  const initial = isUser ? (profile?.full_name?.[0] || 'U').toUpperCase() : 'N';
 
   const div = document.createElement('div');
   div.className = `chat-message msg-${role}`;
@@ -318,7 +318,7 @@ function newConversation() {
     <div class="chat-message msg-bot">
       <div class="msg-avatar" style="background: linear-gradient(135deg, #1e3a8a, #0f172a); border: 1px solid var(--secondary);">🤖</div>
       <div class="msg-content">
-        <strong>¡Hola! Soy TaxIA</strong>, tu asistente tributario avanzado. 🇩🇴<br><br>
+        <strong>¡Hola! Soy NormaIA</strong>, tu asistente tributario avanzado. 🇩🇴<br><br>
         Estoy listo para analizar normativas de la DGII, ayudarte con tus declaraciones (ITBIS, IR-1, IR-2) o explicarte cómo funciona la Facturación Electrónica (e-CF).<br><br>
         ¿En qué puedo ayudarte hoy?
       </div>
@@ -337,7 +337,7 @@ function renderHistoryMessages(messages) {
   if (!messages || messages.length === 0) {
     container.innerHTML = `
       <div class="chat-message msg-bot">
-        <div class="msg-avatar" style="background: linear-gradient(135deg, #1e3a8a, #0f172a); border: 1px solid var(--secondary);">🤖</div>
+        <div class="msg-avatar">N</div>
         <div class="msg-content"><em>Esta conversación está vacía.</em></div>
       </div>
     `;

@@ -1,34 +1,84 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
+/* ════════════════════════════════════════════════════════════════
+   NORMAIA · Design System (tokens base)
+   Identidad: editorial · advisor tributario de autoridad.
+   Reemplaza el theme anterior. Mantiene las variables legacy
+   (--primary, --secondary, --text-main, etc.) como aliases del
+   nuevo sistema para no romper el CSS existente.
+   ══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');
 
 :root {
-  /* Core Colors - Fintech Light Theme */
-  --bg-deep: #1A1B41; /* Navy for dark sections/sidebar */
-  --bg-light: #FFFFFF; /* Main background */
-  --bg-alt: #F7F9FC; /* Alternate section background */
-  --bg-surface: #FFFFFF; /* Card backgrounds */
-  
-  --primary: #2563EB; /* Bright Royal Blue */
-  --primary-hover: #1D4ED8;
-  --secondary: #00D1B2; /* Teal accent (Expatfile style) */
-  --secondary-hover: #00B89C;
-  --accent-warm: #FF6B6B; /* Coral for badges/alerts */
-  
-  --text-main: #1A1B41; /* Navy text for light mode */
-  --text-muted: #4A5568; /* Slate gray */
-  --text-inverse: #FFFFFF; /* Text on dark backgrounds */
-  
-  --success: #10B981;
-  --danger: #EF4444;
+  /* ── Surfaces (warm cream "paper") ── */
+  --paper:        oklch(97.8% 0.010 85);
+  --paper-2:      oklch(95.6% 0.012 85);
+  --card:         oklch(99.2% 0.006 85);
+  --line:         oklch(89% 0.012 85);
+  --line-soft:    oklch(93% 0.010 85);
 
-  /* Shadows replacing Glassmorphism */
-  --border-light: 1px solid #E2E8F0;
-  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
-  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+  /* ── Ink (texto) ── */
+  --ink:          oklch(20% 0.018 255);
+  --ink-2:        oklch(36% 0.018 255);
+  --ink-3:        oklch(52% 0.014 255);
+  --ink-4:        oklch(68% 0.012 255);
 
-  /* Typography */
-  --font-display: 'Outfit', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  /* ── Accent (plum — una sola voz de color) ── */
+  --accent:       oklch(44% 0.105 330);
+  --accent-soft:  oklch(92% 0.040 330);
+  --accent-ink:   oklch(28% 0.080 330);
+
+  /* ── Status ── */
+  --pos:          oklch(55% 0.110 150);
+  --warn:         oklch(62% 0.130 65);
+  --danger-norma: oklch(58% 0.180 25);
+
+  /* ── Typography ── */
+  --serif: "Instrument Serif", "Times New Roman", serif;
+  --sans:  "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --mono:  "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* ── Rhythm ── */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-xl: 22px;
+
+  --shadow-card-norma: 0 1px 0 oklch(100% 0 0 / .9) inset,
+                       0 1px 2px oklch(20% 0.018 255 / .04),
+                       0 12px 32px -12px oklch(20% 0.018 255 / .12);
+  --shadow-pop:        0 1px 0 oklch(100% 0 0 / .9) inset,
+                       0 18px 50px -18px oklch(20% 0.018 255 / .25);
+  --shadow-float:      0 30px 70px -30px oklch(20% 0.018 255 / .35),
+                       0 8px 20px -8px oklch(20% 0.018 255 / .12);
+
+  /* ═══════ ALIASES — variables legacy mapeadas a NormaIA ═══════
+     Esto preserva todo el CSS que ya usa --primary, --text-main, etc. */
+  --bg-deep:        var(--ink);              /* sidebar dark (se overridea a paper-2 en app.css) */
+  --bg-light:       var(--paper);            /* fondo principal */
+  --bg-alt:         var(--paper-2);          /* secciones alternadas */
+  --bg-surface:     var(--card);             /* tarjetas */
+
+  --primary:        var(--accent);           /* botones y enlaces primarios */
+  --primary-hover:  var(--accent-ink);
+  --secondary:      var(--accent);           /* el template usa una sola voz de color */
+  --secondary-hover:var(--accent-ink);
+  --accent-warm:    var(--warn);
+
+  --text-main:      var(--ink);
+  --text-muted:     var(--ink-3);
+  --text-inverse:   var(--paper);
+
+  --success:        var(--pos);
+  --danger:         var(--danger-norma);
+
+  --border-light:   1px solid var(--line);
+  --shadow-sm: var(--shadow-card-norma);
+  --shadow-md: var(--shadow-card-norma);
+  --shadow-lg: var(--shadow-float);
+
+  /* fuentes legacy → nuevas */
+  --font-display:   var(--serif);
+  --font-body:      var(--sans);
 }
 
 * {
@@ -38,63 +88,154 @@
 }
 
 body {
-  font-family: var(--font-body);
-  background-color: var(--bg-light);
-  color: var(--text-main);
-  line-height: 1.6;
+  font-family: var(--sans);
+  background-color: var(--paper);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.55;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
+::selection { background: var(--accent-soft); color: var(--accent-ink); }
+
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display);
-  font-weight: 700;
-  line-height: 1.2;
-  color: var(--text-main);
+  font-family: var(--serif);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -.015em;
+  color: var(--ink);
 }
 
 a {
   text-decoration: none;
-  color: var(--primary);
-  transition: color 0.3s;
+  color: var(--ink);
+  transition: color 0.2s;
 }
-
-a:hover {
-  color: var(--primary-hover);
-}
+a:hover { color: var(--accent); }
 
 button {
-  font-family: var(--font-body);
+  font-family: var(--sans);
   border: none;
   outline: none;
+  cursor: pointer;
 }
 
-/* Custom Scrollbar */
+/* ── Scrollbar editorial ── */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-alt);
+  background: var(--paper-2);
 }
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: oklch(from var(--ink) l c h / .15);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+  background: oklch(from var(--ink) l c h / .25);
 }
 
-/* Utilities */
+/* ── Utilities ── */
 .card-shadow {
-  background: var(--bg-surface);
-  border: var(--border-light);
-  border-radius: 16px;
-  box-shadow: var(--shadow-sm);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-card-norma);
   transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--accent);
+  -webkit-background-clip: initial;
+  -webkit-text-fill-color: currentColor;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   COMPONENTES BASE NORMAIA
+   Usables como utility classes en HTML.
+   ══════════════════════════════════════════════════════════════ */
+
+/* Brand mark — la "N" serif con dot accent */
+.brand-mark {
+  width: 32px; height: 32px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--paper);
+  display: grid; place-items: center;
+  font-family: var(--serif);
+  font-size: 22px;
+  font-style: italic;
+  line-height: 1;
+  letter-spacing: -.02em;
+  position: relative;
+  flex: 0 0 auto;
+}
+.brand-mark::after {
+  content: "";
+  position: absolute;
+  right: -3px; top: -3px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--paper);
+}
+.brand-mark-lg {
+  width: 56px; height: 56px;
+  border-radius: 16px;
+  font-size: 36px;
+}
+.brand-mark-lg::after {
+  width: 12px; height: 12px;
+  right: -4px; top: -4px;
+}
+
+.brand-name {
+  font-family: var(--serif);
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: -.02em;
+  color: var(--ink);
+  font-style: normal;
+  font-weight: 400;
+}
+.brand-tld {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .04em;
+  color: var(--ink-4);
+  margin-left: 2px;
+  padding-top: 6px;
+}
+
+/* Pill estándar */
+.norma-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px 6px 10px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 500;
+  box-shadow: var(--shadow-card-norma);
+}
+.norma-pill .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px oklch(from var(--accent) l c h / .18);
+}
+.norma-pill .mono { font-family: var(--mono); font-weight: 500; }
+
+/* Eyebrow */
+.eyebrow {
+  font-size: 10.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 600;
 }
