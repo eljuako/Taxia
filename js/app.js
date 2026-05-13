@@ -230,6 +230,13 @@ const app = {
     const planDisplay = document.getElementById('user-plan-display');
     if (planDisplay) planDisplay.textContent = (window.CONFIG && window.CONFIG.PLAN_LABELS[plan]) || 'Plan Libre';
 
+    // Tag del logo del sidebar (al lado de "NormaIA") — refleja el plan actual
+    const sidebarTag = document.getElementById('sidebar-plan-tag');
+    if (sidebarTag) {
+      const tagMap = { libre: 'Libre', pro: 'Pro', pro_max: 'Pro Max' };
+      sidebarTag.textContent = tagMap[plan] || 'Libre';
+    }
+
     const usageText = document.getElementById('ia-usage-text');
     if (usageText) usageText.textContent = `${used} / ${limit}`;
 

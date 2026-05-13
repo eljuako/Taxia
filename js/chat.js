@@ -316,10 +316,9 @@ function newConversation() {
   // Conservar solo el mensaje de bienvenida del bot (el primero)
   container.innerHTML = `
     <div class="chat-message msg-bot">
-      <div class="msg-avatar" style="background: linear-gradient(135deg, #1e3a8a, #0f172a); border: 1px solid var(--secondary);">🤖</div>
+      <div class="msg-avatar">N</div>
       <div class="msg-content">
-        <strong>¡Hola! Soy NormaIA</strong>, tu asistente tributario avanzado. 🇩🇴<br><br>
-        Estoy listo para analizar normativas de la DGII, ayudarte con tus declaraciones (ITBIS, IR-1, IR-2) o explicarte cómo funciona la Facturación Electrónica (e-CF).<br><br>
+        <strong>¡Hola! Soy NormaIA</strong>, tu asistente tributario dominicano. 🇩🇴<br><br>
         ¿En qué puedo ayudarte hoy?
       </div>
     </div>
