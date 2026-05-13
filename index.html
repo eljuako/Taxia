@@ -1499,7 +1499,7 @@
                 </div>
               </div>
               <form class="v2-mock-input" onsubmit="event.preventDefault(); window.app.showModal('register');" onclick="window.app.showModal('register')">
-                <input type="text" class="v2-mock-input-field" placeholder="Escribe tu pregunta tributaria…" readonly onfocus="window.app.showModal('register')">
+                <input type="text" id="mock-input-demo" name="mock-input-demo" aria-label="Demo de entrada de pregunta" class="v2-mock-input-field" placeholder="Escribe tu pregunta tributaria…" readonly onfocus="window.app.showModal('register')">
                 <button type="submit" class="v2-mock-send" aria-label="Enviar">➤</button>
               </form>
             </div>
@@ -2048,7 +2048,7 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
           </button>
           <input type="file" id="chat-file-input" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif" style="display:none;" onchange="window.chat.handleFileSelect(event)">
-          <textarea id="chat-input" rows="1" placeholder="Hazme una pregunta tributaria... (Presiona Enter para enviar)"></textarea>
+          <textarea id="chat-input" name="chat-input" aria-label="Mensaje para NormaIA" rows="1" placeholder="Hazme una pregunta tributaria... (Presiona Enter para enviar)"></textarea>
           <div class="btn-send" onclick="window.chat.sendChatMessage()">➤</div>
         </div>
       </div>
@@ -2068,12 +2068,12 @@
       <h2 style="margin-bottom:0.5rem;">Iniciar sesión</h2>
       <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">Accede a tu cuenta NormaIA</p>
       <div class="form-group input-group">
-        <label>Correo Electrónico</label>
-        <input type="email" id="login-email" placeholder="tucorreo@empresa.com">
+        <label for="login-email">Correo Electrónico</label>
+        <input type="email" id="login-email" name="email" autocomplete="email" placeholder="tucorreo@empresa.com">
       </div>
       <div class="form-group input-group">
-        <label>Contraseña</label>
-        <input type="password" id="login-pass" placeholder="••••••••">
+        <label for="login-pass">Contraseña</label>
+        <input type="password" id="login-pass" name="password" autocomplete="current-password" placeholder="••••••••">
       </div>
       <div id="login-feedback" class="form-feedback" style="display:none;"></div>
       <button type="button" id="btn-login-submit" class="btn-auth v2-cta-btn" style="width:100%; margin-top:0.5rem;" onclick="window.app.handleLogin()">Entrar</button>

@@ -415,7 +415,12 @@
           autoRefreshToken: true,
           persistSession: true,
           detectSessionInUrl: true,
-          flowType: 'pkce',
+          // Implicit flow (token en hash) — evita el problema de Chrome eliminando
+          // localStorage en sitios intermediarios (Bounce Tracking Mitigation),
+          // que rompía el code_verifier de PKCE durante el callback OAuth.
+          flowType: 'implicit',
+          storage: window.localStorage,
+          storageKey: 'normaia-auth-session',
         },
       });
     } catch (e) {
@@ -578,12 +583,20 @@
       if (!sb) return;
       btnGoogle.disabled = true;
       try {
-        await sb.auth.signInWithOAuth({
+        const { error } = await sb.auth.signInWithOAuth({
           provider: 'google',
-          options: { redirectTo: window.location.origin },
+          options: {
+            redirectTo: window.location.origin + '/',
+            queryParams: { access_type: 'offline', prompt: 'consent' },
+          },
         });
+        if (error) {
+          showFeedback('No se pudo iniciar Google: ' + error.message, 'error');
+          btnGoogle.disabled = false;
+        }
+        // Si OK, el navegador será redirigido a Google.
       } catch (err) {
-        showFeedback('No se pudo iniciar Google: ' + err.message, 'error');
+        showFeedback('No se pudo iniciar Google: ' + (err.message || err), 'error');
         btnGoogle.disabled = false;
       }
     });

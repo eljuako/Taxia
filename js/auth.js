@@ -23,9 +23,37 @@ function initSupabase() {
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true,
-        flowType: 'pkce'
+        // Implicit flow: el token llega directo en el hash (#access_token=...).
+        // Evita el problema de "Chrome state deletion for intermediate sites"
+        // (Bounce Tracking Mitigation) que afectaba al flow PKCE porque borraba
+        // el code_verifier del localStorage de Supabase entre navegaciones.
+        flowType: 'implicit',
+        storage: window.localStorage,
+        storageKey: 'normaia-auth-session',
       }
     });
+
+    // Detectar si venimos de un callback OAuth (Google).
+    // Implicit flow → token llega en hash: #access_token=...
+    // (PKCE flow llegaba como ?code=... — mantenemos ambas detecciones por compat.)
+    const url = new URL(window.location.href);
+    const isOAuthCallback = url.hash.includes('access_token=') || url.searchParams.has('code');
+    const hasOAuthError = url.searchParams.has('error');
+
+    if (hasOAuthError) {
+      // Mostrar error al usuario de forma visible
+      console.warn('OAuth error:', url.searchParams.get('error_description') || url.searchParams.get('error'));
+      setTimeout(() => {
+        window.app?.showToast?.(
+          'No se pudo completar el inicio de sesión con Google: ' +
+          (url.searchParams.get('error_description') || url.searchParams.get('error')),
+          'error',
+          7000
+        );
+      }, 500);
+      // Limpiar params de error de la URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
 
     let initialAuthDone = false;
 
@@ -43,6 +71,8 @@ function initSupabase() {
 
     sb.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) resolveInitialAuth(session);
+    }).catch(err => {
+      console.warn('getSession error:', err);
     });
 
     sb.auth.onAuthStateChange(async (event, session) => {
@@ -58,20 +88,38 @@ function initSupabase() {
             window.app.showLoggedIn();
           }
         }
+        // Si veníamos de OAuth, limpiar la URL (query + hash) ahora que la sesión está establecida.
+        // Implicit flow deja #access_token=... en el hash; PKCE dejaba ?code=... en query.
+        if (isOAuthCallback) {
+          window.history.replaceState({}, '', window.location.pathname);
+        }
       } else if (event === 'SIGNED_OUT') {
         initialAuthDone = false;
         currentUser = null;
         userProfile = null;
         window.app.showLoggedOut();
+      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+        // Refresh silencioso — actualizar currentUser por si cambió
+        currentUser = session.user;
       }
     });
 
+    // Timeout de seguridad: si no recibimos INITIAL_SESSION o SIGNED_IN, asumir no logueado.
+    // Más largo (12s) si venimos de OAuth callback — el code exchange puede tardar.
+    const timeoutMs = isOAuthCallback ? 12000 : 5000;
     setTimeout(() => {
       if (!initialAuthDone) {
         initialAuthDone = true;
         window.app.showLoggedOut();
+        if (isOAuthCallback) {
+          window.app?.showToast?.(
+            'El inicio de sesión tardó demasiado. Intenta de nuevo.',
+            'error',
+            5000
+          );
+        }
       }
-    }, 5000);
+    }, timeoutMs);
 
   } catch (e) {
     console.warn('Supabase init error:', e);
@@ -107,11 +155,30 @@ async function doRegister(name, email, pass) {
 }
 
 async function doGoogleAuth() {
-  if (!sb) return;
-  await sb.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.origin },
-  });
+  if (!sb) {
+    window.app?.showToast?.('Servicio de autenticación no disponible.', 'error');
+    return;
+  }
+  try {
+    // redirectTo debe coincidir EXACTAMENTE con una "Redirect URL" autorizada en Supabase
+    // Dashboard → Authentication → URL Configuration. Usamos origin + '/' para evitar
+    // ambigüedades entre "https://normaia.do" y "https://normaia.do/".
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/',
+        queryParams: { access_type: 'offline', prompt: 'consent' },
+      },
+    });
+    if (error) {
+      console.error('signInWithOAuth error:', error);
+      window.app?.showToast?.('No se pudo iniciar Google: ' + error.message, 'error', 6000);
+    }
+    // Si OK, el navegador será redirigido a Google. No hay que hacer nada más aquí.
+  } catch (e) {
+    console.error('doGoogleAuth exception:', e);
+    window.app?.showToast?.('Error inesperado iniciando Google.', 'error');
+  }
 }
 
 async function signOut() {
