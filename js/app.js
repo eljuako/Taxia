@@ -107,10 +107,11 @@ const app = {
     if (el) el.classList.add('open');
     if (id === 'login') this.setFormFeedback('login', '');
 
-    // Si abrimos el modal de upgrade, renderizar los botones PayPal
+    // Si abrimos el modal de upgrade, renderizar los botones PayPal.
+    // El skeleton ya está visible (HTML estático), así que el usuario ve algo
+    // inmediatamente. PayPal renderiza en requestAnimationFrame (siguiente paint).
     if (id === 'upgrade' && window.payments?.initUpgradeButtons) {
-      // Pequeño delay para que el modal esté visible (PayPal no renderiza en hidden containers)
-      setTimeout(() => window.payments.initUpgradeButtons(), 200);
+      window.payments.initUpgradeButtons();
     }
   },
 

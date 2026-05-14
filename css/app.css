@@ -434,7 +434,7 @@
 
 .history-list {
   list-style: none;
-  padding: 0 4px;
+  padding: 0 2px 0 0;
   margin: 0 0 0.5rem;
   display: flex;
   flex-direction: column;
@@ -463,6 +463,7 @@
 }
 
 .history-item {
+  position: relative;        /* para las acciones absolutas */
   display: flex;
   align-items: stretch;
   border-radius: 8px;
@@ -480,50 +481,73 @@
 
 .history-item-main {
   flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 9px 12px;
+  min-width: 0;        /* CLAVE: permite que el hijo con ellipsis se trunque */
+  display: block;
+  padding: 8px 10px;
   background: transparent;
   border: none;
   color: var(--ink-2);
   text-align: left;
   cursor: pointer;
   font: inherit;
+  overflow: hidden;
 }
 .history-item-main:hover { color: var(--ink); }
 .history-item.active .history-item-main { color: var(--accent-ink); }
 
 .history-item-title {
+  display: block;
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   width: 100%;
+  max-width: 100%;
   line-height: 1.25;
+  margin-bottom: 2px;
 }
 .history-item-date {
+  display: block;
   font-size: 10.5px;
   color: var(--ink-4);
   font-variant-numeric: tabular-nums;
 }
 
+/* Las acciones flotan a la derecha (absolute) y solo aparecen al hover/active.
+   No comen ancho del título — el item completo está disponible para el texto. */
 .history-item-actions {
+  position: absolute;
+  right: 4px; top: 50%;
+  transform: translateY(-50%);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
   gap: 2px;
-  padding-right: 4px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    oklch(from var(--ink) l c h / .02) 8%,
+    oklch(from var(--paper-2) l c h / 0.95) 25%
+  );
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.15s;
 }
 .history-item:hover .history-item-actions,
 .history-item.active .history-item-actions {
   opacity: 1;
+  pointer-events: auto;
+}
+.history-item.active .history-item-actions {
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    oklch(from var(--accent-soft) l c h / .4) 8%,
+    var(--accent-soft) 25%
+  );
 }
 .history-action-btn {
   background: transparent;

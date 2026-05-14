@@ -1396,6 +1396,55 @@
       #modal-upgrade .modal { max-width: 95%; padding: 1.5rem; }
       .upgrade-grid { grid-template-columns: 1fr; }
     }
+
+    /* ═════════════════════════════════
+       PAYPAL — skeleton mientras renderiza
+    ═════════════════════════════════ */
+    .paypal-slot { min-height: 96px; position: relative; }
+    .paypal-skeleton {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: stretch;
+    }
+    .paypal-skeleton-btn {
+      height: 38px;
+      border-radius: 999px;
+      background: linear-gradient(
+        90deg,
+        oklch(from var(--ink) l c h / .06) 0%,
+        oklch(from var(--ink) l c h / .12) 50%,
+        oklch(from var(--ink) l c h / .06) 100%
+      );
+      background-size: 200% 100%;
+      animation: skeletonShimmer 1.4s ease-in-out infinite;
+    }
+    .paypal-skeleton-btn.alt {
+      height: 34px;
+      background: linear-gradient(
+        90deg,
+        oklch(from var(--ink) l c h / .04) 0%,
+        oklch(from var(--ink) l c h / .09) 50%,
+        oklch(from var(--ink) l c h / .04) 100%
+      );
+      background-size: 200% 100%;
+      animation: skeletonShimmer 1.4s ease-in-out infinite;
+      animation-delay: .15s;
+    }
+    .paypal-skeleton-hint {
+      text-align: center;
+      font-size: 11px;
+      color: var(--ink-4);
+      font-family: var(--mono);
+      letter-spacing: .04em;
+      margin-top: 4px;
+    }
+    @keyframes skeletonShimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    /* Cuando PayPal ya renderizó, el slot pierde el min-height para encajar correcto */
+    .paypal-slot.is-ready { min-height: 0; }
   </style>
 </head>
 <body>
@@ -2158,7 +2207,13 @@
             <li>Soporte prioritario</li>
           </ul>
           <span class="current-tag" id="tag-current-pro" style="display:none;">Tu plan actual</span>
-          <div id="upgrade-paypal-pro"></div>
+          <div id="upgrade-paypal-pro" class="paypal-slot">
+            <div class="paypal-skeleton" aria-hidden="true">
+              <div class="paypal-skeleton-btn"></div>
+              <div class="paypal-skeleton-btn alt"></div>
+              <div class="paypal-skeleton-hint">Cargando opciones de pago…</div>
+            </div>
+          </div>
         </div>
 
         <!-- PRO MAX -->
@@ -2174,7 +2229,13 @@
             <li>Soporte WhatsApp dedicado</li>
           </ul>
           <span class="current-tag" id="tag-current-promax" style="display:none;">Tu plan actual</span>
-          <div id="upgrade-paypal-promax"></div>
+          <div id="upgrade-paypal-promax" class="paypal-slot">
+            <div class="paypal-skeleton" aria-hidden="true">
+              <div class="paypal-skeleton-btn"></div>
+              <div class="paypal-skeleton-btn alt"></div>
+              <div class="paypal-skeleton-hint">Cargando opciones de pago…</div>
+            </div>
+          </div>
         </div>
       </div>
 
