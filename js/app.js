@@ -192,10 +192,14 @@ const app = {
   // ─────────── PLAN LOCKS ───────────
   applyPlanLocks(plan) {
     const allowed = PLAN_TOOLS[plan] || PLAN_TOOLS.libre;
-    document.querySelectorAll('.nav-item[data-tool]').forEach(el => {
+    // Aplica a nav-items del sidebar (legacy) Y a las tool-chips de la toolbar
+    document.querySelectorAll('.nav-item[data-tool], .tool-chip[data-tool]').forEach(el => {
       const tool = el.dataset.tool;
-      if (allowed.includes(tool)) el.classList.remove('locked');
-      else el.classList.add('locked');
+      const isLocked = !allowed.includes(tool);
+      el.classList.toggle('locked', isLocked);
+      // Ocultar el lock badge si el plan ya incluye esa herramienta
+      const lock = el.querySelector('.lock-badge, .tool-chip-lock');
+      if (lock) lock.style.display = isLocked ? '' : 'none';
     });
 
     ['libre', 'pro', 'promax'].forEach(key => {

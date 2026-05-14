@@ -1950,73 +1950,102 @@
       </div>
 
       <div class="sidebar-scrollable">
-        <!-- Bloque fijo: Asistente + Smart Tools (siempre visibles) -->
-        <div class="sidebar-fixed-block">
-          <div class="nav-section-title">Asistente</div>
-          <div class="nav-item active" data-tab="chat">💬 Consultar IA</div>
-
-          <div class="nav-section-title">Smart Tools</div>
-          <div class="nav-item" data-tool="itbis" onclick="window.app.openSmartCard('itbis')"><span class="nav-item-label">📊 Simular ITBIS</span></div>
-          <div class="nav-item" data-tool="rst" onclick="window.app.openSmartCard('rst')"><span class="nav-item-label">📋 Simular RST</span></div>
-          <div class="nav-item" data-tool="ir1" onclick="window.app.openSmartCard('ir1')"><span class="nav-item-label">👤 Simular IR-1</span><span class="lock-badge">🔒 Pro</span></div>
-          <div class="nav-item" data-tool="ir2" onclick="window.app.openSmartCard('ir2')"><span class="nav-item-label">🏢 Simular IR-2</span><span class="lock-badge">🔒 Pro</span></div>
-          <div class="nav-item" data-tool="ir17" onclick="window.app.openSmartCard('ir17')"><span class="nav-item-label">💼 Simular IR-17</span><span class="lock-badge">🔒 Pro</span></div>
+        <!-- Asistente — siempre visible -->
+        <div class="nav-item active" data-tab="chat">
+          <span class="nav-item-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Consultar IA
+          </span>
         </div>
 
-        <!-- Historial — toma el resto del alto disponible y scrollea internamente -->
+        <!-- Nueva conversación — botón prominente -->
+        <button id="btn-new-conversation" class="btn-new-conv" title="Nueva conversación">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>Nueva conversación</span>
+        </button>
+
+        <!-- Historial — toma todo el resto del alto -->
         <div class="history-section">
           <div class="nav-section-title history-title-row">
             <span>Historial</span>
             <button id="btn-refresh-history" class="history-refresh-btn" title="Recargar historial" aria-label="Recargar">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
             </button>
           </div>
-          <button id="btn-new-conversation" class="btn-new-conv" title="Nueva conversación">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span>Nueva conversación</span>
-          </button>
           <ul id="history-list" class="history-list">
-            <li class="history-empty">Cargando…</li>
+            <li class="history-empty">Sin conversaciones todavía.</li>
           </ul>
         </div>
       </div>
 
+      <!-- Bottom block compacto: uso + usuario + acciones -->
       <div class="sidebar-bottom">
-        <div class="usage-container">
-          <div class="usage-text">
-            <span>Uso mensual</span>
-            <span id="ia-usage-text">0 / 10</span>
+        <div class="usage-card">
+          <div class="usage-row">
+            <span class="usage-label">Uso mensual</span>
+            <span class="usage-mono" id="ia-usage-text">0 / 10</span>
           </div>
           <div class="usage-bar-bg">
             <div class="usage-bar-fill" id="ia-usage-bar" style="width: 0%;"></div>
           </div>
-          <button type="button" class="btn-upgrade-sidebar" onclick="window.app.showModal('upgrade')">⚡ Mejorar Plan</button>
+          <button type="button" class="btn-upgrade-sidebar" onclick="window.app.showModal('upgrade')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg>
+            Mejorar Plan
+          </button>
         </div>
 
-        <!-- User info (no clickeable) + botón logout separado y claro -->
-        <div class="user-info-strip">
+        <div class="user-row">
           <div class="avatar-mini" id="user-initial">U</div>
           <div class="user-info-text">
             <div id="user-name-display">Usuario</div>
             <div id="user-plan-display">Plan Libre</div>
           </div>
+          <button type="button" class="btn-logout-icon" onclick="window.auth.signOut()" title="Cerrar sesión" aria-label="Cerrar sesión">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </button>
         </div>
-        <button type="button" class="btn-logout" onclick="window.auth.signOut()" title="Cerrar sesión">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-          <span>Cerrar sesión</span>
-        </button>
       </div>
     </div>
 
     <!-- MAIN CHAT WORKSPACE -->
     <div class="app-main">
       <div class="mobile-header">
-        <div style="font-weight:bold;">NormaIA Pro</div>
+        <div style="font-family:var(--serif); font-size:20px; letter-spacing:-.01em;">NormaIA</div>
         <button type="button" class="mobile-menu-btn" onclick="document.querySelector('.app-sidebar').classList.toggle('open')">☰</button>
+      </div>
+
+      <!-- Smart Tools toolbar — chips horizontales arriba del chat -->
+      <div class="tools-bar" id="tools-bar">
+        <div class="tools-bar-inner">
+          <span class="tools-label">Herramientas:</span>
+          <button type="button" class="tool-chip" data-tool="itbis" onclick="window.app.openSmartCard('itbis')">
+            <span class="tool-chip-icon">📊</span>
+            <span class="tool-chip-label">ITBIS</span>
+          </button>
+          <button type="button" class="tool-chip" data-tool="rst" onclick="window.app.openSmartCard('rst')">
+            <span class="tool-chip-icon">📋</span>
+            <span class="tool-chip-label">RST</span>
+          </button>
+          <button type="button" class="tool-chip" data-tool="ir1" onclick="window.app.openSmartCard('ir1')">
+            <span class="tool-chip-icon">👤</span>
+            <span class="tool-chip-label">IR-1</span>
+            <span class="tool-chip-lock">Pro</span>
+          </button>
+          <button type="button" class="tool-chip" data-tool="ir2" onclick="window.app.openSmartCard('ir2')">
+            <span class="tool-chip-icon">🏢</span>
+            <span class="tool-chip-label">IR-2</span>
+            <span class="tool-chip-lock">Pro</span>
+          </button>
+          <button type="button" class="tool-chip" data-tool="ir17" onclick="window.app.openSmartCard('ir17')">
+            <span class="tool-chip-icon">💼</span>
+            <span class="tool-chip-label">IR-17</span>
+            <span class="tool-chip-lock">Pro</span>
+          </button>
+        </div>
       </div>
 
       <!-- Chat custom por API (NO iframe). Usa /api/chat que esconde la key de Dify -->
