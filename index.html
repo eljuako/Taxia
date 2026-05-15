@@ -1445,6 +1445,178 @@
     }
     /* Cuando PayPal ya renderizó, el slot pierde el min-height para encajar correcto */
     .paypal-slot.is-ready { min-height: 0; }
+
+    /* Tag "Próximamente" para features del roadmap */
+    .soon-tag {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      background: var(--paper-2);
+      border: 1px solid var(--line);
+      color: var(--ink-4);
+      padding: 1px 5px;
+      border-radius: 4px;
+      margin-left: 4px;
+      vertical-align: 1px;
+    }
+
+    /* ═════════════════════════════════
+       CALENDARIO DE VENCIMIENTOS
+    ═════════════════════════════════ */
+    .calendar-modal { max-width: 640px; width: 92%; padding: 1.8rem 1.6rem; max-height: 88vh; overflow-y: auto; }
+    .cal-list {
+      list-style: none; padding: 0; margin: 0;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .cal-item {
+      display: grid;
+      grid-template-columns: 40px 1fr auto;
+      gap: 14px;
+      align-items: center;
+      padding: 12px 14px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--r-md);
+      transition: all 0.15s;
+    }
+    .cal-item.urgent { border-color: oklch(from var(--danger-norma) l c h / .45); background: oklch(from var(--danger-norma) l c h / .04); }
+    .cal-item.warn   { border-color: oklch(from var(--warn) l c h / .45);          background: oklch(from var(--warn) l c h / .04); }
+    .cal-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: var(--paper-2);
+      display: grid; place-items: center;
+      font-size: 20px;
+    }
+    .cal-item.urgent .cal-icon { background: oklch(from var(--danger-norma) l c h / .12); }
+    .cal-item.warn   .cal-icon { background: oklch(from var(--warn) l c h / .12); }
+    .cal-main { min-width: 0; }
+    .cal-title {
+      font-family: var(--sans);
+      font-weight: 600; font-size: 13.5px;
+      color: var(--ink);
+      margin-bottom: 2px;
+    }
+    .cal-desc {
+      font-size: 11.5px;
+      color: var(--ink-2);
+      line-height: 1.35;
+      margin-bottom: 3px;
+    }
+    .cal-legal {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--ink-4);
+      letter-spacing: .03em;
+    }
+    .cal-date { text-align: right; min-width: 90px; }
+    .cal-date-num {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 22px;
+      line-height: 1;
+      color: var(--ink);
+      letter-spacing: -.01em;
+    }
+    .cal-date-year {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--ink-4);
+      margin-top: 2px;
+    }
+    .cal-date-left {
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      margin-top: 6px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      display: inline-block;
+      background: var(--paper-2);
+      color: var(--ink-3);
+      border: 1px solid var(--line);
+    }
+    .cal-item.urgent .cal-date-left { background: var(--danger-norma); color: var(--paper); border-color: var(--danger-norma); }
+    .cal-item.warn   .cal-date-left { background: oklch(from var(--warn) l c h / .15); color: var(--warn); border-color: oklch(from var(--warn) l c h / .35); }
+
+    /* Estado bloqueado (Libre) */
+    .cal-locked {
+      text-align: center;
+      padding: 1.5rem 1rem;
+    }
+    .cal-locked-icon {
+      font-size: 44px;
+      margin-bottom: 0.6rem;
+    }
+    .cal-locked h3 {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 22px;
+      color: var(--ink);
+      margin-bottom: 0.6rem;
+    }
+    .cal-locked p {
+      color: var(--ink-2);
+      font-size: 14px;
+      max-width: 42ch;
+      margin: 0 auto 1.2rem;
+      line-height: 1.5;
+    }
+    .cta-upgrade-cal {
+      background: linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - .08) c calc(h + 20)) 100%);
+      color: var(--paper);
+      border: 0;
+      padding: 12px 22px;
+      border-radius: 999px;
+      font: 600 14px/1 var(--sans);
+      cursor: pointer;
+      box-shadow: var(--shadow-card-norma);
+      transition: all 0.2s;
+    }
+    .cta-upgrade-cal:hover { transform: translateY(-1px); filter: brightness(1.08); }
+    .cal-preview-list {
+      list-style: none; padding: 0; margin: 1.4rem auto 0;
+      max-width: 360px;
+      display: flex; flex-direction: column; gap: 6px;
+      filter: blur(0.5px);
+      opacity: 0.6;
+    }
+    .cal-preview-list li {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 12px;
+      background: var(--paper-2);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 12px;
+    }
+
+    /* Divisor pequeño entre Smart Tools y el botón de Vencimientos */
+    .tool-chip-divider {
+      width: 1px; height: 20px;
+      background: var(--line);
+      margin: 0 4px;
+      flex: 0 0 auto;
+    }
+    .tool-chip-cal {
+      border-color: oklch(from var(--accent) l c h / .25);
+      background: oklch(from var(--accent-soft) l c h / .4);
+    }
+    .tool-chip-cal:hover {
+      background: oklch(from var(--accent-soft) l c h / .7);
+      border-color: oklch(from var(--accent) l c h / .55);
+    }
+
+    @media (max-width: 600px) {
+      .cal-item { grid-template-columns: 36px 1fr auto; gap: 10px; padding: 10px 12px; }
+      .cal-icon { width: 36px; height: 36px; font-size: 18px; }
+      .cal-date { min-width: 70px; }
+      .cal-date-num { font-size: 18px; }
+      .cal-desc { font-size: 11px; }
+      .cal-legal { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -1842,13 +2014,15 @@
         <div class="v2-pricing-grid">
           <!-- LIBRE -->
           <div class="v2-plan">
-            <div class="v2-plan-name">Libre</div>
+            <div class="v2-plan-name">🌱 Libre</div>
             <div class="v2-plan-price">RD$0<small> / mes</small></div>
-            <div class="v2-plan-desc">Perfecto para explorar la plataforma sin compromiso.</div>
+            <div class="v2-plan-desc">Para explorar sin compromiso.</div>
             <ul class="v2-plan-feats">
               <li>10 consultas mensuales</li>
-              <li>Acceso a todas las temáticas DGII</li>
-              <li>Citas básicas de normativa</li>
+              <li>Asesoría básica con IA</li>
+              <li>Simulador ITBIS (IT-1)</li>
+              <li>Simulador RST</li>
+              <li>Chat web</li>
               <li>Sin tarjeta de crédito</li>
             </ul>
             <button type="button" class="v2-plan-cta outline" onclick="window.app.showModal('register')">Empezar gratis</button>
@@ -1857,34 +2031,38 @@
           <!-- PRO (FEATURED) -->
           <div class="v2-plan featured">
             <div class="v2-plan-badge">★ Más popular</div>
-            <div class="v2-plan-name">Pro</div>
+            <div class="v2-plan-name">⚡ Pro</div>
             <div class="v2-plan-price">RD$1,500<small> / mes</small></div>
-            <div style="font-size:0.72rem; color:var(--text-muted); margin-top:-0.4rem;">Cobro internacional en USD vía PayPal</div>
-            <div class="v2-plan-desc" style="margin-top:0.8rem;">Para asesores y firmas contables que consultan a diario.</div>
+            <div style="font-size:0.72rem; color:var(--text-muted); margin-top:-0.4rem;">Cobro en USD vía PayPal</div>
+            <div class="v2-plan-desc" style="margin-top:0.8rem;">Para asesores y firmas activas.</div>
             <ul class="v2-plan-feats">
               <li>100 consultas mensuales</li>
-              <li>Simuladores ITBIS, ISR e IR-17</li>
-              <li>Alertas de vencimientos fiscales</li>
-              <li>Citas avanzadas con texto literal</li>
-              <li>Soporte prioritario</li>
+              <li>Asesoría con pasos a seguir</li>
+              <li>Simuladores ITBIS, IR-1, IR-2, RST</li>
+              <li>Calendario de vencimientos DGII</li>
+              <li>Avisos en plataforma</li>
+              <li>Chat web</li>
             </ul>
             <button type="button" class="v2-plan-cta primary" onclick="window.payments.landingPricingClick('pro')">Comenzar Pro</button>
           </div>
 
-          <!-- PRO MAX -->
+          <!-- MAX -->
           <div class="v2-plan">
-            <div class="v2-plan-name">Pro Max</div>
+            <div class="v2-plan-name">👑 Max</div>
             <div class="v2-plan-price">RD$5,000<small> / mes</small></div>
-            <div style="font-size:0.72rem; color:var(--text-muted); margin-top:-0.4rem;">Cobro internacional en USD vía PayPal</div>
-            <div class="v2-plan-desc" style="margin-top:0.8rem;">Para grandes despachos y empresas con múltiples clientes.</div>
+            <div style="font-size:0.72rem; color:var(--text-muted); margin-top:-0.4rem;">Cobro en USD vía PayPal</div>
+            <div class="v2-plan-desc" style="margin-top:0.8rem;">Despachos y empresas con múltiples clientes.</div>
             <ul class="v2-plan-feats">
-              <li>Consultas ilimitadas</li>
-              <li>Auditoría automática de comprobantes</li>
-              <li>Llenado asistido de formularios DGII</li>
-              <li>API de integración</li>
-              <li>Soporte dedicado por WhatsApp</li>
+              <li>1,000 consultas mensuales</li>
+              <li>Asesoría con pasos a seguir</li>
+              <li>Todos los simuladores + IR-17</li>
+              <li>Calendario de vencimientos DGII</li>
+              <li style="opacity:.7;">Auditoría de comprobantes <span class="soon-tag">Próx.</span></li>
+              <li style="opacity:.7;">Llenado asistido formularios DGII <span class="soon-tag">Próx.</span></li>
+              <li style="opacity:.7;">Bot WhatsApp · SMS / Email <span class="soon-tag">Próx.</span></li>
+              <li style="opacity:.7;">API de integración <span class="soon-tag">Próx.</span></li>
             </ul>
-            <button type="button" class="v2-plan-cta outline" onclick="window.payments.landingPricingClick('pro_max')">Comenzar Pro Max</button>
+            <button type="button" class="v2-plan-cta outline" onclick="window.payments.landingPricingClick('pro_max')">Comenzar Max</button>
           </div>
         </div>
         <div style="text-align:center; margin-top:2.5rem; color:var(--text-muted); font-size:0.9rem;">
@@ -2092,7 +2270,13 @@
           <button type="button" class="tool-chip" data-tool="ir17" onclick="window.app.openSmartCard('ir17')">
             <span class="tool-chip-icon">💼</span>
             <span class="tool-chip-label">IR-17</span>
-            <span class="tool-chip-lock">Pro</span>
+            <span class="tool-chip-lock">Max</span>
+          </button>
+          <span class="tool-chip-divider"></span>
+          <button type="button" class="tool-chip tool-chip-cal" onclick="window.calendar.open()">
+            <span class="tool-chip-icon">📅</span>
+            <span class="tool-chip-label">Vencimientos</span>
+            <span class="tool-chip-lock" id="cal-next-badge"></span>
           </button>
         </div>
       </div>
@@ -2174,20 +2358,23 @@
   <div class="modal-overlay" id="modal-upgrade">
     <div class="modal">
       <button type="button" class="modal-close" onclick="window.app.closeModal('upgrade')">✕</button>
-      <h2 style="text-align:center; margin-bottom:0.5rem;">Mejora tu plan</h2>
-      <p style="color:var(--text-muted); font-size:0.95rem; text-align:center; margin-bottom:0.5rem;">
-        Desbloquea más consultas y los simuladores avanzados de IR-1, IR-2 e IR-17.
+      <h2 style="text-align:center; margin-bottom:0.4rem;">Mejora tu plan</h2>
+      <p style="color:var(--ink-3); font-size:0.92rem; text-align:center; margin-bottom:1rem;">
+        Más consultas, simuladores avanzados, calendario de vencimientos y más.
       </p>
 
       <div class="upgrade-grid">
         <!-- LIBRE -->
         <div class="upgrade-plan" id="upgrade-libre">
-          <h4>Libre</h4>
+          <h4>🌱 Libre</h4>
           <div class="price">RD$0<small> /mes</small></div>
+          <div style="font-size:0.72rem; color:var(--ink-3); margin-bottom:0.6rem;">Para explorar sin compromiso</div>
           <ul>
             <li>10 consultas mensuales</li>
-            <li>Simulador ITBIS</li>
-            <li>Citas básicas DGII</li>
+            <li>Asesoría básica con IA</li>
+            <li>Simulador ITBIS (IT-1)</li>
+            <li>Simulador RST</li>
+            <li>Chat web</li>
           </ul>
           <span class="current-tag" id="tag-current-libre" style="display:none;">Tu plan actual</span>
           <button type="button" class="btn-pick outline" id="btn-pick-libre" onclick="window.app.closeModal('upgrade')">Continuar gratis</button>
@@ -2196,15 +2383,16 @@
         <!-- PRO (FEATURED) -->
         <div class="upgrade-plan featured" id="upgrade-pro">
           <span class="badge-top">★ Más popular</span>
-          <h4>Pro</h4>
+          <h4>⚡ Pro</h4>
           <div class="price">RD$1,500<small> /mes</small></div>
-          <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.5rem;">Cobro en USD vía PayPal</div>
+          <div style="font-size:0.72rem; color:var(--ink-3); margin-bottom:0.6rem;">Para asesores y firmas activas · Cobro en USD vía PayPal</div>
           <ul>
             <li>100 consultas mensuales</li>
-            <li>Simuladores IR-1, IR-2 e IR-17</li>
-            <li>Citas avanzadas con texto literal</li>
-            <li>Alertas de vencimientos</li>
-            <li>Soporte prioritario</li>
+            <li>Asesoría con pasos a seguir</li>
+            <li>Simuladores ITBIS, IR-1, IR-2, RST</li>
+            <li>Calendario de vencimientos DGII</li>
+            <li>Avisos en plataforma</li>
+            <li>Chat web</li>
           </ul>
           <span class="current-tag" id="tag-current-pro" style="display:none;">Tu plan actual</span>
           <div id="upgrade-paypal-pro" class="paypal-slot">
@@ -2216,17 +2404,22 @@
           </div>
         </div>
 
-        <!-- PRO MAX -->
+        <!-- MAX -->
         <div class="upgrade-plan" id="upgrade-promax">
-          <h4>Pro Max</h4>
+          <h4>👑 Max</h4>
           <div class="price">RD$5,000<small> /mes</small></div>
-          <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.5rem;">Cobro en USD vía PayPal</div>
+          <div style="font-size:0.72rem; color:var(--ink-3); margin-bottom:0.6rem;">Despachos y empresas con múltiples clientes · Cobro en USD vía PayPal</div>
           <ul>
-            <li>Consultas ilimitadas</li>
-            <li>Todos los simuladores</li>
-            <li>Auditoría de comprobantes</li>
-            <li>API de integración</li>
-            <li>Soporte WhatsApp dedicado</li>
+            <li>1,000 consultas mensuales</li>
+            <li>Asesoría con pasos a seguir</li>
+            <li>Todos los simuladores + IR-17 (retenciones)</li>
+            <li>Calendario de vencimientos DGII</li>
+            <li style="opacity:.65;">Aviso de facilidades y leyes nuevas <span class="soon-tag">Próx.</span></li>
+            <li style="opacity:.65;">Auditoría automática de comprobantes <span class="soon-tag">Próx.</span></li>
+            <li style="opacity:.65;">Llenado asistido de formularios DGII <span class="soon-tag">Próx.</span></li>
+            <li style="opacity:.65;">Bot NormaIA por WhatsApp <span class="soon-tag">Próx.</span></li>
+            <li style="opacity:.65;">Avisos SMS / Email <span class="soon-tag">Próx.</span></li>
+            <li style="opacity:.65;">API de integración <span class="soon-tag">Próx.</span></li>
           </ul>
           <span class="current-tag" id="tag-current-promax" style="display:none;">Tu plan actual</span>
           <div id="upgrade-paypal-promax" class="paypal-slot">
@@ -2239,8 +2432,8 @@
         </div>
       </div>
 
-      <p style="text-align:center; margin-top:1.5rem; color:var(--text-muted); font-size:0.8rem;">
-        🔒 Pagos seguros vía PayPal · ↺ Cancela cuando quieras
+      <p style="text-align:center; margin-top:1.5rem; color:var(--ink-3); font-size:0.8rem;">
+        🔒 Pagos seguros vía PayPal · ↺ Cancela cuando quieras · <span class="soon-tag">Próx.</span> = roadmap 2026
       </p>
     </div>
   </div>
@@ -2252,6 +2445,7 @@
   <script src="./js/forms.js"></script>
   <script src="./js/paypal.js"></script>
   <script src="./js/history.js"></script>
+  <script src="./js/calendar.js"></script>
   <script src="./js/app.js"></script>
 
 </body>

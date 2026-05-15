@@ -1,9 +1,12 @@
 // app.js
 
-// Herramientas disponibles por plan
+// Herramientas disponibles por plan — alineado con oferta v2:
+//   Libre: ITBIS + RST
+//   Pro:   + IR-1, IR-2
+//   Max:   + IR-17 (exclusivo del tier superior)
 const PLAN_TOOLS = {
   libre:   ['itbis', 'rst'],
-  pro:     ['itbis', 'rst', 'ir1', 'ir2', 'ir17'],
+  pro:     ['itbis', 'rst', 'ir1', 'ir2'],
   pro_max: ['itbis', 'rst', 'ir1', 'ir2', 'ir17'],
 };
 
@@ -202,6 +205,29 @@ const app = {
       const lock = el.querySelector('.lock-badge, .tool-chip-lock');
       if (lock) lock.style.display = isLocked ? '' : 'none';
     });
+
+    // Badge del próximo vencimiento en el chip de Calendario (solo Pro+)
+    const calBadge = document.getElementById('cal-next-badge');
+    if (calBadge && window.calendar?.getNextDeadline) {
+      if (plan === 'libre') {
+        calBadge.textContent = 'Pro';
+        calBadge.style.display = '';
+      } else {
+        const next = window.calendar.getNextDeadline();
+        if (next) {
+          calBadge.textContent = next.daysLeft <= 0 ? 'Hoy' : (next.daysLeft + 'd');
+          calBadge.style.display = '';
+          // Color dinámico según urgencia
+          calBadge.style.background = next.daysLeft <= 3
+            ? 'var(--danger-norma)'
+            : (next.daysLeft <= 10 ? 'var(--warn)' : '');
+          calBadge.style.color = next.daysLeft <= 10 ? 'var(--paper)' : '';
+          calBadge.style.borderColor = next.daysLeft <= 10 ? 'transparent' : '';
+        } else {
+          calBadge.style.display = 'none';
+        }
+      }
+    }
 
     ['libre', 'pro', 'promax'].forEach(key => {
       const tag = document.getElementById('tag-current-' + key);
