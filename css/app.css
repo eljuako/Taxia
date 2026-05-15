@@ -383,6 +383,97 @@
 }
 
 /* ════════════════════════════════════════════════════════════════
+   DROPDOWN — Formatos DGII (606/607/608/609 agrupados)
+   ══════════════════════════════════════════════════════════════ */
+.tool-chip-dropdown {
+  position: relative;
+  display: inline-block;
+  flex: 0 0 auto;
+}
+.tool-chip-dgii {
+  background: oklch(from var(--accent-soft) l c h / .25);
+}
+.tool-chip-dgii[aria-expanded="true"] {
+  background: oklch(from var(--accent) l c h / .15);
+  border-color: oklch(from var(--accent) l c h / .55);
+}
+.dgii-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 50;
+  min-width: 280px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-float);
+  padding: 6px;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  animation: dgiiMenuIn 0.15s ease-out;
+}
+.dgii-menu.open { display: flex; }
+@keyframes dgiiMenuIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.dgii-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: all 0.15s;
+}
+.dgii-menu-item:hover {
+  background: var(--paper-2);
+  border-color: var(--line);
+}
+.dgii-menu-num {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 5px 9px;
+  border-radius: 6px;
+  flex: 0 0 auto;
+  letter-spacing: -0.02em;
+}
+.dgii-menu-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  min-width: 0;
+}
+.dgii-menu-text strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.dgii-menu-text small {
+  font-size: 11px;
+  color: var(--ink-3);
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+@media (max-width: 880px) {
+  .dgii-menu {
+    right: auto;
+    left: 0;
+    min-width: 260px;
+    max-width: 92vw;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
    HISTORIAL — Items
    ══════════════════════════════════════════════════════════════ */
 .history-title-row {
@@ -887,6 +978,7 @@
   width: 540px;
   max-width: 92vw;
   height: 100vh;
+  height: 100dvh;
   background: var(--card);
   border-left: 1px solid var(--line);
   box-shadow: var(--shadow-float);
@@ -894,7 +986,10 @@
   transform: translateX(100%);
   transition: transform 0.3s ease;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
+/* Módulos DGII (606-609) usan tabla ancha — panel a 92vw */
+.smart-card-panel:has(.f606-table) { width: 720px; max-width: 96vw; }
 .smart-card-panel.open { transform: translateX(0); }
 .smart-card-panel::-webkit-scrollbar { width: 8px; }
 .smart-card-panel::-webkit-scrollbar-thumb {

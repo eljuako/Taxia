@@ -82,8 +82,8 @@
 
       <div class="f606-toolbar">
         <button type="button" class="ff-btn-secondary" onclick="window.forms607.addRow()">+ Agregar venta</button>
-        <button type="button" class="ff-btn-secondary" onclick="document.getElementById('f607-csv-input').click()">📤 Cargar CSV</button>
-        <input type="file" id="f607-csv-input" accept=".csv,.txt" style="display:none;" onchange="window.forms607.loadCsv(event)">
+        <button type="button" class="ff-btn-secondary" onclick="document.getElementById('f607-csv-input').click()">📤 Cargar Excel/CSV</button>
+        <input type="file" id="f607-csv-input" accept=".csv,.txt,.xlsx,.xls" style="display:none;" onchange="window.forms607.loadCsv(event)">
         <button type="button" class="ff-btn-secondary" onclick="window.forms607.clearAll()">🗑 Limpiar todo</button>
       </div>
 
@@ -231,46 +231,70 @@
     window.app.showToast('Plantilla CSV descargada', 'success', 2500);
   }
 
-  function loadCsv(event) {
+  const FIELD_MAP_607 = {
+    idCliente:        ['rnc cliente', 'rnc o cedula cliente', 'cliente rnc', 'cliente', 'rnc', 'cedula'],
+    tipoId:           ['tipo id', 'tipo identificacion', 'tipo documento'],
+    ncf:              ['ncf', 'ncf emitido', 'comprobante', 'numero comprobante'],
+    tipoIngreso:      ['tipo ingreso', 'tipo de ingreso'],
+    fechaComp:        ['fecha comprobante', 'fecha emision', 'fecha factura', 'fecha'],
+    montoFact:        ['monto facturado', 'monto', 'total', 'importe', 'subtotal'],
+    itbisFact:        ['itbis facturado', 'itbis', 'iva facturado', 'iva'],
+    itbisRetTerceros: ['itbis retenido terceros', 'itbis retenido', 'itbis retencion'],
+    isrPercibido:     ['isr percibido', 'isr', 'retencion isr'],
+  };
+
+  async function loadCsv(event) {
     const file = event.target.files?.[0];
     event.target.value = '';
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const lines = e.target.result.split(/\r?\n/).filter(l => l.trim());
-      if (lines.length < 2) {
-        window.app.showToast('CSV vacío o sin datos', 'error');
+    if (!file || !window.formsImport) {
+      window.app.showToast('Helper no disponible', 'error');
+      return;
+    }
+    try {
+      const result = await window.formsImport.parseFile(file, FIELD_MAP_607);
+      const missing = result.missingFields.filter(f => ['ncf', 'fechaComp', 'montoFact'].includes(f));
+      if (missing.length) {
+        window.app.showToast(`Faltan columnas: ${missing.join(', ')}`, 'error', 7000);
         return;
       }
-      const dataLines = lines.slice(1);
-      const newRows = [];
-      for (const line of dataLines) {
-        const c = line.split(',').map(x => x.trim().replace(/^"|"$/g, ''));
-        if (c.length < 9) continue;
-        newRows.push({
-          idCliente: sanitizeId(c[0]),
-          tipoId: c[1] || '1',
-          ncf: sanitizeNCF(c[2]),
-          ncfMod: '',
-          tipoIngreso: (c[3] || '01').padStart(2, '0'),
-          fechaComp: c[4] || '',
-          fechaRet: '',
-          montoFact: parseFloat(c[5]) || 0,
-          itbisFact: parseFloat(c[6]) || 0,
-          itbisRetTerceros: parseFloat(c[7]) || 0,
-          itbisPercibido: 0,
-          isrRetTerceros: 0,
-          isrPercibido: parseFloat(c[8]) || 0,
-          iscFact: 0,
-          otrosImpuestos: 0,
-          propina: 0,
-        });
-      }
+      const newRows = result.mappedRows.map(r => ({
+        idCliente: sanitizeId(r.idCliente),
+        tipoId: String(r.tipoId || '1').slice(0, 1) || '1',
+        ncf: sanitizeNCF(r.ncf),
+        ncfMod: '',
+        tipoIngreso: String(r.tipoIngreso || '01').padStart(2, '0').slice(0, 2),
+        fechaComp: parseDate(r.fechaComp),
+        fechaRet: '',
+        montoFact: parseFloat(r.montoFact) || 0,
+        itbisFact: parseFloat(r.itbisFact) || 0,
+        itbisRetTerceros: parseFloat(r.itbisRetTerceros) || 0,
+        itbisPercibido: 0,
+        isrRetTerceros: 0,
+        isrPercibido: parseFloat(r.isrPercibido) || 0,
+        iscFact: 0,
+        otrosImpuestos: 0,
+        propina: 0,
+      })).filter(r => r.ncf && r.montoFact > 0);
+
+      const skipped = result.totalRows - newRows.length;
       _rows = _rows.concat(newRows);
       render();
-      window.app.showToast(`${newRows.length} ventas cargadas`, 'success', 3000);
-    };
-    reader.readAsText(file);
+      let msg = `✓ ${newRows.length} ventas cargadas`;
+      if (skipped > 0) msg += ` (${skipped} omitidas)`;
+      window.app.showToast(msg, 'success', 4000);
+    } catch (err) {
+      window.app.showToast(`Error: ${err.message}`, 'error', 6000);
+    }
+  }
+
+  function parseDate(input) {
+    if (!input) return '';
+    const s = String(input).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (m) { const [, a, b, y] = m; return `${y}-${String(b).padStart(2, '0')}-${String(a).padStart(2, '0')}`; }
+    const t = new Date(s);
+    return !isNaN(t.getTime()) ? t.toISOString().slice(0, 10) : '';
   }
 
   function generate() {

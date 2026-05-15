@@ -77,8 +77,8 @@
 
       <div class="f606-toolbar">
         <button type="button" class="ff-btn-secondary" onclick="window.forms609.addRow()">+ Agregar pago</button>
-        <button type="button" class="ff-btn-secondary" onclick="document.getElementById('f609-csv-input').click()">📤 Cargar CSV</button>
-        <input type="file" id="f609-csv-input" accept=".csv,.txt" style="display:none;" onchange="window.forms609.loadCsv(event)">
+        <button type="button" class="ff-btn-secondary" onclick="document.getElementById('f609-csv-input').click()">📤 Cargar Excel/CSV</button>
+        <input type="file" id="f609-csv-input" accept=".csv,.txt,.xlsx,.xls" style="display:none;" onchange="window.forms609.loadCsv(event)">
         <button type="button" class="ff-btn-secondary" onclick="window.forms609.clearAll()">🗑 Limpiar todo</button>
       </div>
 
@@ -210,33 +210,58 @@
     window.app.showToast('Plantilla CSV descargada', 'success', 2500);
   }
 
-  function loadCsv(event) {
+  const FIELD_MAP_609 = {
+    nombreBeneficiario: ['nombre beneficiario', 'beneficiario', 'razon social', 'proveedor', 'nombre', 'razon social beneficiario'],
+    tipoServicio:       ['tipo servicio', 'tipo de servicio', 'concepto', 'servicio'],
+    paisDestino:        ['pais destino', 'pais', 'country', 'iso pais', 'codigo pais'],
+    fechaPago:          ['fecha pago', 'fecha de pago', 'fecha'],
+    montoFact:          ['monto facturado', 'monto', 'total', 'importe', 'monto facturado rd'],
+    isrRet:             ['isr retenido', 'isr', 'retencion isr', 'retencion renta'],
+    itbisRet:           ['itbis retenido', 'itbis', 'iva retenido', 'iva'],
+  };
+
+  async function loadCsv(event) {
     const file = event.target.files?.[0];
     event.target.value = '';
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const lines = e.target.result.split(/\r?\n/).filter(l => l.trim());
-      if (lines.length < 2) { window.app.showToast('CSV vacío', 'error'); return; }
-      const newRows = [];
-      lines.slice(1).forEach(line => {
-        const c = line.split(',').map(x => x.trim().replace(/^"|"$/g, ''));
-        if (c.length < 7) return;
-        newRows.push({
-          nombreBeneficiario: sanitizeText(c[0]),
-          tipoServicio: (c[1] || '01').padStart(2, '0'),
-          paisDestino: String(c[2] || '').toUpperCase().slice(0, 2),
-          fechaPago: c[3] || '',
-          montoFact: parseFloat(c[4]) || 0,
-          isrRet: parseFloat(c[5]) || 0,
-          itbisRet: parseFloat(c[6]) || 0,
-        });
-      });
+    if (!file || !window.formsImport) {
+      window.app.showToast('Helper no disponible', 'error');
+      return;
+    }
+    try {
+      const result = await window.formsImport.parseFile(file, FIELD_MAP_609);
+      const missing = result.missingFields.filter(f => ['nombreBeneficiario', 'paisDestino', 'fechaPago', 'montoFact'].includes(f));
+      if (missing.length) {
+        window.app.showToast(`Faltan columnas: ${missing.join(', ')}`, 'error', 7000);
+        return;
+      }
+      const newRows = result.mappedRows.map(r => ({
+        nombreBeneficiario: sanitizeText(r.nombreBeneficiario),
+        tipoServicio: String(r.tipoServicio || '01').padStart(2, '0').slice(0, 2),
+        paisDestino: String(r.paisDestino || '').toUpperCase().slice(0, 2),
+        fechaPago: parseDate(r.fechaPago),
+        montoFact: parseFloat(r.montoFact) || 0,
+        isrRet: parseFloat(r.isrRet) || 0,
+        itbisRet: parseFloat(r.itbisRet) || 0,
+      })).filter(r => r.nombreBeneficiario && r.fechaPago && r.montoFact > 0);
+      const skipped = result.totalRows - newRows.length;
       _rows = _rows.concat(newRows);
       render();
-      window.app.showToast(`${newRows.length} pagos cargados`, 'success', 3000);
-    };
-    reader.readAsText(file);
+      let msg = `✓ ${newRows.length} pagos cargados`;
+      if (skipped > 0) msg += ` (${skipped} omitidos)`;
+      window.app.showToast(msg, 'success', 4000);
+    } catch (err) {
+      window.app.showToast(`Error: ${err.message}`, 'error', 6000);
+    }
+  }
+
+  function parseDate(input) {
+    if (!input) return '';
+    const s = String(input).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (m) { const [, a, b, y] = m; return `${y}-${String(b).padStart(2, '0')}-${String(a).padStart(2, '0')}`; }
+    const t = new Date(s);
+    return !isNaN(t.getTime()) ? t.toISOString().slice(0, 10) : '';
   }
 
   function generate() {

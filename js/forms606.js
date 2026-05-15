@@ -106,8 +106,8 @@
 
       <div class="f606-toolbar">
         <button type="button" class="ff-btn-secondary" onclick="window.forms606.addRow()">+ Agregar compra</button>
-        <button type="button" class="ff-btn-secondary" onclick="document.getElementById('f606-csv-input').click()">📤 Cargar CSV</button>
-        <input type="file" id="f606-csv-input" accept=".csv,.txt" style="display:none;" onchange="window.forms606.loadCsv(event)">
+        <button type="button" class="ff-btn-secondary" onclick="document.getElementById('f606-csv-input').click()">📤 Cargar Excel/CSV</button>
+        <input type="file" id="f606-csv-input" accept=".csv,.txt,.xlsx,.xls" style="display:none;" onchange="window.forms606.loadCsv(event)">
         <button type="button" class="ff-btn-secondary" onclick="window.forms606.clearAll()">🗑 Limpiar todo</button>
       </div>
 
@@ -281,45 +281,97 @@
     window.app.showToast('Plantilla CSV descargada', 'success', 2500);
   }
 
-  function loadCsv(event) {
+  // Mapeo flexible de columnas para CSV/Excel
+  // Cada campo interno tiene varios sinónimos que se intentan matchear
+  const FIELD_MAP_606 = {
+    rnc:                ['rnc proveedor', 'rnc o cedula proveedor', 'rnc', 'cedula', 'rnc cedula', 'proveedor rnc'],
+    tipoBienServicios:  ['tipo bien servicio', 'tipo bien servicios', 'tipo b s', 'tipo bs', 'tipo gasto'],
+    ncf:                ['ncf', 'comprobante', 'numero comprobante fiscal'],
+    fechaComp:          ['fecha comprobante', 'fecha factura', 'fecha emision', 'fecha'],
+    fechaPago:          ['fecha pago', 'fecha de pago'],
+    montoFact:          ['monto facturado', 'monto', 'total', 'subtotal', 'importe'],
+    itbisFact:          ['itbis facturado', 'itbis', 'iva facturado', 'iva'],
+    itbisRet:           ['itbis retenido', 'itbis retencion'],
+    isrRet:             ['isr retenido', 'isr retencion', 'retencion isr', 'retencion renta'],
+  };
+
+  async function loadCsv(event) {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target.result;
-      const lines = text.split(/\r?\n/).filter(l => l.trim());
-      if (lines.length < 2) {
-        window.app.showToast('CSV vacío o sin filas de datos', 'error');
+    if (!window.formsImport) {
+      window.app.showToast('Helper de import no cargado, recarga la página', 'error');
+      return;
+    }
+    try {
+      const result = await window.formsImport.parseFile(file, FIELD_MAP_606);
+
+      if (!result.mappedRows.length) {
+        window.app.showToast('No se pudo leer ninguna fila del archivo', 'error');
         return;
       }
-      // Saltar header
-      const dataLines = lines.slice(1);
-      const newRows = [];
-      for (const line of dataLines) {
-        const cells = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
-        if (cells.length < 9) continue;
-        newRows.push({
-          rnc: sanitizeId(cells[0]),
-          tipoBienServicios: (cells[1] || '09').padStart(2, '0'),
-          ncf: sanitizeNCF(cells[2]),
-          ncfMod: '',
-          tipoId: cells[0]?.length === 9 ? '1' : (cells[0]?.length === 11 ? '2' : '1'),
-          fechaComp: cells[3] || '',
-          fechaPago: cells[4] || '',
-          montoFact: parseFloat(cells[5]) || 0,
-          itbisFact: parseFloat(cells[6]) || 0,
-          itbisRet: parseFloat(cells[7]) || 0,
-          isrRet: parseFloat(cells[8]) || 0,
-          montoServ: 0,
-          montoBienes: 0,
-        });
+      // Si faltan campos críticos, advertir
+      const critical = ['rnc', 'ncf', 'fechaComp', 'montoFact'];
+      const missingCritical = result.missingFields.filter(f => critical.includes(f));
+      if (missingCritical.length) {
+        window.app.showToast(
+          `Faltan columnas obligatorias: ${missingCritical.join(', ')}. Revisa los headers de tu archivo.`,
+          'error', 7000
+        );
+        return;
       }
+
+      // Convertir a estructura interna
+      const newRows = result.mappedRows.map(r => ({
+        rnc: sanitizeId(r.rnc),
+        tipoBienServicios: String(r.tipoBienServicios || '09').padStart(2, '0').slice(0, 2),
+        ncf: sanitizeNCF(r.ncf),
+        ncfMod: '',
+        tipoId: (sanitizeId(r.rnc).length === 9) ? '1' : '2',
+        fechaComp: parseDate(r.fechaComp),
+        fechaPago: parseDate(r.fechaPago),
+        montoFact: parseFloat(r.montoFact) || 0,
+        itbisFact: parseFloat(r.itbisFact) || 0,
+        itbisRet: parseFloat(r.itbisRet) || 0,
+        isrRet: parseFloat(r.isrRet) || 0,
+        montoServ: 0,
+        montoBienes: 0,
+      })).filter(r => r.rnc && r.ncf);  // descartar filas sin RNC ni NCF
+
+      const skipped = result.totalRows - newRows.length;
       _rows = _rows.concat(newRows);
       render();
-      window.app.showToast(`${newRows.length} compras cargadas del CSV`, 'success', 3000);
-    };
-    reader.readAsText(file);
+
+      let msg = `✓ ${newRows.length} compras cargadas`;
+      if (skipped > 0) msg += ` (${skipped} omitidas por datos incompletos)`;
+      window.app.showToast(msg, 'success', 4000);
+    } catch (err) {
+      window.app.showToast(`Error: ${err.message}`, 'error', 6000);
+    }
+  }
+
+  // Parser de fecha tolerante: acepta YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY (intenta detectar)
+  function parseDate(input) {
+    if (!input) return '';
+    const s = String(input).trim();
+    // YYYY-MM-DD ya formateado
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    // DD/MM/YYYY o DD-MM-YYYY
+    const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (m) {
+      const [, a, b, y] = m;
+      // Si el primer número > 12, asumimos DD/MM/YYYY
+      const day = parseInt(a) > 12 ? a : a;
+      const month = parseInt(a) > 12 ? b : (parseInt(b) > 12 ? a : b);
+      // Default: DD/MM/YYYY (estándar dominicano)
+      return `${y}-${String(b).padStart(2, '0')}-${String(a).padStart(2, '0')}`;
+    }
+    // Excel a veces devuelve fechas como número serial o como string YYYY/MM/DD
+    const isoTry = new Date(s);
+    if (!isNaN(isoTry.getTime())) {
+      return isoTry.toISOString().slice(0, 10);
+    }
+    return '';
   }
 
   // ════════════════════════════════════════════════════════════════

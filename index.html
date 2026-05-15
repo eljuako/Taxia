@@ -1578,7 +1578,28 @@
 
     @media (max-width: 768px) {
       .f606-header-form { grid-template-columns: 1fr; }
-      .f606-table { font-size: 11px; }
+      .f606-table { font-size: 11px; min-width: 720px; }
+      .f606-table-wrap {
+        position: relative;
+        box-shadow: inset -20px 0 18px -18px oklch(from var(--ink) l c h / .15);
+      }
+      .f606-table-wrap::after {
+        content: "← desliza →";
+        display: block;
+        text-align: center;
+        font-size: 10px;
+        color: var(--ink-4);
+        padding: 4px;
+        font-family: var(--mono);
+        letter-spacing: .04em;
+        background: var(--paper-2);
+        border-top: 1px solid var(--line-soft);
+      }
+      .f606-totals { grid-template-columns: repeat(2, 1fr); }
+      .f606-toolbar { flex-direction: column; }
+      .f606-toolbar > * { width: 100%; }
+      .ff-actions { flex-direction: column; }
+      .ff-actions > * { width: 100%; }
     }
 
     /* Tag "Próximamente" para features del roadmap */
@@ -2175,8 +2196,8 @@
               <li>Asesoría con pasos a seguir</li>
               <li>Simuladores ITBIS, IR-1, RST</li>
               <li>Calendario de vencimientos DGII</li>
-              <li>Avisos en plataforma</li>
-              <li>Chat web</li>
+              <li>Papel de trabajo Excel descargable</li>
+              <li>Historial de consultas</li>
             </ul>
             <button type="button" class="v2-plan-cta primary" onclick="window.payments.landingPricingClick('pro')">Comenzar Pro</button>
           </div>
@@ -2190,13 +2211,12 @@
             <ul class="v2-plan-feats">
               <li>1,000 consultas mensuales</li>
               <li>Asesoría con pasos a seguir</li>
-              <li>Simuladores ITBIS, IR-1, RST</li>
+              <li>Simuladores ITBIS, RST, IR-1</li>
               <li>+ IR-2 (PJ anual) e IR-17 (retenciones)</li>
               <li>Calendario de vencimientos DGII</li>
-              <li style="opacity:.7;">Auditoría de comprobantes <span class="soon-tag">Próx.</span></li>
-              <li style="opacity:.7;">Llenado asistido formularios DGII <span class="soon-tag">Próx.</span></li>
-              <li style="opacity:.7;">Bot WhatsApp · SMS / Email <span class="soon-tag">Próx.</span></li>
-              <li style="opacity:.7;">API de integración <span class="soon-tag">Próx.</span></li>
+              <li><strong>Formatos DGII 606, 607, 608, 609</strong></li>
+              <li>Subida directa a Oficina Virtual DGII</li>
+              <li>Import desde Excel/CSV con mapeo flexible</li>
             </ul>
             <button type="button" class="v2-plan-cta outline" onclick="window.payments.landingPricingClick('pro_max')">Comenzar Max</button>
           </div>
@@ -2384,7 +2404,15 @@
       <!-- Smart Tools toolbar — chips horizontales arriba del chat -->
       <div class="tools-bar" id="tools-bar">
         <div class="tools-bar-inner">
-          <span class="tools-label">Herramientas:</span>
+          <!-- Vencimientos primero — alta utilidad diaria -->
+          <button type="button" class="tool-chip tool-chip-cal" onclick="window.calendar.open()">
+            <span class="tool-chip-icon">📅</span>
+            <span class="tool-chip-label">Vencimientos</span>
+            <span class="tool-chip-lock" id="cal-next-badge"></span>
+          </button>
+          <span class="tool-chip-divider"></span>
+
+          <!-- Simuladores -->
           <button type="button" class="tool-chip" data-tool="itbis" onclick="window.app.openSmartCard('itbis')">
             <span class="tool-chip-icon">📊</span>
             <span class="tool-chip-label">ITBIS</span>
@@ -2408,32 +2436,48 @@
             <span class="tool-chip-label">IR-17</span>
             <span class="tool-chip-lock">Max</span>
           </button>
-          <button type="button" class="tool-chip" data-tool="f606" onclick="window.app.openSmartCard('f606')">
-            <span class="tool-chip-icon">📑</span>
-            <span class="tool-chip-label">606</span>
-            <span class="tool-chip-lock">Max</span>
-          </button>
-          <button type="button" class="tool-chip" data-tool="f607" onclick="window.app.openSmartCard('f607')">
-            <span class="tool-chip-icon">📑</span>
-            <span class="tool-chip-label">607</span>
-            <span class="tool-chip-lock">Max</span>
-          </button>
-          <button type="button" class="tool-chip" data-tool="f608" onclick="window.app.openSmartCard('f608')">
-            <span class="tool-chip-icon">📑</span>
-            <span class="tool-chip-label">608</span>
-            <span class="tool-chip-lock">Max</span>
-          </button>
-          <button type="button" class="tool-chip" data-tool="f609" onclick="window.app.openSmartCard('f609')">
-            <span class="tool-chip-icon">📑</span>
-            <span class="tool-chip-label">609</span>
-            <span class="tool-chip-lock">Max</span>
-          </button>
+
           <span class="tool-chip-divider"></span>
-          <button type="button" class="tool-chip tool-chip-cal" onclick="window.calendar.open()">
-            <span class="tool-chip-icon">📅</span>
-            <span class="tool-chip-label">Vencimientos</span>
-            <span class="tool-chip-lock" id="cal-next-badge"></span>
-          </button>
+
+          <!-- Dropdown agrupado: Formatos DGII (606/607/608/609) -->
+          <div class="tool-chip-dropdown">
+            <button type="button" class="tool-chip tool-chip-dgii" onclick="window.app.toggleDgiiMenu(event)" aria-haspopup="true" aria-expanded="false">
+              <span class="tool-chip-icon">📑</span>
+              <span class="tool-chip-label">Formatos DGII</span>
+              <span class="tool-chip-lock">Max</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:2px;"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="dgii-menu" id="dgii-menu">
+              <button type="button" class="dgii-menu-item" data-tool="f606" onclick="window.app.openSmartCard('f606'); window.app.closeDgiiMenu();">
+                <span class="dgii-menu-num">606</span>
+                <span class="dgii-menu-text">
+                  <strong>Compras</strong>
+                  <small>Bienes y servicios adquiridos</small>
+                </span>
+              </button>
+              <button type="button" class="dgii-menu-item" data-tool="f607" onclick="window.app.openSmartCard('f607'); window.app.closeDgiiMenu();">
+                <span class="dgii-menu-num">607</span>
+                <span class="dgii-menu-text">
+                  <strong>Ventas</strong>
+                  <small>Bienes y servicios facturados</small>
+                </span>
+              </button>
+              <button type="button" class="dgii-menu-item" data-tool="f608" onclick="window.app.openSmartCard('f608'); window.app.closeDgiiMenu();">
+                <span class="dgii-menu-num">608</span>
+                <span class="dgii-menu-text">
+                  <strong>NCF anulados</strong>
+                  <small>Comprobantes anulados del período</small>
+                </span>
+              </button>
+              <button type="button" class="dgii-menu-item" data-tool="f609" onclick="window.app.openSmartCard('f609'); window.app.closeDgiiMenu();">
+                <span class="dgii-menu-num">609</span>
+                <span class="dgii-menu-text">
+                  <strong>Pagos al exterior</strong>
+                  <small>Retenciones a no residentes</small>
+                </span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -2547,8 +2591,8 @@
             <li>Asesoría con pasos a seguir</li>
             <li>Simuladores ITBIS, IR-1, RST</li>
             <li>Calendario de vencimientos DGII</li>
-            <li>Avisos en plataforma</li>
-            <li>Chat web</li>
+            <li>Papel de trabajo Excel descargable</li>
+            <li>Chat web · Historial de consultas</li>
           </ul>
           <span class="current-tag" id="tag-current-pro" style="display:none;">Tu plan actual</span>
           <div id="upgrade-paypal-pro" class="paypal-slot">
@@ -2568,15 +2612,13 @@
           <ul>
             <li>1,000 consultas mensuales</li>
             <li>Asesoría con pasos a seguir</li>
-            <li>Simuladores ITBIS, IR-1, RST</li>
+            <li>Todos los simuladores: ITBIS, RST, IR-1</li>
             <li>+ IR-2 (PJ anual) e IR-17 (retenciones)</li>
             <li>Calendario de vencimientos DGII</li>
-            <li style="opacity:.65;">Aviso de facilidades y leyes nuevas <span class="soon-tag">Próx.</span></li>
-            <li style="opacity:.65;">Auditoría automática de comprobantes <span class="soon-tag">Próx.</span></li>
-            <li style="opacity:.65;">Llenado asistido de formularios DGII <span class="soon-tag">Próx.</span></li>
-            <li style="opacity:.65;">Bot NormaIA por WhatsApp <span class="soon-tag">Próx.</span></li>
-            <li style="opacity:.65;">Avisos SMS / Email <span class="soon-tag">Próx.</span></li>
-            <li style="opacity:.65;">API de integración <span class="soon-tag">Próx.</span></li>
+            <li><strong>Formatos DGII 606, 607, 608, 609</strong></li>
+            <li>Subida directa a Oficina Virtual DGII</li>
+            <li>Import desde Excel/CSV con mapeo flexible</li>
+            <li>Papel de trabajo Excel descargable</li>
           </ul>
           <span class="current-tag" id="tag-current-promax" style="display:none;">Tu plan actual</span>
           <div id="upgrade-paypal-promax" class="paypal-slot">
@@ -2590,7 +2632,7 @@
       </div>
 
       <p style="text-align:center; margin-top:1.5rem; color:var(--ink-3); font-size:0.8rem;">
-        🔒 Pagos seguros vía PayPal · ↺ Cancela cuando quieras · <span class="soon-tag">Próx.</span> = roadmap 2026
+        🔒 Pagos seguros vía PayPal · ↺ Cancela cuando quieras
       </p>
     </div>
   </div>
@@ -2603,6 +2645,7 @@
   <script src="./js/paypal.js"></script>
   <script src="./js/history.js"></script>
   <script src="./js/calendar.js"></script>
+  <script src="./js/forms_import.js"></script>
   <script src="./js/forms606.js"></script>
   <script src="./js/forms607.js"></script>
   <script src="./js/forms608.js"></script>

@@ -196,8 +196,8 @@ const app = {
   // ─────────── PLAN LOCKS ───────────
   applyPlanLocks(plan) {
     const allowed = PLAN_TOOLS[plan] || PLAN_TOOLS.libre;
-    // Aplica a nav-items del sidebar (legacy) Y a las tool-chips de la toolbar
-    document.querySelectorAll('.nav-item[data-tool], .tool-chip[data-tool]').forEach(el => {
+    // Aplica a nav-items del sidebar (legacy), tool-chips y items del dropdown DGII
+    document.querySelectorAll('.nav-item[data-tool], .tool-chip[data-tool], .dgii-menu-item[data-tool]').forEach(el => {
       const tool = el.dataset.tool;
       const isLocked = !allowed.includes(tool);
       el.classList.toggle('locked', isLocked);
@@ -205,6 +205,15 @@ const app = {
       const lock = el.querySelector('.lock-badge, .tool-chip-lock');
       if (lock) lock.style.display = isLocked ? '' : 'none';
     });
+
+    // Lock global del dropdown DGII si NINGÚN formato está allowed
+    const anyDgii = ['f606', 'f607', 'f608', 'f609'].some(t => allowed.includes(t));
+    const dgiiChip = document.querySelector('.tool-chip-dgii');
+    if (dgiiChip) {
+      dgiiChip.classList.toggle('locked', !anyDgii);
+      const dgiiLock = dgiiChip.querySelector('.tool-chip-lock');
+      if (dgiiLock) dgiiLock.style.display = anyDgii ? 'none' : '';
+    }
 
     // Badge del próximo vencimiento en el chip de Calendario (solo Pro+)
     const calBadge = document.getElementById('cal-next-badge');
@@ -315,6 +324,36 @@ const app = {
 
   closeSmartCard() {
     document.getElementById('smart-card-panel').classList.remove('open');
+  },
+
+  // ─────────── DROPDOWN FORMATOS DGII ───────────
+  toggleDgiiMenu(event) {
+    event?.stopPropagation();
+    const menu = document.getElementById('dgii-menu');
+    const btn = event?.currentTarget;
+    if (!menu) return;
+    const isOpen = menu.classList.contains('open');
+    menu.classList.toggle('open', !isOpen);
+    if (btn) btn.setAttribute('aria-expanded', String(!isOpen));
+
+    // Click fuera del menú lo cierra
+    if (!isOpen) {
+      const closeHandler = (e) => {
+        if (!menu.contains(e.target) && e.target !== btn && !btn?.contains(e.target)) {
+          this.closeDgiiMenu();
+          document.removeEventListener('click', closeHandler);
+        }
+      };
+      // Diferir para no capturar el mismo click que lo abre
+      setTimeout(() => document.addEventListener('click', closeHandler), 0);
+    }
+  },
+
+  closeDgiiMenu() {
+    const menu = document.getElementById('dgii-menu');
+    const btn = document.querySelector('.tool-chip-dgii');
+    if (menu) menu.classList.remove('open');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
   },
 };
 
