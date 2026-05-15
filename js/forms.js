@@ -501,7 +501,7 @@
 
         <div class="ff-actions">
           <button class="ff-btn-secondary" onclick="window.forms.clearForm('${formKey}')">Limpiar</button>
-          <button class="ff-btn-primary" onclick="window.forms.exportForm('${formKey}')">📥 Exportar resumen</button>
+          <button class="ff-btn-primary" onclick="window.forms.exportForm('${formKey}')">📊 Descargar papel de trabajo (Excel)</button>
         </div>
       </div>
     `;
@@ -711,41 +711,177 @@
     window.app.showToast('Formulario limpiado', 'info', 2000);
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // EXPORT — Excel "papel de trabajo" con layout DGII
+  // ═══════════════════════════════════════════════════════════
+  // Genera un .xlsx con 3 hojas:
+  //  1. Formulario   — réplica del layout oficial con casillas numeradas
+  //  2. Base legal   — artículos y normas aplicables al cálculo
+  //  3. Instrucciones — guía para transcribir a Oficina Virtual DGII
+  //
+  // NOTA: este archivo NO se sube a DGII. Es papel de trabajo del contador.
+  // Para presentar la declaración hay que ir a oficinavirtual.dgii.gov.do
+  // y llenar los campos con los valores de este archivo.
   function exportForm(formKey) {
     const form = FORMS[formKey];
     if (!form) return;
-    const lines = [];
-    lines.push(`==============================================`);
-    lines.push(`  ${form.title} — ${form.subtitle}`);
-    lines.push(`  Generado por NormaIA — ${new Date().toLocaleDateString('es-DO')}`);
-    lines.push(`==============================================`);
-    lines.push('');
+    if (typeof XLSX === 'undefined') {
+      window.app.showToast('Librería de Excel aún cargando, intenta en 2s', 'info', 3000);
+      return;
+    }
+
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('es-DO');
+    const isoDate = today.toISOString().slice(0, 10);
+
+    // ─── HOJA 1: Formulario ───────────────────────────────────
+    const formSheet = [];
+    formSheet.push(['NORMAIA · PAPEL DE TRABAJO', '', '', '']);
+    formSheet.push([form.title, form.subtitle, '', '']);
+    formSheet.push([form.deadline || '', '', `Generado: ${dateStr}`, '']);
+    formSheet.push(['', '', '', '']);
+    formSheet.push(['Casilla', 'Concepto', 'Monto (RD$)', 'Nota']);
+
+    let casilla = 1;
     for (const section of form.sections) {
-      lines.push(`--- ${section.name} ---`);
+      formSheet.push([`— ${section.name} —`, '', '', '']);
       for (const f of section.fields) {
+        if (f.type === 'select') {
+          const el = document.getElementById(f.id);
+          const selectedLabel = el?.options?.[el.selectedIndex]?.text || el?.value || '';
+          formSheet.push(['', f.label, selectedLabel, '']);
+          continue;
+        }
         const v = num(f.id);
+        const isResult = f.type === 'result' || f.highlight;
+        const note = f.readonly ? 'Calculado' : (f.sub || '');
         if (v !== 0 || f.readonly || f.type === 'result') {
-          lines.push(`${f.label.padEnd(50, '.')} ${fmtRD(v)}`);
+          formSheet.push([
+            String(casilla).padStart(2, '0'),
+            f.label + (isResult ? ' ★' : ''),
+            +v.toFixed(2),
+            note,
+          ]);
+          casilla++;
         }
       }
-      lines.push('');
+      formSheet.push(['', '', '', '']);
     }
-    const sum = form.summary();
-    lines.push(`==============================================`);
-    lines.push(`RESULTADO: ${sum.label} = ${sum.value}`);
-    lines.push(`==============================================`);
-    lines.push('');
-    lines.push('Esta es una estimación generada por NormaIA basada en los datos ingresados.');
-    lines.push('No sustituye la declaración oficial en la Oficina Virtual de la DGII.');
 
-    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${form.title.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.txt`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    window.app.showToast('Resumen descargado', 'success', 2500);
+    const sum = form.summary();
+    formSheet.push(['', '', '', '']);
+    formSheet.push(['RESULTADO FINAL', sum.label, sum.value, '']);
+    formSheet.push(['', '', '', '']);
+    formSheet.push(['⚠ Este es un papel de trabajo del contador.', '', '', '']);
+    formSheet.push(['  NO se sube a DGII como archivo.', '', '', '']);
+    formSheet.push(['  Transcribe los valores a Oficina Virtual', '', '', '']);
+    formSheet.push(['  para presentar la declaración oficial.', '', '', '']);
+
+    const ws1 = XLSX.utils.aoa_to_sheet(formSheet);
+    ws1['!cols'] = [
+      { wch: 9 },     // Casilla
+      { wch: 48 },    // Concepto
+      { wch: 18 },    // Monto
+      { wch: 35 },    // Nota
+    ];
+    // Combinar header row 1 (NORMAIA) — A1:D1
+    ws1['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 1 } },
+    ];
+
+    // ─── HOJA 2: Base legal ───────────────────────────────────
+    const legalRows = [
+      ['Base legal del cálculo'],
+      [''],
+      ['Fundamento', 'Norma', 'Resumen'],
+    ];
+    const legalMap = {
+      it1: [
+        ['ITBIS general', 'Art. 341 CT Ley 11-92', '18% sobre transferencias gravadas'],
+        ['ITBIS reducido', 'Art. 343 párrafo I', '16% sobre productos específicos'],
+        ['Exportaciones', 'Art. 343 párrafo II', 'Tasa 0%'],
+        ['Crédito fiscal', 'Art. 346 CT', 'Compensación contra débito del mismo período'],
+        ['Plazo declaración', 'Art. 353 CT', 'Día 20 del mes siguiente'],
+      ],
+      ir1: [
+        ['Escala progresiva PF', 'Art. 296 CT', '0% / 15% / 20% / 25% sobre renta neta'],
+        ['Exención anual', 'Art. 296 + Decreto 309-12', 'Mínimo no imponible RD$ 416,220'],
+        ['Anticipos ISR', 'Art. 314 CT', '1.5% ingresos brutos o ISR año anterior'],
+        ['Plazo declaración', 'Art. 110 CT', '31 de marzo (cierre dic anterior)'],
+      ],
+      ir2: [
+        ['ISR Personas Jurídicas', 'Art. 297 CT', '27% sobre renta neta imponible'],
+        ['Impuesto a los Activos', 'Ley 173-07 + Art. 401 CT', '1% sobre activos fijos depreciables'],
+        ['Crédito por ISR', 'Art. 405 CT', 'Pagar el mayor entre ISR e Imp. Activos'],
+        ['Plazo declaración', 'Art. 295 CT', '120 días post cierre fiscal'],
+      ],
+      ir17: [
+        ['Honorarios profesionales', 'Norma 02-2005 + Art. 309', '10% ISR + 100% ITBIS retención'],
+        ['Alquileres', 'Art. 309 lit. b)', '10% ISR + 100% ITBIS'],
+        ['Pagos al exterior', 'Art. 305 CT', '27% (salvo CDI España/Canadá)'],
+        ['Estado a proveedores', 'Norma 02-2005', '5% ISR + 100% ITBIS'],
+        ['Dividendos', 'Art. 308 CT', '10% pago único sobre el bruto'],
+      ],
+      rst: [
+        ['Régimen Simplificado', 'Decreto 265-19 + Norma 06-2021', 'Régimen opcional para MIPYMES'],
+        ['Topes RST', 'Decreto 265-19 actualizado', 'Servicios RD$ 12,068,181.09 / Compras RD$ 55,485,890.09'],
+        ['PJ Servicios', 'Decreto 265-19', '7% sobre ingresos brutos (ISR + ITBIS)'],
+        ['PF Servicios', 'Decreto 265-19', 'Escala reducida 0/10/15/20% sobre ingresos'],
+        ['4 cuotas trimestrales', 'Decreto 265-19', 'Mar/Abr · Jun · Sep · Dic'],
+        ['Permanencia mínima', 'Decreto 265-19', '3 años en el régimen'],
+      ],
+    };
+    (legalMap[formKey] || []).forEach(r => legalRows.push(r));
+    legalRows.push(['']);
+    legalRows.push(['Nota: Esta información es referencial.']);
+    legalRows.push(['Consulta siempre la normativa vigente en dgii.gov.do o con un CPA certificado.']);
+
+    const ws2 = XLSX.utils.aoa_to_sheet(legalRows);
+    ws2['!cols'] = [{ wch: 32 }, { wch: 32 }, { wch: 48 }];
+
+    // ─── HOJA 3: Instrucciones ─────────────────────────────────
+    const instr = [
+      [`Cómo presentar el ${form.title} en DGII`],
+      [''],
+      ['1.', 'Entra a https://oficinavirtual.dgii.gov.do con tu RNC y clave'],
+      ['2.', 'Menú: Declaración Jurada → busca el formulario correspondiente'],
+      ['3.', 'Selecciona el período fiscal a declarar'],
+      ['4.', 'Transcribe los valores de la Hoja 1 a las casillas correspondientes'],
+      ['5.', 'Verifica los totales calculados por la plataforma DGII'],
+      ['6.', 'Firma electrónicamente y envía la declaración'],
+      ['7.', 'Imprime el comprobante de envío para tu archivo'],
+      [''],
+      ['Pagos:'],
+      ['', 'Si te queda saldo a pagar, DGII genera un volante con código de barras.'],
+      ['', 'Puedes pagar en cualquier banco autorizado o vía portal bancario.'],
+      [''],
+      ['Plazos generales:'],
+      ['', 'IT-1 (ITBIS): día 20 del mes siguiente'],
+      ['', 'IR-3 / IR-17 (Retenciones): día 10 del mes siguiente'],
+      ['', 'IR-1 (PF anual): 31 de marzo'],
+      ['', 'IR-2 (PJ anual): 120 días post cierre fiscal'],
+      ['', 'RST: 4 cuotas trimestrales (Mar/Abr · Jun · Sep · Dic)'],
+      [''],
+      ['Recargos por mora (Arts. 26-27 y 252 CT):'],
+      ['', '10% el primer mes'],
+      ['', '+ 4% por cada mes adicional'],
+      ['', '+ 1.10% mensual de interés indemnizatorio'],
+      [''],
+      [`Generado por NormaIA · ${dateStr} · normaia.do`],
+    ];
+    const ws3 = XLSX.utils.aoa_to_sheet(instr);
+    ws3['!cols'] = [{ wch: 5 }, { wch: 80 }];
+
+    // ─── ARMAR WORKBOOK Y DESCARGAR ────────────────────────────
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws1, 'Formulario');
+    XLSX.utils.book_append_sheet(wb, ws2, 'Base legal');
+    XLSX.utils.book_append_sheet(wb, ws3, 'Instrucciones');
+
+    const filename = `NormaIA_${form.title.replace(/\s+/g, '_')}_${isoDate}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    window.app.showToast('📊 Papel de trabajo descargado', 'success', 3000);
   }
 
   // ═══════════════════════════════════════════════════════════

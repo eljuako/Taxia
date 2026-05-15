@@ -1,13 +1,13 @@
 // app.js
 
-// Herramientas disponibles por plan — alineado con oferta v2:
+// Herramientas disponibles por plan — alineado con oferta v2 final:
 //   Libre: ITBIS + RST
-//   Pro:   + IR-1, IR-2
-//   Max:   + IR-17 (exclusivo del tier superior)
+//   Pro:   + IR-1
+//   Max:   + IR-2, IR-17 + formatos envío DGII 606/607/608/609
 const PLAN_TOOLS = {
   libre:   ['itbis', 'rst'],
-  pro:     ['itbis', 'rst', 'ir1', 'ir2'],
-  pro_max: ['itbis', 'rst', 'ir1', 'ir2', 'ir17'],
+  pro:     ['itbis', 'rst', 'ir1'],
+  pro_max: ['itbis', 'rst', 'ir1', 'ir2', 'ir17', 'f606', 'f607', 'f608', 'f609'],
 };
 
 const app = {
@@ -281,7 +281,7 @@ const app = {
     this.applyPlanLocks(plan);
   },
 
-  // ─────────── FORMULARIOS COMPLETOS (delegado a forms.js) ───────────
+  // ─────────── FORMULARIOS COMPLETOS (delegado a forms.js / forms606.js) ───────────
   // Mapeo entre las claves de Smart Tools y las claves de los formularios
   _formMap: { itbis: 'it1', ir1: 'ir1', ir2: 'ir2', ir17: 'ir17', rst: 'rst' },
 
@@ -295,6 +295,16 @@ const app = {
       return;
     }
 
+    // Formatos de envío DGII (606/607/608/609) — UI separada por módulo
+    const dgiiFormatos = { f606: 'forms606', f607: 'forms607', f608: 'forms608', f609: 'forms609' };
+    if (dgiiFormatos[type]) {
+      const mod = window[dgiiFormatos[type]];
+      if (mod) mod.open();
+      else console.warn(`${dgiiFormatos[type]}.js no cargado`);
+      return;
+    }
+
+    // Simuladores tradicionales (delegado a forms.js)
     const formKey = this._formMap[type];
     if (!formKey || !window.forms) {
       console.warn('Formulario no disponible:', type);
