@@ -327,25 +327,66 @@ const app = {
   },
 
   // ─────────── DROPDOWN FORMATOS DGII ───────────
+  // El menú usa position:fixed para escapar del overflow:auto del tools-bar.
+  // Las coordenadas se calculan dinámicamente desde el bounding rect del botón.
+  _positionDgiiMenu() {
+    const menu = document.getElementById('dgii-menu');
+    const btn = document.querySelector('.tool-chip-dgii');
+    if (!menu || !btn) return;
+    const rect = btn.getBoundingClientRect();
+    const menuWidth = 280;        // min-width del CSS
+    const menuMargin = 8;          // gap del botón
+    const viewportW = window.innerWidth;
+    const viewportH = window.innerHeight;
+
+    // Por defecto: alineado a la derecha del botón
+    let left = rect.right - menuWidth;
+    // Si no cabe a la izquierda (ej. móvil), alinearlo al borde izquierdo del botón
+    if (left < 8) left = Math.max(8, rect.left);
+    // Si igual se sale a la derecha, recortar
+    if (left + menuWidth > viewportW - 8) left = viewportW - menuWidth - 8;
+
+    let top = rect.bottom + menuMargin;
+    // Si no cabe abajo, abrir hacia arriba
+    if (top + 280 > viewportH && rect.top - 280 > 0) {
+      top = rect.top - menuMargin - 280;
+    }
+
+    menu.style.left = left + 'px';
+    menu.style.top = top + 'px';
+  },
+
   toggleDgiiMenu(event) {
     event?.stopPropagation();
+    event?.preventDefault();
     const menu = document.getElementById('dgii-menu');
-    const btn = event?.currentTarget;
+    const btn = event?.currentTarget || document.querySelector('.tool-chip-dgii');
     if (!menu) return;
-    const isOpen = menu.classList.contains('open');
-    menu.classList.toggle('open', !isOpen);
-    if (btn) btn.setAttribute('aria-expanded', String(!isOpen));
+    const willOpen = !menu.classList.contains('open');
 
-    // Click fuera del menú lo cierra
-    if (!isOpen) {
+    if (willOpen) {
+      this._positionDgiiMenu();
+      menu.classList.add('open');
+      if (btn) btn.setAttribute('aria-expanded', 'true');
+
+      // Click fuera del menú lo cierra
       const closeHandler = (e) => {
-        if (!menu.contains(e.target) && e.target !== btn && !btn?.contains(e.target)) {
+        if (!menu.contains(e.target) && !btn?.contains(e.target)) {
           this.closeDgiiMenu();
           document.removeEventListener('click', closeHandler);
+          window.removeEventListener('resize', repositionHandler);
+          window.removeEventListener('scroll', repositionHandler, true);
         }
       };
-      // Diferir para no capturar el mismo click que lo abre
-      setTimeout(() => document.addEventListener('click', closeHandler), 0);
+      // Reposicionar si cambia el viewport o hay scroll
+      const repositionHandler = () => this._positionDgiiMenu();
+      setTimeout(() => {
+        document.addEventListener('click', closeHandler);
+        window.addEventListener('resize', repositionHandler);
+        window.addEventListener('scroll', repositionHandler, true);
+      }, 0);
+    } else {
+      this.closeDgiiMenu();
     }
   },
 

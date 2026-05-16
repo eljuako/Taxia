@@ -398,10 +398,12 @@
   border-color: oklch(from var(--accent) l c h / .55);
 }
 .dgii-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  z-index: 50;
+  /* position: fixed (no absolute) para escapar del overflow:auto del tools-bar.
+     Las coordenadas se setean por JS al abrir. */
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 200;
   min-width: 280px;
   background: var(--card);
   border: 1px solid var(--line);
@@ -466,8 +468,6 @@
 
 @media (max-width: 880px) {
   .dgii-menu {
-    right: auto;
-    left: 0;
     min-width: 260px;
     max-width: 92vw;
   }

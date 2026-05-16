@@ -15,38 +15,14 @@
   function setText(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
 
   // ── Escala progresiva ISR personas físicas — IR-1 normal (Art. 296)
-  // Tasas: 0 / 15% / 20% / 25%
-  const TABLA_IR1 = [
-    { desde: 0,       tasa: 0,    base: 0     },
-    { desde: 416220,  tasa: 0.15, base: 0     },
-    { desde: 624329,  tasa: 0.20, base: 31216 },
-    { desde: 867123,  tasa: 0.25, base: 79776 },
-  ];
+  // Tasas: 0 / 15% / 20% / 25%. Se calcula por tramos para respetar la
+  // exención anual y evitar redondeos de montos fijos acumulados.
   function calcIR1(rentaNeta) {
-    for (let i = TABLA_IR1.length - 1; i >= 0; i--) {
-      const t = TABLA_IR1[i];
-      if (rentaNeta > t.desde) return +(t.base + (rentaNeta - t.desde) * t.tasa).toFixed(2);
-    }
-    return 0;
-  }
-
-  // ── Escala progresiva RST para Persona Física (Decreto 265-19)
-  // Tasas REDUCIDAS respecto al IR-1: 0 / 10% / 15% / 20%
-  // Se aplica directamente sobre los INGRESOS BRUTOS (no sobre el 60%).
-  // El "beneficio" del RST PF es esta escala reducida + 4 cuotas trimestrales.
-  // base acumulada de cada tramo = la suma de impuesto de los tramos anteriores
-  const TABLA_RST_PF = [
-    { desde: 0,       tasa: 0,    base: 0          },
-    { desde: 416220,  tasa: 0.10, base: 0          },                      // 10% sobre excedente de 416,220
-    { desde: 624329,  tasa: 0.15, base: 20810.90   },  // (624329-416220) * 0.10 = 20,810.90
-    { desde: 867123,  tasa: 0.20, base: 57230.00   },  // 20810.90 + (867123-624329) * 0.15 = 57,229.00 ≈ 57,230
-  ];
-  function calcRstPf(ingresoBruto) {
-    for (let i = TABLA_RST_PF.length - 1; i >= 0; i--) {
-      const t = TABLA_RST_PF[i];
-      if (ingresoBruto > t.desde) return +(t.base + (ingresoBruto - t.desde) * t.tasa).toFixed(2);
-    }
-    return 0;
+    const renta = Math.max(0, Number(rentaNeta) || 0);
+    const tramo15 = Math.min(Math.max(renta - 416220, 0), 624329 - 416220) * 0.15;
+    const tramo20 = Math.min(Math.max(renta - 624329, 0), 867123 - 624329) * 0.20;
+    const tramo25 = Math.max(renta - 867123, 0) * 0.25;
+    return +(tramo15 + tramo20 + tramo25).toFixed(2);
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -319,6 +295,12 @@
         {
           name: 'III. Cálculo del Impuesto',
           fields: [
+            { id: 'rst-gasto-presunto', label: 'Gasto Presunto / Deduccion 40% (PF Servicios)', type: 'money', readonly: true, formula: () => {
+              const tipo = document.getElementById('rst-tipo')?.value;
+              const modalidad = document.getElementById('rst-modalidad')?.value;
+              if (tipo === 'pf' && modalidad !== 'compras') return num('rst-ingresos-anuales') * 0.40;
+              return 0;
+            }},
             { id: 'rst-base-imponible', label: 'Base Imponible', type: 'money', readonly: true, formula: () => {
               const tipo = document.getElementById('rst-tipo')?.value;
               const modalidad = document.getElementById('rst-modalidad')?.value;
@@ -327,10 +309,9 @@
                 return num('rst-compras-anuales') * (num('rst-margen-bruto') / 100);
               }
               // Servicios o Agropecuario:
-              // - PF: la base es el INGRESO BRUTO directo. El "beneficio" del RST PF
-              //       es la escala reducida (10/15/20% vs 15/20/25% del IR-1 normal),
-              //       NO una deducción del 40%. La escala se aplica sobre el bruto.
+              // - PF: aplica gasto presunto de 40% y luego escala progresiva IR-1.
               // - PJ: 100% de los ingresos (luego se aplica 7% en ISR).
+              if (tipo === 'pf') return Math.max(0, num('rst-ingresos-anuales') - num('rst-gasto-presunto'));
               return num('rst-ingresos-anuales');
             }},
             { id: 'rst-isr', label: 'ISR a Pagar', type: 'money', readonly: true, highlight: true, formula: () => {
@@ -341,21 +322,17 @@
               if (modalidad === 'compras') {
                 // Modalidad Compras
                 if (tipo === 'pj') return base * 0.27;
-                // PF Compras: escala RST con tasas reducidas
-                return calcRstPf(base);
+                // PF Compras: escala progresiva de persona fisica sobre margen presunto
+                return calcIR1(base);
               }
               // Servicios / Agropecuario
               if (tipo === 'pj') {
                 // PJ Servicios: 7% sobre ingresos brutos (cubre ISR + ITBIS)
                 return num('rst-ingresos-anuales') * 0.07;
               }
-              // PF Servicios: escala progresiva RST sobre ingresos brutos.
-              //   0 → 416,220        : exento
-              //   416,220 → 624,329  : 10% sobre excedente
-              //   624,329 → 867,123  : 15% sobre excedente
-              //   > 867,123          : 20% sobre excedente
-              // Ejemplo: ingresos 500,000 → 10% × (500,000-416,220) = RD$8,378
-              return calcRstPf(num('rst-ingresos-anuales'));
+              // PF Servicios: 40% de gasto presunto y escala progresiva IR-1
+              // sobre la renta neta imponible (0 / 15% / 20% / 25%).
+              return calcIR1(base);
             }},
             { id: 'rst-itbis', label: 'ITBIS a Pagar (solo modalidad Compras)', type: 'money', readonly: true, formula: () => {
               const modalidad = document.getElementById('rst-modalidad')?.value;
@@ -609,6 +586,7 @@
     setFieldVisible('rst-ingresos-anuales', isServiciosOAgro);
     setFieldVisible('rst-compras-anuales', isCompras);
     setFieldVisible('rst-margen-bruto', isCompras);
+    setFieldVisible('rst-gasto-presunto', tipo === 'pf' && isServiciosOAgro);
     setFieldVisible('rst-itbis', isCompras);
 
     // 2) Pre-llenar el margen bruto según el sector (sólo si el usuario aún no escribió)
@@ -640,8 +618,8 @@
       } else {
         lines = [
           ['Exención anual', 'RD$ 416,220.00', 'mínimo no imponible'],
-          ['Escala progresiva RST', '0% / 10% / 15% / 20%', 'tasas reducidas (vs IR-1 normal 15/20/25%)'],
-          ['Cálculo', 'Sobre ingresos brutos (no se aplica 40%)', 'el beneficio del RST PF es la escala reducida'],
+          ['Gasto presunto', '40% de ingresos brutos', 'deduccion automatica para PF servicios'],
+          ['Escala progresiva', '0% / 15% / 20% / 25%', 'aplicada sobre renta neta imponible'],
         ];
       }
     } else if (modalidad === 'compras') {
@@ -656,14 +634,14 @@
       } else {
         lines = [
           ['Margen bruto presunto', `${margenDef}% (referencial · editable)`, 'base = compras × margen'],
-          ['ISR', 'Escala RST (0 / 10% / 15% / 20%)', 'tasas reducidas sobre el margen'],
+          ['ISR', 'Escala progresiva PF (0 / 15% / 20% / 25%)', 'sobre margen presunto'],
           ['ITBIS', `${factorItbis} × 18% del margen`, sector === 'farmacias' ? 'medicamentos exentos' : 'sector general'],
         ];
       }
     } else if (modalidad === 'agropecuario') {
       lines = [
         ['Régimen', 'Producción primaria agropecuaria', 'Decreto 265-19'],
-        ['ISR', tipo === 'pj' ? '7% sobre ingresos brutos' : 'Escala RST reducida (0/10/15/20%)', ''],
+        ['ISR', tipo === 'pj' ? '7% sobre ingresos brutos' : '40% gasto presunto + escala PF', ''],
       ];
     }
 
@@ -827,7 +805,7 @@
         ['Régimen Simplificado', 'Decreto 265-19 + Norma 06-2021', 'Régimen opcional para MIPYMES'],
         ['Topes RST', 'Decreto 265-19 actualizado', 'Servicios RD$ 12,068,181.09 / Compras RD$ 55,485,890.09'],
         ['PJ Servicios', 'Decreto 265-19', '7% sobre ingresos brutos (ISR + ITBIS)'],
-        ['PF Servicios', 'Decreto 265-19', 'Escala reducida 0/10/15/20% sobre ingresos'],
+        ['PF Servicios', 'Decreto 265-19', '40% gasto presunto + escala progresiva PF sobre renta neta'],
         ['4 cuotas trimestrales', 'Decreto 265-19', 'Mar/Abr · Jun · Sep · Dic'],
         ['Permanencia mínima', 'Decreto 265-19', '3 años en el régimen'],
       ],
